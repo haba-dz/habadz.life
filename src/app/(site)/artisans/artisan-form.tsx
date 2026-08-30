@@ -14,8 +14,14 @@ import { Alert, AlertDescription } from "@/components/ui/alert";
 import { artisanVolunteerSchema, type ArtisanVolunteerInput } from "@/schemas/artisan-volunteer";
 import { SuccessPanel } from "@/components/shared/success-panel";
 import { submitArtisanVolunteer } from "@/actions/artisans";
+import type { AvailableLocale } from "@/i18n/locales";
 
-export function ArtisanForm() {
+export function ArtisanForm({
+  locale = "ar",
+}: {
+  locale?: AvailableLocale;
+}) {
+  const isFr = locale === "fr";
   const [submitted, setSubmitted] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [submitError, setSubmitError] = useState<string | null>(null);
@@ -51,12 +57,21 @@ export function ArtisanForm() {
     try {
       const res = await submitArtisanVolunteer(values);
       if (!res.success) {
-        setSubmitError(res.message ?? "حدث خطأ أثناء تسجيل بياناتك. حاول مرة أخرى.");
+        setSubmitError(
+          res.message ??
+            (isFr
+              ? "Une erreur est survenue lors de l'enregistrement. Veuillez réessayer."
+              : "حدث خطأ أثناء تسجيل بياناتك. حاول مرة أخرى."),
+        );
         return;
       }
       setSubmitted(true);
     } catch {
-      setSubmitError("حدث خطأ أثناء تسجيل بياناتك. حاول مرة أخرى.");
+      setSubmitError(
+        isFr
+          ? "Une erreur est survenue lors de l'enregistrement. Veuillez réessayer."
+          : "حدث خطأ أثناء تسجيل بياناتك. حاول مرة أخرى.",
+      );
     } finally {
       setSubmitting(false);
     }
@@ -65,10 +80,14 @@ export function ArtisanForm() {
   if (submitted) {
     return (
       <SuccessPanel
-        title="شكراً لمبادرتكم الإنسانية"
-        description="تم تسجيل بياناتكم بنجاح. ستتواصل معكم خلية التنسيق عند وجود أعمال ترميم تحتاج تخصصكم."
+        title={isFr ? "Merci pour votre engagement humanitaire" : "شكراً لمبادرتكم الإنسانية"}
+        description={
+          isFr
+            ? "Vos coordonnées ont été enregistrées avec succès. La cellule de coordination vous contactera dès qu'un chantier correspond à votre spécialité."
+            : "تم تسجيل بياناتكم بنجاح. ستتواصل معكم خلية التنسيق عند وجود أعمال ترميم تحتاج تخصصكم."
+        }
         primaryHref="/"
-        primaryLabel="العودة للرئيسية"
+        primaryLabel={isFr ? "Retour à l'accueil" : "العودة للرئيسية"}
       />
     );
   }
@@ -77,18 +96,18 @@ export function ArtisanForm() {
     <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
       <Card>
         <CardContent className="space-y-4 px-5 pt-6">
-          <h2 className="font-bold">المعلومات المهنية والشخصية</h2>
+          <h2 className="font-bold">{isFr ? "Informations professionnelles et personnelles" : "المعلومات المهنية والشخصية"}</h2>
 
           <div>
-            <Label className="mb-1.5">الاسم واللقب *</Label>
-            <Input placeholder="محمد بلحاج" {...register("full_name")} />
+            <Label className="mb-1.5">{isFr ? "Nom et prénom *" : "الاسم واللقب *"}</Label>
+            <Input placeholder={isFr ? "Mohamed Belhadj" : "محمد بلحاج"} {...register("full_name")} />
             {errors.full_name && (
               <p className="mt-1 text-sm text-destructive">{errors.full_name.message}</p>
             )}
           </div>
 
           <div>
-            <Label className="mb-1.5">رقم الهاتف *</Label>
+            <Label className="mb-1.5">{isFr ? "Numéro de téléphone *" : "رقم الهاتف *"}</Label>
             <Input dir="ltr" placeholder="0555xxxxxx" {...register("phone")} />
             {errors.phone && (
               <p className="mt-1 text-sm text-destructive">{errors.phone.message}</p>
@@ -96,16 +115,22 @@ export function ArtisanForm() {
           </div>
 
           <div>
-            <Label className="mb-1.5">التخصص الحرفي *</Label>
-            <Input placeholder="دهان، بناء، سباك، كهربائي..." {...register("specialty")} />
+            <Label className="mb-1.5">{isFr ? "Spécialité artisanale *" : "التخصص الحرفي *"}</Label>
+            <Input
+              placeholder={isFr ? "Peinture, maçonnerie, plomberie, électricité..." : "دهان، بناء، سباك، كهربائي..."}
+              {...register("specialty")}
+            />
             {errors.specialty && (
               <p className="mt-1 text-sm text-destructive">{errors.specialty.message}</p>
             )}
           </div>
 
           <div>
-            <Label className="mb-1.5">البلدية أو مكان التواجد *</Label>
-            <Input placeholder="مثال: جيجل، تاكسنة، الميلية، الشقفة..." {...register("commune_id")} />
+            <Label className="mb-1.5">{isFr ? "Commune ou lieu de résidence *" : "البلدية أو مكان التواجد *"}</Label>
+            <Input
+              placeholder={isFr ? "Ex: Jijel, Taher, El Milia, Chekfa..." : "مثال: جيجل، تاكسنة، الميلية، الشقفة..."}
+              {...register("commune_id")}
+            />
             {errors.commune_id && (
               <p className="mt-1 text-sm text-destructive">{errors.commune_id.message}</p>
             )}
@@ -115,14 +140,14 @@ export function ArtisanForm() {
 
       <Card>
         <CardContent className="space-y-4 px-5 pt-6">
-          <h2 className="font-bold">مجالات التطوع والاستعداد</h2>
+          <h2 className="font-bold">{isFr ? "Disponibilité et domaines d'intervention" : "مجالات التطوع والاستعداد"}</h2>
 
           <label className="flex items-center gap-2 text-sm">
             <Checkbox
               checked={canTravel}
               onCheckedChange={(v) => setValue("can_travel", Boolean(v))}
             />
-            الاستعداد للتنقل إلى المناطق المتضررة الأخرى
+            {isFr ? "Prêt à se déplacer vers d'autres zones sinistrées" : "الاستعداد للتنقل إلى المناطق المتضررة الأخرى"}
           </label>
 
           <label className="flex items-center gap-2 text-sm">
@@ -130,7 +155,7 @@ export function ArtisanForm() {
               checked={hasOwnTools}
               onCheckedChange={(v) => setValue("has_own_tools", Boolean(v))}
             />
-            حيازة أدوات العمل الخاصة
+            {isFr ? "Dispose de son propre outillage" : "حيازة أدوات العمل الخاصة"}
           </label>
 
           <label className="flex items-center gap-2 text-sm">
@@ -138,12 +163,17 @@ export function ArtisanForm() {
               checked={showPhonePublicly}
               onCheckedChange={(v) => setValue("show_phone_publicly", Boolean(v))}
             />
-            أوافق على نشر رقم هاتفي للعموم في قائمة الحرفيين بعد التحقق من انضمامي
+            {isFr
+              ? "J'accepte la publication de mon numéro de téléphone dans l'annuaire après vérification"
+              : "أوافق على نشر رقم هاتفي للعموم في قائمة الحرفيين بعد التحقق من انضمامي"}
           </label>
 
           <div>
-            <Label className="mb-1.5">ملاحظات إضافية (أوقات التوفر...)</Label>
-            <Textarea placeholder="أي تفاصيل تساعد فريق التنسيق..." {...register("notes")} />
+            <Label className="mb-1.5">{isFr ? "Remarques (disponibilités...)" : "ملاحظات إضافية (أوقات التوفر...)"}</Label>
+            <Textarea
+              placeholder={isFr ? "Précisions utiles pour l'équipe de coordination..." : "أي تفاصيل تساعد فريق التنسيق..."}
+              {...register("notes")}
+            />
           </div>
         </CardContent>
       </Card>
@@ -156,7 +186,7 @@ export function ArtisanForm() {
 
       <Button type="submit" size="lg" className="w-full" disabled={submitting}>
         {submitting && <Loader2 className="size-4 animate-spin" />}
-        تأكيد تسجيل التطوع
+        {isFr ? "Confirmer l'inscription" : "تأكيد تسجيل التطوع"}
       </Button>
     </form>
   );
