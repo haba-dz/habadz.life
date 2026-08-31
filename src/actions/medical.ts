@@ -33,7 +33,7 @@ export async function submitMedicalVolunteer(
     specialty: result.data.specialty,
     license_number: result.data.license_number || null,
     wilaya_code: result.data.wilaya_code,
-    commune_id: result.data.commune_id || result.data.wilaya_code || "غير محدد",
+    commune_id: result.data.commune_id?.trim() || "",
     current_workplace: result.data.current_workplace || null,
     can_teleconsult: result.data.can_teleconsult,
     can_field_intervene: result.data.can_field_intervene,
