@@ -1,51 +1,71 @@
 "use client";
 
 import { useTransition } from "react";
-import { Check, Languages } from "lucide-react";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
+import { Languages, Loader2 } from "lucide-react";
 import { setLocale } from "@/actions/locale";
-import { AVAILABLE_LOCALES, localeMeta, type AvailableLocale } from "@/i18n/locales";
+import { type AvailableLocale } from "@/i18n/locales";
+import { cn } from "@/lib/utils";
 
 interface LanguageSwitcherProps {
   current: AvailableLocale;
-  /** نص متاح لقارئات الشاشة، مترجَم مثل بقية الواجهة. */
-  label: string;
+  label?: string;
+  className?: string;
 }
 
-export function LanguageSwitcher({ current, label }: LanguageSwitcherProps) {
-  const [pending, startTransition] = useTransition();
+export function LanguageSwitcher({ current, label, className }: LanguageSwitcherProps) {
+  const [isPending, startTransition] = useTransition();
+  const isFr = current === "fr";
+  const targetLocale: AvailableLocale = isFr ? "ar" : "fr";
+
+  const handleToggle = () => {
+    startTransition(() => {
+      void setLocale(targetLocale);
+    });
+  };
 
   return (
-    <DropdownMenu>
-      <DropdownMenuTrigger
-        aria-label={label}
-        disabled={pending}
-        className="inline-flex items-center gap-1.5 rounded-md px-2.5 py-2 text-sm font-medium text-muted-foreground transition-colors hover:bg-muted hover:text-foreground disabled:opacity-60"
-      >
-        <Languages className="size-4" />
-        {/* اسم اللغة الحالية بلغتها — يبقى مفهومًا لمن لا يقرأ لغة الواجهة الحالية. */}
-        <span className="hidden sm:inline">{localeMeta[current].endonym}</span>
-      </DropdownMenuTrigger>
+    <button
+      type="button"
+      onClick={handleToggle}
+      disabled={isPending}
+      aria-label={label || (isFr ? "Passer à l'arabe" : "التبديل إلى الفرنسية")}
+      title={isFr ? "Passer en Arabe (العربية)" : "Passer en Français (Fr)"}
+      className={cn(
+        "group relative inline-flex h-9 items-center gap-1.5 rounded-xl border border-border/80 bg-background/80 px-2.5 py-1 text-xs font-bold shadow-2xs backdrop-blur-xs",
+        "transition-all duration-200 hover:border-algeria-green/40 hover:bg-muted active:scale-95 disabled:pointer-events-none disabled:opacity-60 cursor-pointer",
+        className
+      )}
+    >
+      {isPending ? (
+        <Loader2 className="size-3.5 animate-spin text-algeria-green" />
+      ) : (
+        <Languages className="size-3.5 text-muted-foreground transition-colors group-hover:text-algeria-green" />
+      )}
 
-      <DropdownMenuContent align="end" className="w-auto min-w-40">
-        {AVAILABLE_LOCALES.map((code) => (
-          <DropdownMenuItem
-            key={code}
-            lang={localeMeta[code].htmlLang}
-            dir={localeMeta[code].dir}
-            className="justify-between gap-4"
-            onClick={() => startTransition(() => void setLocale(code))}
-          >
-            <span>{localeMeta[code].endonym}</span>
-            {code === current && <Check className="size-4" aria-hidden />}
-          </DropdownMenuItem>
-        ))}
-      </DropdownMenuContent>
-    </DropdownMenu>
+      {/* Segmented mini pill */}
+      <div className="flex items-center gap-1 font-bold">
+        <span
+          className={cn(
+            "rounded-md px-1.5 py-0.5 text-[11px] transition-all duration-200",
+            !isFr
+              ? "bg-algeria-green text-white shadow-2xs font-extrabold"
+              : "text-muted-foreground group-hover:text-foreground"
+          )}
+        >
+          عربي
+        </span>
+        <span className="text-muted-foreground/40 text-[10px]">/</span>
+        <span
+          className={cn(
+            "rounded-md px-1.5 py-0.5 text-[11px] transition-all duration-200 font-sans",
+            isFr
+              ? "bg-algeria-green text-white shadow-2xs font-extrabold"
+              : "text-muted-foreground group-hover:text-foreground"
+          )}
+        >
+          FR
+        </span>
+      </div>
+    </button>
   );
 }

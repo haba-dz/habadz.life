@@ -17,11 +17,12 @@ import {
   Newspaper,
   ShieldCheck,
   PhoneCall,
-  Info,
+  Home,
   ChevronLeft,
   ChevronRight,
   ExternalLink,
   Users,
+  ShieldAlert,
 } from "lucide-react";
 import {
   Sheet,
@@ -51,29 +52,97 @@ export function MobileNav({ locale, isOpen, onOpenChange, trigger }: MobileNavPr
   const isRtl = locale === "ar";
   const Chevron = isRtl ? ChevronLeft : ChevronRight;
 
-  const mainLinks = [
-    { href: "/", label: isFr ? "Accueil" : "الرئيسية", icon: HeartHandshake },
-    { href: "/map", label: isFr ? "Carte des secours" : "خريطة المراكز والإغاثة", icon: MapPin },
-    { href: "/help", label: isFr ? "Demander de l'aide" : "طلب إغاثة للمتضررين", icon: LifeBuoy, highlight: true },
-    { href: "/donate", label: isFr ? "Enregistrer un don" : "تقديم مساعدات عينية", icon: Gift, highlight: true },
+  // 1. Services aux sinistrés (Need Help)
+  const victimsLinks = [
+    {
+      href: "/help",
+      label: isFr ? "Demander de l'aide urgente" : "طلب إغاثة وإعانة عاجلة",
+      desc: isFr ? "Formulaire de secours pour les familles" : "تسجيل احتياجات الأسرة والمساعدات",
+      icon: LifeBuoy,
+      highlight: true,
+    },
+    {
+      href: "/help/damage-assessment",
+      label: isFr ? "Évaluation des dégâts du logement" : "تصريح أضرار السكن والترميم",
+      desc: isFr ? "Pour mobiliser artisans et matériaux" : "تقدير مواد البناء وورشات الحرفيين",
+      icon: Hammer,
+    },
+    {
+      href: "/map",
+      label: isFr ? "Centres d'hébergement & d'accueil" : "مراكز الإيواء والاستقبال",
+      desc: isFr ? "Localisation des hébergements ouverts" : "المدارس ومراكز الاستقبال المجهزة",
+      icon: Home,
+    },
   ];
 
-  const secondaryLinks = [
-    { href: "/volunteers", label: isFr ? "Volontaires de terrain" : "التطوع وسواعد الإغاثة", icon: Users },
-    { href: "/affected-areas", label: isFr ? "Zones sinistrées" : "المناطق المتضررة", icon: TriangleAlert },
-    { href: "/medical", label: isFr ? "Volontaires médicaux" : "الطواقم الطبية والبيطرية", icon: Stethoscope },
-    { href: "/artisans", label: isFr ? "Artisans & Travaux" : "الحرفيون والترميم", icon: Hammer },
-    { href: "/help/damage-assessment", label: isFr ? "Évaluation des dégâts" : "تقييم الأضرار الميدانية", icon: Info },
-    { href: "/transport", label: isFr ? "Offres de transport" : "عروض النقل والشحن", icon: Truck },
-    { href: "/news", label: isFr ? "Actualités & Rapports" : "الأخبار والمستجدات", icon: Newspaper },
-    { href: "/transparency", label: isFr ? "Transparence & Distribution" : "الشفافية وسجل التوزيع", icon: ShieldCheck },
-    { href: "/official-information", label: isFr ? "Informations officielles" : "البيانات الرسمية", icon: Info },
+  // 2. Bénévolat & Dons (Want to Help)
+  const volunteerLinks = [
+    {
+      href: "/donate",
+      label: isFr ? "Enregistrer un don de matériel" : "تقديم مساعدات وتبرعات عينية",
+      desc: isFr ? "Vivres, eau, couvertures, couches" : "أغذية، أفرشة، أدوية، مياه",
+      icon: Gift,
+      color: "text-algeria-green",
+    },
+    {
+      href: "/volunteers",
+      label: isFr ? "Volontariat de terrain" : "المتطوعون الميدانيون",
+      desc: isFr ? "Tri des colis, déblaiement, aide" : "فرز الطرود، توجيه القوافل، الدعم",
+      icon: Users,
+      color: "text-amber-600 dark:text-amber-400",
+    },
+    {
+      href: "/transport",
+      label: isFr ? "Offres de transport & logistique" : "النقل والشحن اللوجستي",
+      desc: isFr ? "Acheminement des colis et convois" : "نقل الطرود والشحنات بين الولايات",
+      icon: Truck,
+      color: "text-blue-600 dark:text-blue-400",
+    },
+    {
+      href: "/medical",
+      label: isFr ? "Médecins & Vétérinaires" : "الطواقم الطبية والبيطرية",
+      desc: isFr ? "Urgences, soins, santé du bétail" : "طوارئ، تمريض، ورعاية الماشية",
+      icon: Stethoscope,
+      color: "text-emerald-600 dark:text-emerald-400",
+    },
+    {
+      href: "/artisans",
+      label: isFr ? "Artisans du bâtiment" : "الحرفيون وترميم المنازل",
+      desc: isFr ? "Électricité, plomberie, maçonnerie" : "بناء، سباكة، كهرباء، دهان وأسقف",
+      icon: Hammer,
+      color: "text-orange-600 dark:text-orange-400",
+    },
+  ];
+
+  // 3. Suivi & Transparence (Tracking & Info)
+  const infoLinks = [
+    {
+      href: "/map",
+      label: isFr ? "Carte des secours & points actifs" : "خريطة المراكز ونقاط الإغاثة",
+      icon: MapPin,
+    },
+    {
+      href: "/affected-areas",
+      label: isFr ? "Zones et communes sinistrées" : "المناطق والبلديات المتضررة",
+      icon: TriangleAlert,
+    },
+    {
+      href: "/official-information",
+      label: isFr ? "Communiqués & alertes officielles" : "البيانات الرسمية والمستجدات",
+      icon: Newspaper,
+    },
+    {
+      href: "/transparency",
+      label: isFr ? "Transparence & Journal des aides" : "سجل الشفافية وتوزيع المساعدات",
+      icon: ShieldCheck,
+    },
   ];
 
   const emergencyHotlines = [
     { name: isFr ? "Protection Civile" : "الحماية المدنية", number: "14", color: "bg-red-500/10 text-red-600 border-red-200 dark:border-red-900/40" },
-    { name: isFr ? "Police Nationale" : "الأمن الوطني", number: "1548", color: "bg-blue-500/10 text-blue-600 border-blue-200 dark:border-blue-900/40" },
-    { name: isFr ? "Gendarmerie" : "الدرك الوطني", number: "1055", color: "bg-emerald-500/10 text-emerald-600 border-emerald-200 dark:border-emerald-900/40" },
+    { name: isFr ? "Numéro Vert Forêts" : "الغابات", number: "1021", color: "bg-emerald-500/10 text-emerald-600 border-emerald-200 dark:border-emerald-900/40" },
+    { name: isFr ? "Gendarmerie" : "الدرك الوطني", number: "1055", color: "bg-blue-500/10 text-blue-600 border-blue-200 dark:border-blue-900/40" },
+    { name: isFr ? "Police" : "الأمن الوطني", number: "1548", color: "bg-purple-500/10 text-purple-600 border-purple-200 dark:border-purple-900/40" },
   ];
 
   return (
@@ -88,7 +157,7 @@ export function MobileNav({ locale, isOpen, onOpenChange, trigger }: MobileNavPr
               <Button
                 variant="ghost"
                 size="icon"
-                className="size-10 rounded-xl md:hidden text-foreground hover:bg-muted"
+                className="size-10 rounded-xl lg:hidden text-foreground hover:bg-muted"
                 aria-label={isFr ? "Menu de navigation" : "قائمة التنقل"}
               >
                 <Menu className="size-5" />
@@ -99,23 +168,23 @@ export function MobileNav({ locale, isOpen, onOpenChange, trigger }: MobileNavPr
 
       <SheetContent
         side={isRtl ? "right" : "left"}
-        className="w-[85vw] max-w-sm p-0 flex flex-col justify-between bg-background border-border z-50 overflow-hidden"
+        className="w-[88vw] max-w-sm p-0 flex flex-col justify-between bg-background border-border z-50 overflow-hidden"
       >
-        {/* Header */}
-        <div className="flex items-center justify-between border-b border-border/80 px-5 py-4 bg-muted/30">
-          <div className="flex items-center gap-2.5 font-bold">
-            <span className="flex size-8 items-center justify-center rounded-full bg-algeria-green text-white shadow-xs">
+        {/* Drawer Header */}
+        <div className="flex items-center justify-between border-b border-border/80 px-4 py-3.5 bg-card/60">
+          <Link href="/" onClick={() => setOpen(false)} className="flex items-center gap-2 font-black">
+            <span className="flex size-8 items-center justify-center rounded-xl bg-algeria-green text-white shadow-xs">
               <HeartHandshake className="size-4" />
             </span>
-            <span className="text-base tracking-tight">{siteConfig.shortName}</span>
-          </div>
-          <div className="flex items-center gap-2">
+            <span className="text-sm font-black tracking-normal whitespace-nowrap">{siteConfig.shortName}</span>
+          </Link>
+          <div className="flex items-center gap-1.5">
             <LanguageSwitcher current={locale} label={isFr ? "Langue" : "اللغة"} />
             <SheetClose
               render={
                 <Button
                   variant="ghost"
-                  size="icon-sm"
+                  size="icon-xs"
                   className="rounded-lg text-muted-foreground hover:text-foreground"
                 />
               }
@@ -125,15 +194,16 @@ export function MobileNav({ locale, isOpen, onOpenChange, trigger }: MobileNavPr
           </div>
         </div>
 
-        {/* Scrollable Links Area */}
-        <div className="flex-1 overflow-y-auto px-4 py-4 space-y-6">
-          {/* Main Action Links */}
-          <div className="space-y-1.5">
-            <p className="px-2 text-[11px] font-bold uppercase tracking-wider text-muted-foreground">
-              {isFr ? "Actions Principales" : "الخدمات الأساسية"}
-            </p>
-            <div className="grid grid-cols-1 gap-1.5">
-              {mainLinks.map((link) => {
+        {/* Categorized Content */}
+        <div className="flex-1 overflow-y-auto px-3.5 py-4 space-y-5">
+          {/* Section 1: Services Sinistrés */}
+          <div className="rounded-2xl border border-priority-critical/20 bg-priority-critical/[0.03] p-3 space-y-2">
+            <div className="flex items-center gap-1.5 px-1 text-xs font-black text-priority-critical">
+              <ShieldAlert className="size-3.5" />
+              <span>{isFr ? "Services aux sinistrés & Urgence" : "خدمات المتضررين وطلب الإغاثة"}</span>
+            </div>
+            <div className="space-y-1">
+              {victimsLinks.map((link) => {
                 const active = pathname === link.href;
                 const Icon = link.icon;
                 return (
@@ -142,32 +212,78 @@ export function MobileNav({ locale, isOpen, onOpenChange, trigger }: MobileNavPr
                     href={link.href}
                     onClick={() => setOpen(false)}
                     className={cn(
-                      "flex items-center justify-between rounded-xl px-3.5 py-2.5 text-sm font-bold transition-colors",
+                      "flex items-center justify-between rounded-xl p-2.5 text-xs transition-all active:scale-[0.98]",
                       active
-                        ? "bg-algeria-green text-white shadow-xs"
-                        : link.highlight
-                        ? "bg-algeria-green/10 text-algeria-green hover:bg-algeria-green/20"
-                        : "text-foreground hover:bg-muted"
+                        ? "bg-priority-critical text-white shadow-xs font-bold"
+                        : "bg-background/80 hover:bg-background text-foreground border border-border/60"
                     )}
                   >
-                    <div className="flex items-center gap-3">
-                      <Icon className="size-4 shrink-0" />
-                      <span>{link.label}</span>
+                    <div className="flex items-center gap-2.5">
+                      <span className={cn(
+                        "flex size-7 shrink-0 items-center justify-center rounded-lg",
+                        active ? "bg-white/20 text-white" : "bg-priority-critical/10 text-priority-critical"
+                      )}>
+                        <Icon className="size-3.5" />
+                      </span>
+                      <div>
+                        <p className="font-bold leading-tight">{link.label}</p>
+                        <p className={cn("text-[10px] line-clamp-1", active ? "text-white/80" : "text-muted-foreground")}>
+                          {link.desc}
+                        </p>
+                      </div>
                     </div>
-                    <Chevron className="size-4 opacity-50" />
+                    <Chevron className="size-3.5 opacity-40 shrink-0 ms-1" />
                   </Link>
                 );
               })}
             </div>
           </div>
 
-          {/* Secondary Links */}
-          <div className="space-y-1.5">
-            <p className="px-2 text-[11px] font-bold uppercase tracking-wider text-muted-foreground">
-              {isFr ? "Médiathèque & Terrain" : "الميدان والمتابعة"}
+          {/* Section 2: Solidarité & Bénévolat */}
+          <div className="rounded-2xl border border-algeria-green/20 bg-algeria-green/[0.03] p-3 space-y-2">
+            <div className="flex items-center gap-1.5 px-1 text-xs font-black text-algeria-green">
+              <HeartHandshake className="size-3.5" />
+              <span>{isFr ? "Solidarité & Bénévolat" : "سبل المساعدة والتطوع"}</span>
+            </div>
+            <div className="space-y-1">
+              {volunteerLinks.map((link) => {
+                const active = pathname === link.href;
+                const Icon = link.icon;
+                return (
+                  <Link
+                    key={link.href}
+                    href={link.href}
+                    onClick={() => setOpen(false)}
+                    className={cn(
+                      "flex items-center justify-between rounded-xl p-2 text-xs transition-all active:scale-[0.98]",
+                      active
+                        ? "bg-algeria-green text-white shadow-xs font-bold"
+                        : "hover:bg-muted text-foreground"
+                    )}
+                  >
+                    <div className="flex items-center gap-2.5">
+                      <Icon className={cn("size-4 shrink-0", active ? "text-white" : link.color)} />
+                      <div>
+                        <p className="font-bold leading-tight">{link.label}</p>
+                        <p className={cn("text-[10px] line-clamp-1", active ? "text-white/80" : "text-muted-foreground")}>
+                          {link.desc}
+                        </p>
+                      </div>
+                    </div>
+                    <Chevron className="size-3.5 opacity-40 shrink-0 ms-1" />
+                  </Link>
+                );
+              })}
+            </div>
+          </div>
+
+          {/* Section 3: Suivi & Transparence */}
+          <div className="space-y-1.5 px-1">
+            <p className="text-[11px] font-bold text-muted-foreground uppercase tracking-wider">
+              {isFr ? "Suivi & Transparence" : "المتابعة والمستجدات"}
             </p>
             <div className="grid grid-cols-1 gap-1">
-              {secondaryLinks.map((link) => {
+              {infoLinks.map((link) => {
                 const active = pathname === link.href;
                 const Icon = link.icon;
                 return (
@@ -178,54 +294,54 @@ export function MobileNav({ locale, isOpen, onOpenChange, trigger }: MobileNavPr
                     className={cn(
                       "flex items-center justify-between rounded-xl px-3 py-2 text-xs font-semibold transition-colors",
                       active
-                        ? "bg-algeria-green/15 text-algeria-green font-bold"
-                        : "text-muted-foreground hover:bg-muted hover:text-foreground"
+                        ? "bg-muted text-foreground font-bold"
+                        : "text-muted-foreground hover:bg-muted/60 hover:text-foreground"
                     )}
                   >
                     <div className="flex items-center gap-2.5">
-                      <Icon className="size-4 shrink-0" />
+                      <Icon className="size-3.5 shrink-0" />
                       <span>{link.label}</span>
                     </div>
-                    <Chevron className="size-3.5 opacity-40" />
+                    <Chevron className="size-3 opacity-30" />
                   </Link>
                 );
               })}
             </div>
           </div>
 
-          {/* Emergency Hotlines Box */}
-          <div className="rounded-2xl border border-border/80 bg-muted/20 p-3.5 space-y-2.5">
+          {/* Emergency Hotlines Bar */}
+          <div className="rounded-2xl border border-border bg-card p-3 space-y-2">
             <div className="flex items-center gap-1.5 text-xs font-bold text-priority-critical">
               <PhoneCall className="size-3.5" />
-              <span>{isFr ? "Numéros d'urgence gratuits" : "أرقام الطوارئ المجانية"}</span>
+              <span>{isFr ? "Numéros d'urgence gratuits 24h/7j" : "أرقام الطوارئ الوطنية المجانية"}</span>
             </div>
-            <div className="grid grid-cols-3 gap-2">
+            <div className="grid grid-cols-4 gap-1.5">
               {emergencyHotlines.map((hl) => (
                 <a
                   key={hl.number}
                   href={`tel:${hl.number}`}
                   className={cn(
-                    "flex flex-col items-center justify-center rounded-xl border p-2 text-center transition-transform active:scale-95",
+                    "flex flex-col items-center justify-center rounded-xl border py-1.5 px-1 text-center transition-transform active:scale-95",
                     hl.color
                   )}
                 >
-                  <span className="text-base font-black tabular-nums">{hl.number}</span>
-                  <span className="text-[10px] font-bold truncate max-w-full">{hl.name}</span>
+                  <span className="text-sm font-black tabular-nums">{hl.number}</span>
+                  <span className="text-[9px] font-bold truncate max-w-full">{hl.name}</span>
                 </a>
               ))}
             </div>
           </div>
         </div>
 
-        {/* Footer info & Admin link */}
-        <div className="border-t border-border px-5 py-3.5 bg-muted/20 flex items-center justify-between text-xs text-muted-foreground">
-          <span>{isFr ? "Plateforme d'entraide solidaire" : "منصة نجدة وإغاثة تضامنية"}</span>
+        {/* Drawer Footer */}
+        <div className="border-t border-border px-4 py-3 bg-muted/30 flex items-center justify-between text-xs text-muted-foreground">
+          <span>{siteConfig.legalNotice.split("—")[0]}</span>
           <Link
             href="/admin"
             onClick={() => setOpen(false)}
             className="font-bold text-algeria-green hover:underline flex items-center gap-1"
           >
-            <span>{isFr ? "Espace Admin" : "لوحة الإدارة"}</span>
+            <span>{isFr ? "Admin" : "لوحة الإدارة"}</span>
             <ExternalLink className="size-3" />
           </Link>
         </div>
