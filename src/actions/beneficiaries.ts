@@ -5,11 +5,22 @@ import { createClient } from "@/lib/supabase/server";
 import { logActivity } from "@/services/activity-log";
 import type { RequestStatus, VerificationLevel, PriorityLevel } from "@/lib/constants";
 
-export async function updateBeneficiaryStatus(id: string, status: RequestStatus) {
-  const supabase = await createClient();
+async function requireManager(supabase: Awaited<ReturnType<typeof createClient>>) {
   const {
     data: { user },
   } = await supabase.auth.getUser();
+  if (!user) return { ok: false as const, user: null };
+  const { data: profile } = await supabase.from("profiles").select("role").eq("id", user.id).maybeSingle();
+  const role = (profile as { role?: string } | null)?.role;
+  if (role !== "admin" && role !== "coordinator") return { ok: false as const, user };
+  return { ok: true as const, user };
+}
+
+export async function updateBeneficiaryStatus(id: string, status: RequestStatus) {
+  const supabase = await createClient();
+  const gate = await requireManager(supabase);
+  if (!gate.ok) return { success: false, error: "غير مخوّل — هذه العملية للطاقم فقط." };
+  const { user } = gate;
 
   const { error } = await supabase.from("beneficiary_requests").update({ status }).eq("id", id);
   if (error) return { success: false, error: error.message };
@@ -29,9 +40,9 @@ export async function updateBeneficiaryStatus(id: string, status: RequestStatus)
 
 export async function updateBeneficiaryPriority(id: string, priority: PriorityLevel) {
   const supabase = await createClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
+  const gate = await requireManager(supabase);
+  if (!gate.ok) return { success: false, error: "غير مخوّل — هذه العملية للطاقم فقط." };
+  const { user } = gate;
 
   const { error } = await supabase.from("beneficiary_requests").update({ priority }).eq("id", id);
   if (error) return { success: false, error: error.message };
@@ -49,9 +60,9 @@ export async function updateBeneficiaryPriority(id: string, priority: PriorityLe
 
 export async function updateBeneficiaryVerification(id: string, level: VerificationLevel) {
   const supabase = await createClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
+  const gate = await requireManager(supabase);
+  if (!gate.ok) return { success: false, error: "غير مخوّل — هذه العملية للطاقم فقط." };
+  const { user } = gate;
 
   const { error } = await supabase
     .from("beneficiary_requests")
