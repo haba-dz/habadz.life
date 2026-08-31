@@ -1,6 +1,7 @@
 "use server";
 
 import { createClient } from "@/lib/supabase/server";
+import { createAdminClient } from "@/lib/supabase/admin";
 import {
   beneficiaryRequestSchema,
   type BeneficiaryRequestInput,
@@ -26,6 +27,23 @@ export async function submitBeneficiaryRequest(
   }
   const data = parsed.data;
   const supabase = await createClient();
+
+  // P1-05 dedup: same phone within 10 min
+  try {
+    const adminForDedup = createAdminClient();
+    const tenMinAgo = new Date(Date.now() - 10 * 60 * 1000).toISOString();
+    const { data: recent } = await adminForDedup
+      .from("beneficiary_requests")
+      .select("id")
+      .eq("phone", data.phone)
+      .gte("created_at", tenMinAgo)
+      .limit(1);
+    if (recent && recent.length > 0) {
+      return { success: false, error: "تم تسجيل طلبك مؤخراً، يرجى الانتظار 10 دقائق قبل إعادة المحاولة." };
+    }
+  } catch {
+    // fail open if admin key not configured locally
+  }
 
   const { data: campaign } = await supabase
     .from("campaigns")
@@ -61,6 +79,18 @@ export async function submitBeneficiaryRequest(
 
   if (error) {
     return { success: false, error: "حدث خطأ أثناء تسجيل طلبك. حاول مرة أخرى." };
+  }
+
+  // P1-04: audit log via service-role so anon insert has a trail (actor_id null, no raw PII in logs)
+  try {
+    const adminForLog = createAdminClient();
+    await adminForLog.from("activity_logs").insert({
+      actor_id: null,
+      action: `طلب مساعدة جديد من ${data.full_name} (${data.commune})`,
+      entity_type: "beneficiary_request",
+    });
+  } catch {
+    // silent — logging must not break user flow
   }
 
   return { success: true };

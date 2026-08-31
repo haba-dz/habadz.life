@@ -2,11 +2,35 @@
 
 import { revalidatePath } from "next/cache";
 import { createClient } from "@/lib/supabase/server";
+import { createAdminClient } from "@/lib/supabase/admin";
 import { damageAssessmentSchema } from "@/schemas/damage-assessment";
 import { estimateDamageMaterials } from "@/services/damage-estimation";
 import { logActivity } from "@/services/activity-log";
 import { activeCampaignSlug } from "@/config/site";
 import type { DamageAssessmentStatus } from "@/lib/constants";
+
+const MAX_PHOTOS = 5;
+const MAX_PHOTO_SIZE = 5 * 1024 * 1024;
+const ALLOWED_MIME = new Set(["image/jpeg", "image/png", "image/webp", "image/heic", "image/heif"]);
+const ALLOWED_EXT = new Set(["jpg", "jpeg", "png", "webp", "heic", "heif"]);
+
+async function requireManager(supabase: Awaited<ReturnType<typeof createClient>>) {
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user) return { ok: false as const, user: null };
+  const { data: profile } = await supabase.from("profiles").select("role").eq("id", user.id).maybeSingle();
+  const role = (profile as { role?: string } | null)?.role;
+  if (role !== "admin" && role !== "coordinator") return { ok: false as const, user };
+  return { ok: true as const, user };
+}
+
+function sanitizeExt(filename: string): string | null {
+  const raw = filename.split(".").pop()?.toLowerCase() ?? "";
+  if (!ALLOWED_EXT.has(raw)) return null;
+  if (raw === "jpeg") return "jpg";
+  return raw;
+}
 
 export type DamageAssessmentActionState = { success: boolean; error?: string };
 
@@ -36,15 +60,53 @@ export async function submitDamageAssessment(
 
   const supabase = await createClient();
 
-  // رفع الصور (أول رفع ملفات عام في المنصة) — الحاوية خاصة، القراءة للطاقم فقط.
+  // P1-05 dedup: phone already submitted within 10 min
+  try {
+    const adminForDedup = createAdminClient();
+    const tenMinAgo = new Date(Date.now() - 10 * 60 * 1000).toISOString();
+    const { data: recent } = await adminForDedup
+      .from("damage_assessments")
+      .select("id")
+      .eq("phone", data.phone)
+      .gte("created_at", tenMinAgo)
+      .limit(1);
+    if (recent && recent.length > 0) {
+      return { success: false, error: "تم تسجيل طلبك مؤخراً، يرجى الانتظار 10 دقائق قبل إعادة المحاولة." };
+    }
+  } catch {
+    // fail open for dedup check — do not block legitimate request if admin key missing locally
+  }
+
+  // P1-01 + P0-02 hardening: limit count/size/type and use random path (no wilaya in path)
   const photoPaths: string[] = [];
-  const photos = formData.getAll("photos");
-  for (const [index, file] of photos.entries()) {
-    if (file instanceof File && file.size > 0) {
-      const ext = file.name.split(".").pop() || "jpg";
-      const path = `${data.wilaya}/${Date.now()}-${index}.${ext}`;
-      const { error: uploadError } = await supabase.storage.from("damage-photos").upload(path, file);
-      if (!uploadError) photoPaths.push(path);
+  const photos = formData.getAll("photos").filter((f): f is File => f instanceof File && f.size > 0);
+  if (photos.length > MAX_PHOTOS) {
+    return { success: false, error: `عدد الصور كبير جداً (الحد ${MAX_PHOTOS} صور).` };
+  }
+  for (const file of photos) {
+    if (file.size > MAX_PHOTO_SIZE) {
+      return { success: false, error: "إحدى الصور كبيرة جداً (الحد 5MB للصورة)." };
+    }
+    if (file.type && !ALLOWED_MIME.has(file.type)) {
+      return { success: false, error: "نوع الصورة غير مدعوم (المسموح: JPG PNG WEBP HEIC)." };
+    }
+    const ext = sanitizeExt(file.name);
+    if (!ext) {
+      return { success: false, error: "امتداد الصورة غير مدعوم." };
+    }
+    const path = `${crypto.randomUUID()}.${ext}`;
+    const { error: uploadError } = await supabase.storage
+      .from("damage-photos")
+      .upload(path, file, { contentType: file.type || `image/${ext}`, upsert: false });
+    if (!uploadError) {
+      photoPaths.push(path);
+    } else {
+      // P1-06 + P2-05: fail and cleanup already uploaded instead of silent swallow
+      if (photoPaths.length > 0) {
+        await supabase.storage.from("damage-photos").remove(photoPaths);
+      }
+      console.error("Damage photo upload error:", uploadError);
+      return { success: false, error: "فشل رفع الصور، حاول مرة أخرى بصور أصغر." };
     }
   }
 
@@ -62,6 +124,7 @@ export async function submitDamageAssessment(
 
   // ننشئ احتياجًا قياسيًا (مواد بناء) يدخل تلقائيًا في دورة المطابقة الحالية
   // (donations -> matching.ts -> transport) دون أي كود مطابقة إضافي.
+  // P0-03+P1-02: use service-role for needs insert (anon RLS would block is_manager)
   let linkedNeedId: string | null = null;
   if (hasAnyMaterialNeed) {
     const { data: campaign } = await supabase
@@ -77,24 +140,37 @@ export async function submitDamageAssessment(
       .maybeSingle();
 
     if (campaign && category) {
-      const { data: need } = await supabase
-        .from("needs")
-        .insert({
-          campaign_id: campaign.id,
-          category_id: category.id,
-          wilaya: data.wilaya,
-          commune: data.commune,
-          title: `مواد ترميم — ${data.full_name}`,
-          quantity_needed: estimate.paintCans > 0 ? estimate.paintCans : 1,
-          quantity_available: 0,
-          unit: "piece",
-          priority: "medium",
-          notes: data.finishing_notes || null,
-          source_type: "public_report",
-        })
-        .select("id")
-        .maybeSingle();
-      linkedNeedId = need?.id ?? null;
+      // P2-01: derive priority from severity instead of hardcoded medium
+      const derivedPriority =
+        data.needs_roofing || data.needs_electrical
+          ? "critical"
+          : data.needs_plumbing || estimate.paintCans > 10
+            ? "high"
+            : "medium";
+      try {
+        const adminSupabase = createAdminClient();
+        const { data: need, error: needError } = await adminSupabase
+          .from("needs")
+          .insert({
+            campaign_id: campaign.id,
+            category_id: category.id,
+            wilaya: data.wilaya,
+            commune: data.commune,
+            title: `مواد ترميم — ${data.full_name}`,
+            quantity_needed: estimate.paintCans > 0 ? estimate.paintCans : 1,
+            quantity_available: 0,
+            unit: "piece",
+            priority: derivedPriority,
+            notes: data.finishing_notes || null,
+            source_type: "public_report",
+          })
+          .select("id")
+          .maybeSingle();
+        if (!needError) linkedNeedId = need?.id ?? null;
+        else console.error("Linked need insert error:", needError);
+      } catch (e) {
+        console.error("Admin client missing for linked need:", e);
+      }
     }
   }
 
@@ -121,13 +197,27 @@ export async function submitDamageAssessment(
 
   if (error) {
     console.error("Damage assessment insert error:", error);
+    // P1-06 compensating delete: remove orphan photos if DB insert failed
+    if (photoPaths.length > 0) {
+      await supabase.storage.from("damage-photos").remove(photoPaths);
+    }
     return { success: false, error: "حدث خطأ أثناء تسجيل التقييم. حاول مرة أخرى." };
   }
 
-  await logActivity(supabase, {
-    action: `طلب تقييم أضرار جديد من ${data.full_name} (${data.commune})`,
-    entityType: "damage_assessment",
-  });
+  // P1-04: log via service-role so anon RLS (is_staff) does not silently drop it
+  try {
+    const adminForLog = createAdminClient();
+    await adminForLog.from("activity_logs").insert({
+      actor_id: null,
+      action: `طلب تقييم أضرار جديد من ${data.full_name} (${data.commune})`,
+      entity_type: "damage_assessment",
+    });
+  } catch {
+    await logActivity(supabase, {
+      action: `طلب تقييم أضرار جديد من ${data.full_name} (${data.commune})`,
+      entityType: "damage_assessment",
+    });
+  }
 
   revalidatePath("/admin/damage-assessments");
   revalidatePath("/admin/needs");
@@ -137,9 +227,9 @@ export async function submitDamageAssessment(
 
 export async function updateDamageAssessmentStatus(id: string, status: DamageAssessmentStatus) {
   const supabase = await createClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
+  const gate = await requireManager(supabase);
+  if (!gate.ok) return { success: false, error: "غير مخوّل — هذه العملية للطاقم فقط." };
+  const { user } = gate;
 
   const { error } = await supabase.from("damage_assessments").update({ status }).eq("id", id);
   if (error) return { success: false, error: "ليست لديك صلاحية تغيير الحالة (الأدمن فقط)." };
@@ -157,9 +247,9 @@ export async function updateDamageAssessmentStatus(id: string, status: DamageAss
 
 export async function assignArtisanToAssessment(assessmentId: string, artisanId: string | null) {
   const supabase = await createClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
+  const gate = await requireManager(supabase);
+  if (!gate.ok) return { success: false, error: "غير مخوّل — هذه العملية للطاقم فقط." };
+  const { user } = gate;
 
   const { error } = await supabase
     .from("damage_assessments")

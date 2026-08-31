@@ -6,13 +6,24 @@ import { createClient } from "@/lib/supabase/server";
 import { logActivity } from "@/services/activity-log";
 import { activeCampaignSlug } from "@/config/site";
 
+async function requireManager(supabase: Awaited<ReturnType<typeof createClient>>) {
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user) return { ok: false as const, user: null };
+  const { data: profile } = await supabase.from("profiles").select("role").eq("id", user.id).maybeSingle();
+  const role = (profile as { role?: string } | null)?.role;
+  if (role !== "admin" && role !== "coordinator") return { ok: false as const, user };
+  return { ok: true as const, user };
+}
+
 const createNeedSchema = z.object({
   category_id: z.string().uuid(),
-  wilaya: z.string().trim().min(1),
-  commune: z.string().trim().min(1),
+  wilaya: z.string().trim().min(1).max(100),
+  commune: z.string().trim().min(1).max(100),
   title: z.string().trim().max(200).optional().or(z.literal("")),
-  quantity_needed: z.number().positive(),
-  quantity_available: z.number().min(0),
+  quantity_needed: z.number().positive().max(100000),
+  quantity_available: z.number().min(0).max(100000),
   unit: z.enum(["piece", "box", "portion", "carton", "liter", "kg", "ton", "bundle", "person"]),
   priority: z.enum(["critical", "high", "medium", "low"]),
   notes: z.string().trim().max(500).optional().or(z.literal("")),
@@ -26,9 +37,9 @@ export async function createNeed(input: CreateNeedInput) {
   const data = parsed.data;
 
   const supabase = await createClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
+  const gate = await requireManager(supabase);
+  if (!gate.ok) return { success: false, error: "غير مخوّل — هذه العملية للطاقم فقط." };
+  const { user } = gate;
 
   const { data: campaign } = await supabase
     .from("campaigns")
@@ -68,9 +79,9 @@ export async function createNeed(input: CreateNeedInput) {
 
 export async function updateNeedStatus(id: string, status: "active" | "resolved" | "expired") {
   const supabase = await createClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
+  const gate = await requireManager(supabase);
+  if (!gate.ok) return { success: false, error: "غير مخوّل — هذه العملية للطاقم فقط." };
+  const { user } = gate;
 
   const { error } = await supabase.from("needs").update({ status }).eq("id", id);
   if (error) return { success: false, error: error.message };
@@ -93,9 +104,9 @@ export async function updateNeedPriority(
   priority: "critical" | "high" | "medium" | "low",
 ) {
   const supabase = await createClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
+  const gate = await requireManager(supabase);
+  if (!gate.ok) return { success: false, error: "غير مخوّل — هذه العملية للطاقم فقط." };
+  const { user } = gate;
 
   const { error } = await supabase.from("needs").update({ priority }).eq("id", id);
   if (error) return { success: false, error: error.message };
