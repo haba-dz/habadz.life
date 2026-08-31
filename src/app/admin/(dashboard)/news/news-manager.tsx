@@ -159,7 +159,7 @@ export function NewsManager({
       body: officialBody,
       source: officialSource,
       url: officialUrl,
-      update_type: officialType,
+      update_type: officialType as "fire_alert" | "road_status" | "weather_warning" | "safety_guidelines" | "statement" | "news",
     });
     setSubmittingOfficial(false);
     if (!res.success) {
