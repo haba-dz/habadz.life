@@ -2,6 +2,10 @@
 -- جيجل، بجاية، ميلة، سكيكدة — مصدرها ملف موثق قدّمه فريق التنسيق.
 -- الحالات المُبلَّغ عنها عبر مواقع التواصل ولم تُؤكَّد بعد مُعلَّمة severity='unconfirmed'
 -- وتُعرض في الواجهة بوضوح كبلاغات غير مؤكدة.
+--
+-- التحويل الصريح في أول صف ضروري: أنواع أعمدة قائمة `values` تُستنتج من
+-- القيم، فتصير `text`، وإدراج `text` في عمود من نوع enum يفشل. تحديد النوع
+-- مرة واحدة يكفي — Postgres يعمّمه على العمود كلّه.
 
 insert into public.affected_areas
   (campaign_id, wilaya, wilaya_fr, daira, daira_fr, commune, commune_fr,
@@ -11,7 +15,7 @@ select c.id, v.wilaya, v.wilaya_fr, v.daira, v.daira_fr, v.commune, v.commune_fr
        'قائمة موثقة من فريق التنسيق — أوت 2026'
 from public.campaigns c,
 (values
-  ('جيجل','Jijel','الشقفة','Chekfa','برج الطهر','Bordj T''har','تغراست','Taghrast','Ravagé / dégâts importants','ravaged'),
+  ('جيجل','Jijel','الشقفة','Chekfa','برج الطهر','Bordj T''har','تغراست','Taghrast','Ravagé / dégâts importants','ravaged'::public.affected_severity),
   ('جيجل','Jijel','الشقفة','Chekfa','الشقفة','Chekfa','غبالة','Ghebala','Évacuation préventive','evacuated'),
   ('جيجل','Jijel','الشقفة','Chekfa','الشقفة','Chekfa','السبت','Es-Sabt','Incendie','burning'),
   ('جيجل','Jijel','الميلية','El Milia','أولاد يحيى خدروش','Ouled Yahia Khadrouche','سيدي محمد','Sidi M''hamed','Habitations menacées / évacuations','evacuated'),
