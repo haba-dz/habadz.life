@@ -14,16 +14,18 @@ export const medicalVolunteerSchema = z.object({
     .or(z.literal("")),
   specialty: z
     .string({ error: "يرجى تحديد التخصص الطبي" })
-    .min(2, "التخصص الطبي مطلوب"),
-  license_number: z.string().optional().or(z.literal("")),
-  wilaya_code: z.string({ error: "يرجى اختيار الولاية" }).min(1),
-  commune_id: z.string({ error: "يرجى اختيار البلدية" }).min(1),
-  current_workplace: z.string().optional().or(z.literal("")),
+    .trim()
+    .min(2, "التخصص الطبي مطلوب")
+    .max(120, "التخصص طويل جداً"),
+  license_number: z.string().trim().max(50, "رقم الترخيص طويل جداً").optional().or(z.literal("")),
+  wilaya_code: z.string({ error: "يرجى اختيار الولاية" }).trim().min(1).max(10),
+  commune_id: z.string({ error: "يرجى اختيار البلدية" }).trim().min(1).max(120),
+  current_workplace: z.string().trim().max(120, "مكان العمل طويل جداً").optional().or(z.literal("")),
   can_teleconsult: z.boolean(),
   can_field_intervene: z.boolean(),
   has_emergency_kit: z.boolean(),
   show_phone_publicly: z.boolean(),
-  notes: z.string().max(500, "الملاحظات لا يجب أن تتجاوز 500 حرف").optional().or(z.literal("")),
+  notes: z.string().trim().max(500, "الملاحظات لا يجب أن تتجاوز 500 حرف").optional().or(z.literal("")),
 });
 
 export type MedicalVolunteerInput = z.infer<typeof medicalVolunteerSchema>;
