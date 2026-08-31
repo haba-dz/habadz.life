@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import { HeartHandshake, Gift, Truck, MapPin } from "lucide-react";
+import { HeartHandshake, Gift, Truck, MapPin, TriangleAlert } from "lucide-react";
 import {
   Dialog,
   DialogContent,
@@ -17,17 +17,17 @@ import type { AvailableLocale } from "@/i18n/locales";
 const STORAGE_KEY = "haba_welcome_seen_v1";
 
 const rolesAr = [
-  { href: "/donate", icon: Gift, title: "لدي مساعدات عينية", desc: "أملك مواد وإعانات وأريد إيصالها للمتضررين" },
-  { href: "/volunteers", icon: HeartHandshake, title: "أريد التطوع ميدانيًا", desc: "المشاركة في فرز الطرود والدعم على الأرض" },
-  { href: "/transport", icon: Truck, title: "أستطيع النقل والشحن", desc: "لدي مركبة أو شاحنة لنقل الشحنات" },
-  { href: "/map", icon: MapPin, title: "خريطة المراكز", desc: "الاطلاع على نقاط التجميع ومراكز الإغاثة" },
+  { href: "/help", icon: TriangleAlert, title: "أحتاج مساعدة (عائلة متضررة)", desc: "تسجيل احتياجات أسرتكم لإيصال الإغاثة والمواد الأساسية", color: "bg-priority-critical/10 text-priority-critical" },
+  { href: "/donate", icon: Gift, title: "لدي مساعدات عينية", desc: "أملك مواد وإعانات وأريد إيصالها للمتضررين", color: "bg-algeria-green/10 text-algeria-green" },
+  { href: "/volunteers", icon: HeartHandshake, title: "أريد التطوع ميدانيًا أو طبياً", desc: "المشاركة في فرز الطرود، الإغاثة، أو الرعاية الصحية", color: "bg-amber-500/10 text-amber-600" },
+  { href: "/map", icon: MapPin, title: "خريطة المراكز ونقاط الإغاثة", desc: "الاطلاع على نقاط التجميع ومراكز الاستقبال المفتوحة", color: "bg-blue-500/10 text-blue-600" },
 ];
 
 const rolesFr = [
-  { href: "/donate", icon: Gift, title: "J'ai des dons matériels", desc: "Fournir des vivres et produits de première nécessité" },
-  { href: "/volunteers", icon: HeartHandshake, title: "Volontariat de terrain", desc: "Aider au tri des colis et logistique sur place" },
-  { href: "/transport", icon: Truck, title: "Transport & Logistique", desc: "Véhicule disponible pour acheminer les dons" },
-  { href: "/map", icon: MapPin, title: "Carte des secours", desc: "Consulter les centres et points de collecte" },
+  { href: "/help", icon: TriangleAlert, title: "J'ai besoin d'aide (famille sinistrée)", desc: "Enregistrer vos besoins urgents (vivres, hébergement, soins)", color: "bg-priority-critical/10 text-priority-critical" },
+  { href: "/donate", icon: Gift, title: "J'ai des dons matériels", desc: "Fournir des vivres et produits de première nécessité", color: "bg-algeria-green/10 text-algeria-green" },
+  { href: "/volunteers", icon: HeartHandshake, title: "Volontariat de terrain & Médical", desc: "Aider au tri des colis, secours ou soins", color: "bg-amber-500/10 text-amber-600" },
+  { href: "/map", icon: MapPin, title: "Carte des secours & centres", desc: "Consulter les points de collecte et centres d'accueil", color: "bg-blue-500/10 text-blue-600" },
 ];
 
 export function WelcomeDialog({ locale = "ar" }: { locale?: AvailableLocale }) {
@@ -69,7 +69,7 @@ export function WelcomeDialog({ locale = "ar" }: { locale?: AvailableLocale }) {
           </DialogTitle>
           <DialogDescription>
             {isFr
-              ? "Plateforme solidaire pour coordonner les secours. Comment souhaitez-vous participer ?"
+              ? "Plateforme citoyenne solidaire pour coordonner les secours. Comment souhaitez-vous participer ?"
               : "منصة وطنية لتنسيق التضامن وتقديم المساعدات. كيف ترغب في المشاركة اليوم؟"}
           </DialogDescription>
         </DialogHeader>
@@ -84,7 +84,7 @@ export function WelcomeDialog({ locale = "ar" }: { locale?: AvailableLocale }) {
                 onClick={() => choose(r.href)}
                 className="flex items-center gap-3.5 rounded-xl border border-border bg-card p-3.5 text-start transition-all hover:border-algeria-green hover:bg-muted/50 active:scale-[0.98] cursor-pointer"
               >
-                <div className="flex size-10 shrink-0 items-center justify-center rounded-xl bg-algeria-green/10 text-algeria-green">
+                <div className={`flex size-10 shrink-0 items-center justify-center rounded-xl ${r.color}`}>
                   <Icon className="size-5" />
                 </div>
                 <div className="flex-1 min-w-0">
@@ -98,7 +98,7 @@ export function WelcomeDialog({ locale = "ar" }: { locale?: AvailableLocale }) {
 
         <div className="flex justify-end pt-1">
           <Button variant="ghost" size="sm" onClick={dismiss}>
-            {isFr ? "Continuer vers le site" : "تخطي ومتابعة التصفح"}
+            {isFr ? "Fermer et parcourir le site" : "إغلاق والتصفح مباشرة"}
           </Button>
         </div>
       </DialogContent>

@@ -59,6 +59,16 @@ export default async function HomePage() {
 
   const quickActions = [
     {
+      href: "/help",
+      icon: TriangleAlert,
+      title: isFr ? "Besoin d'aide" : "أحتاج مساعدة",
+      desc: isFr ? "Enregistrement des besoins des sinistrés." : "تسجيل العائلات والمتضررين من الحرائق.",
+      badge: isFr ? "Urgence" : "طوارئ",
+      accent: "border-priority-critical/40 bg-priority-critical/5 hover:border-priority-critical hover:bg-priority-critical/10 shadow-sm",
+      iconBg: "bg-priority-critical/15 text-priority-critical",
+      badgeColor: "bg-priority-critical/15 text-priority-critical",
+    },
+    {
       href: "/donate",
       icon: Gift,
       title: t.home.actions.donate.title,
@@ -93,14 +103,6 @@ export default async function HomePage() {
       desc: t.home.actions.medical.desc,
       accent: "hover:border-emerald-500 hover:shadow-md",
       iconBg: "bg-emerald-500/10 text-emerald-600 dark:text-emerald-400",
-    },
-    {
-      href: "/help/damage-assessment",
-      icon: Hammer,
-      title: isFr ? "Dégâts & Artisans" : "أضرار وترميم السكن",
-      desc: isFr ? "Déclaration des dégâts et artisans." : "تصريح الأضرار وتطوع الحرفيين.",
-      accent: "hover:border-orange-500 hover:shadow-md",
-      iconBg: "bg-orange-500/10 text-orange-600 dark:text-orange-400",
     },
     {
       href: "/map",

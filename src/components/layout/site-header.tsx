@@ -52,27 +52,28 @@ export async function SiteHeader() {
           ))}
         </nav>
 
-        {/* End: Language Switcher + Desktop Action Buttons */}
+        {/* End: Language Switcher + Actions (Need Help & Donate) */}
         <div className="flex items-center gap-1.5 sm:gap-2 shrink-0">
           <LanguageSwitcher current={locale} label={t.language.change} />
 
           <LinkButton
-            href="/volunteers"
+            href="/help"
             size="sm"
             variant="outline"
-            className="hidden md:inline-flex border-algeria-green/30 text-algeria-green hover:bg-algeria-green/10 font-bold rounded-xl h-9 whitespace-nowrap"
+            className="hidden sm:inline-flex border-priority-critical/40 text-priority-critical hover:bg-priority-critical/10 font-bold rounded-xl h-9 whitespace-nowrap"
           >
-            <Users className="size-3.5" />
-            <span>{isFr ? "Bénévolat" : "التطوع الميداني"}</span>
+            <TriangleAlert className="size-3.5" />
+            <span>{isFr ? "Besoin d'aide" : "أحتاج مساعدة"}</span>
           </LinkButton>
 
           <LinkButton
             href="/donate"
             size="sm"
-            className="hidden sm:inline-flex bg-algeria-green hover:bg-algeria-green/90 text-white font-bold rounded-xl h-9 shadow-xs whitespace-nowrap"
+            className="bg-algeria-green hover:bg-algeria-green/90 text-white font-bold rounded-xl h-9 shadow-xs whitespace-nowrap text-xs sm:text-sm"
           >
             <Gift className="size-3.5" />
-            <span>{t.cta.haveAid}</span>
+            <span className="hidden md:inline">{t.cta.haveAid}</span>
+            <span className="md:hidden">{isFr ? "Dons" : "تقديم مساعدة"}</span>
           </LinkButton>
         </div>
       </div>

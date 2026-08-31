@@ -3,7 +3,7 @@
 import { useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { Home, MapPin, Gift, Users, Menu } from "lucide-react";
+import { Home, MapPin, Gift, TriangleAlert, Menu } from "lucide-react";
 import { MobileNav } from "./mobile-nav";
 import type { AvailableLocale } from "@/i18n/locales";
 import { cn } from "@/lib/utils";
@@ -26,10 +26,11 @@ export function MobileBottomNav({ locale }: { locale: AvailableLocale }) {
       active: pathname === "/",
     },
     {
-      href: "/map",
-      label: isFr ? "Carte" : "الخريطة",
-      icon: MapPin,
-      active: pathname === "/map",
+      href: "/help",
+      label: isFr ? "Besoin d'aide" : "طلب إغاثة",
+      icon: TriangleAlert,
+      active: pathname === "/help",
+      tone: "text-priority-critical",
     },
     {
       href: "/donate",
@@ -39,10 +40,10 @@ export function MobileBottomNav({ locale }: { locale: AvailableLocale }) {
       isCta: true,
     },
     {
-      href: "/volunteers",
-      label: isFr ? "Bénévoles" : "المتطوعون",
-      icon: Users,
-      active: pathname === "/volunteers",
+      href: "/map",
+      label: isFr ? "Carte" : "الخريطة",
+      icon: MapPin,
+      active: pathname === "/map",
     },
   ];
 
@@ -90,16 +91,16 @@ export function MobileBottomNav({ locale }: { locale: AvailableLocale }) {
                 className={cn(
                   "flex flex-1 flex-col items-center justify-center py-1 text-center transition-colors min-h-[48px] rounded-xl active:bg-muted/40",
                   item.active
-                    ? "text-algeria-green font-bold"
+                    ? (item.tone || "text-algeria-green") + " font-bold"
                     : "text-muted-foreground hover:text-foreground"
                 )}
               >
-                <Icon className={cn("size-5 transition-transform", item.active && "scale-110")} />
+                <Icon className={cn("size-5 transition-transform", item.active && "scale-110", !item.active && item.tone ? "text-priority-critical/70" : "")} />
                 <span className="mt-1 text-[10px] font-semibold leading-none truncate">
                   {item.label}
                 </span>
                 {item.active && (
-                  <span className="mt-0.5 size-1 rounded-full bg-algeria-green" />
+                  <span className={cn("mt-0.5 size-1 rounded-full", item.tone ? "bg-priority-critical" : "bg-algeria-green")} />
                 )}
               </Link>
             );

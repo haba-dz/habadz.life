@@ -25,6 +25,7 @@ export async function SiteFooter() {
   const isFr = locale === "fr";
 
   const solidarityLinks = [
+    { href: "/help", label: isFr ? "Demande d'aide (familles sinistrées)" : "طلب مساعدة لعائلة متضررة", icon: TriangleAlert },
     { href: "/donate", label: isFr ? "Faire un don de matériel" : "تقديم مساعدات وتبرعات عينية", icon: Gift },
     { href: "/volunteers", label: isFr ? "Volontariat de terrain" : "المتطوعون وسواعد الإغاثة", icon: Users },
     { href: "/transport", label: isFr ? "Transport & Logistique" : "عروض النقل والشحن اللوجستي", icon: Truck },

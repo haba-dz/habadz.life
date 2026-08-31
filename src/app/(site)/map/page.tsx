@@ -84,11 +84,11 @@ export default async function MapPage() {
           <Button
             size="sm"
             variant="outline"
-            render={<Link href="/volunteers" />}
-            className="rounded-xl font-bold gap-1.5 border-amber-500/40 hover:bg-amber-500/10 text-amber-700 dark:text-amber-300"
+            render={<Link href="/help" />}
+            className="rounded-xl font-bold gap-1.5 border-priority-critical/40 hover:bg-priority-critical/10 text-priority-critical"
           >
-            <HeartHandshake className="size-4 text-amber-600" />
-            <span>{isFr ? "Bénévolat terrain" : "التطوع الميداني"}</span>
+            <HeartHandshake className="size-4 text-priority-critical" />
+            <span>{isFr ? "Besoin d'aide" : "أحتاج مساعدة"}</span>
           </Button>
 
           <Button

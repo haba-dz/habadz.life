@@ -52,6 +52,14 @@ export function MobileNav({ locale, isOpen, onOpenChange, trigger }: MobileNavPr
   // 1. Bénévolat & Dons (Solidarité)
   const volunteerLinks = [
     {
+      href: "/help",
+      label: isFr ? "Demande d'aide d'urgence" : "طلب مساعدة وإغاثة عاجلة",
+      desc: isFr ? "Pour les familles et personnes sinistrées" : "تسجيل العائلات والأسر المتضررة من الحرائق",
+      icon: TriangleAlert,
+      color: "text-priority-critical",
+      badge: isFr ? "Urgence" : "طوارئ",
+    },
+    {
       href: "/donate",
       label: isFr ? "Enregistrer un don de matériel" : "تقديم مساعدات وتبرعات عينية",
       desc: isFr ? "Vivres, eau, couvertures, couches" : "أغذية، أفرشة، أدوية، مياه",
