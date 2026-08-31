@@ -33,12 +33,15 @@ export const CommuneSelect = forwardRef<HTMLSelectElement, CommuneSelectProps>(
 
     const communes = useMemo(() => {
       if (!wilaya || wilaya === "all") return [];
-      return getCommunesByWilaya(wilaya).sort((a, b) =>
-        isFr ? a.name_fr.localeCompare(b.name_fr) : a.name_ar.localeCompare(b.name_ar),
+      // Deterministic sort with explicit locale to prevent hydration mismatch between server and client
+      return [...getCommunesByWilaya(wilaya)].sort((a, b) =>
+        isFr
+          ? a.name_fr.localeCompare(b.name_fr, "fr", { sensitivity: "base" })
+          : a.name_ar.localeCompare(b.name_ar, "ar", { sensitivity: "base" }),
       );
     }, [wilaya, isFr]);
 
-    const isDisabled = disabled || !wilaya || wilaya === "all" || communes.length === 0;
+    const isDisabled = disabled || !wilaya || wilaya === "all";
 
     return (
       <div className="relative w-full">
@@ -53,11 +56,11 @@ export const CommuneSelect = forwardRef<HTMLSelectElement, CommuneSelectProps>(
           )}
           {...props}
         >
-          {includeAllOption && (
-            <option value="all">
-              {allOptionLabel ?? (isFr ? "Toutes les communes" : "كل البلديات")}
-            </option>
-          )}
+          <option value="">
+            {includeAllOption
+              ? (allOptionLabel ?? (isFr ? "Toutes les communes" : "كل البلديات"))
+              : (isFr ? "Non spécifié (Optionnel)" : "غير محدد / كامل الولاية (اختياري)")}
+          </option>
 
           {!wilaya || wilaya === "all" ? (
             <option value="" disabled>

@@ -17,7 +17,7 @@ export const medicalVolunteerSchema = z.object({
     .min(2, "التخصص الطبي مطلوب"),
   license_number: z.string().optional().or(z.literal("")),
   wilaya_code: z.string({ error: "يرجى اختيار الولاية" }).min(1),
-  commune_id: z.string({ error: "يرجى اختيار البلدية" }).min(1),
+  commune_id: z.string().optional().or(z.literal("")),
   current_workplace: z.string().optional().or(z.literal("")),
   can_teleconsult: z.boolean(),
   can_field_intervene: z.boolean(),

@@ -239,9 +239,9 @@ export function MedicalVolunteerForm({
             )}
           </div>
 
-          {/* Commune selection */}
+          {/* Commune selection (Optional) */}
           <div>
-            <Label className="mb-1.5">{isFr ? "Commune de résidence / intervention *" : "البلدية (مكان التواجد / التدخل) *"}</Label>
+            <Label className="mb-1.5">{isFr ? "Commune (facultatif)" : "البلدية / الدائرة (اختياري)"}</Label>
             <CommuneSelect
               wilaya={selectedWilaya}
               locale={locale}
