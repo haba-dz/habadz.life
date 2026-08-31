@@ -30,21 +30,20 @@ export async function getCategories(): Promise<CategoryRow[]> {
   }
 }
 
+function activeNeedsQuery(supabase: Awaited<ReturnType<typeof createClient>>) {
+  return supabase
+    .from("needs")
+    .select("*, categories(slug, name_ar, default_unit)")
+    .eq("status", "active")
+    .order("priority", { ascending: true })
+    .order("updated_at", { ascending: false });
+}
+
 export async function getCriticalNeeds(limit = 6) {
   try {
     const supabase = await createClient();
-    const { data } = await supabase
-      .from("needs")
-      .select("*, categories(slug, name_ar, default_unit)")
-      .eq("status", "active")
-      .order("updated_at", { ascending: false })
-      .limit(50);
-
-    const rows = data ?? [];
-    const priorityRank: Record<string, number> = { critical: 0, high: 1, medium: 2, low: 3 };
-    return rows
-      .sort((a, b) => priorityRank[a.priority] - priorityRank[b.priority])
-      .slice(0, limit);
+    const { data } = await activeNeedsQuery(supabase).limit(limit);
+    return data ?? [];
   } catch {
     return [];
   }
@@ -53,11 +52,7 @@ export async function getCriticalNeeds(limit = 6) {
 export async function getAllActiveNeeds() {
   try {
     const supabase = await createClient();
-    const { data } = await supabase
-      .from("needs")
-      .select("*, categories(slug, name_ar, default_unit)")
-      .eq("status", "active")
-      .order("updated_at", { ascending: false });
+    const { data } = await activeNeedsQuery(supabase);
     return data ?? [];
   } catch {
     return [];
@@ -146,6 +141,16 @@ export async function getOfficialUpdates(limit = 5) {
     return data ?? [];
   } catch {
     return [];
+  }
+}
+
+export async function getOfficialUpdateById(id: string) {
+  try {
+    const supabase = await createClient();
+    const { data } = await supabase.from("official_updates").select("*").eq("id", id).maybeSingle();
+    return data;
+  } catch {
+    return null;
   }
 }
 
