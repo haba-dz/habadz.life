@@ -50,64 +50,68 @@ export async function syncOfficialNews(): Promise<{
 
     const fetchedItems: IngestedNewsItem[] = [];
 
-    // Curated fallback emergency bulletins from Algerian official sources
-    const sampleOfficialBulletins: IngestedNewsItem[] = [
-      {
-        title: "الحماية المدنية: السيطرة التامة على بؤرة غابة العوانة وإخماد ألسنة اللهب بنسبة 95%",
-        body: "تعلن مصالح الحماية المدنية لولاية جيجل بالتعاون مع محافظة الغابات عن نجاح عمليات التدخل الجوي والأرتال المتنقلة في إخماد حريق غابة العوانة مع استمرار الحراسة الوقائية لمنع تجدد البؤر.",
-        source: "مديرية الحماية المدنية لولاية جيجل",
-        authority: "protection_civile",
-        url: "https://www.facebook.com/DGPC0018",
-        update_type: "fire_alert",
-        wilaya: "جيجل",
-        is_urgent: true,
-        published_at: new Date(Date.now() - 1000 * 60 * 25).toISOString(),
-      },
-      {
-        title: "الدرك الوطني (طريقي): إعادة فتح الطريق الوطني رقم 43 الرابط بين جيجل وبجاية أمام حركة القوافل والشاحنات",
-        body: "تُعلم مصالح الدرك الوطني مستعملي الطريق بفتح المقطع بين زيامة منصورية والخيارة بعد الانتهاء من تأمين حواف الطريق وإزالة مخلفات الأشجار. يُرجى الالتزام بالسرعة القانونية وتسهيل مرور مركبات الإسعاف.",
-        source: "طريقي - مركز الإعلام وتنسيق المرور للدرك الوطني",
-        authority: "gendarmerie",
-        url: "https://www.facebook.com/tariki.gendarmerie.algerie",
-        update_type: "road_status",
-        wilaya: "جيجل",
-        is_urgent: false,
-        published_at: new Date(Date.now() - 1000 * 60 * 90).toISOString(),
-      },
-      {
-        title: "الديوان الوطني للأرصاد الجوية: نشرية خاصة تحذر من رياح قوية وانخفاض تدريجي في درجات الحرارة بالسواحل الشرقية",
-        body: "نشرية جوية خاصة برياح شرقية إلى شمالية شرقية تتراوح سرعتها بين 40 و60 كم/سا على ولايات جيجل، بجاية، وسكيكدة مما يساعد في تبريد المناطق الجبلية ويسهل عمل فرق الإطفاء الأرضية.",
-        source: "الديوان الوطني للأرصاد الجوية (Météo Algérie)",
-        authority: "meteo",
-        url: "https://www.facebook.com/MeteoAlgerieOfficiel/",
-        update_type: "weather_warning",
-        wilaya: "جيجل",
-        is_urgent: false,
-        published_at: new Date(Date.now() - 1000 * 60 * 180).toISOString(),
-      },
-      {
-        title: "محافظة الغابات: تشديد دوريات المراقبة وتوجيه شاحنات الصهاريج نحو النقاط الحساسة في غابة بوعفرون بالميلية",
-        body: "انتشار فرق الغابات بالتنسيق مع المتطوعين المعتمدين لتزويد نقاط التزويد بالماء وفتح المسالك الترابية أمام سيارات التدخل السريع التابعة لمراكز الإيواء.",
-        source: "المديرية العامة للغابات",
-        authority: "forets",
-        url: "https://www.facebook.com/forets.algerie",
-        update_type: "safety_guidelines",
-        wilaya: "جيجل",
-        is_urgent: false,
-        published_at: new Date(Date.now() - 1000 * 60 * 360).toISOString(),
-      },
-      {
-        title: "خلية الأزمة الولائية: توجيه كافة التبرعات العينية الجديدة مباشرة إلى المركز الجهوي للتجميع بحي لعقابي",
-        body: "تهيب خلية الأزمة بالجمعيات والمتبرعين القادمين من مختلف الولايات التوجه إلى المستودع المركزي بجيجل لتنظيم التوزيع بالتساوي وتجنب التكدس في مراكز الإيواء المكتملة.",
-        source: "خلية الأزمة ومتابعة الطوارئ - ولاية جيجل",
-        authority: "wilaya",
-        url: "https://www.facebook.com/WilayadeJijel",
-        update_type: "statement",
-        wilaya: "جيجل",
-        is_urgent: true,
-        published_at: new Date(Date.now() - 1000 * 60 * 520).toISOString(),
-      },
-    ];
+    // In production, no fake bulletins — they pollute official Updates and
+    // make sync look successful when DB is down. Keep demo data only for dev.
+    const sampleOfficialBulletins: IngestedNewsItem[] =
+      process.env.NODE_ENV === "production"
+        ? []
+        : [
+            {
+              title: "الحماية المدنية: السيطرة التامة على بؤرة غابة العوانة وإخماد ألسنة اللهب بنسبة 95%",
+              body: "تعلن مصالح الحماية المدنية لولاية جيجل بالتعاون مع محافظة الغابات عن نجاح عمليات التدخل الجوي والأرتال المتنقلة في إخماد حريق غابة العوانة مع استمرار الحراسة الوقائية لمنع تجدد البؤر.",
+              source: "مديرية الحماية المدنية لولاية جيجل",
+              authority: "protection_civile",
+              url: "https://www.facebook.com/DGPC0018",
+              update_type: "fire_alert",
+              wilaya: "جيجل",
+              is_urgent: true,
+              published_at: new Date(Date.now() - 1000 * 60 * 25).toISOString(),
+            },
+            {
+              title: "الدرك الوطني (طريقي): إعادة فتح الطريق الوطني رقم 43 الرابط بين جيجل وبجاية أمام حركة القوافل والشاحنات",
+              body: "تُعلم مصالح الدرك الوطني مستعملي الطريق بفتح المقطع بين زيامة منصورية والخيارة بعد الانتهاء من تأمين حواف الطريق وإزالة مخلفات الأشجار. يُرجى الالتزام بالسرعة القانونية وتسهيل مرور مركبات الإسعاف.",
+              source: "طريقي - مركز الإعلام وتنسيق المرور للدرك الوطني",
+              authority: "gendarmerie",
+              url: "https://www.facebook.com/tariki.gendarmerie.algerie",
+              update_type: "road_status",
+              wilaya: "جيجل",
+              is_urgent: false,
+              published_at: new Date(Date.now() - 1000 * 60 * 90).toISOString(),
+            },
+            {
+              title: "الديوان الوطني للأرصاد الجوية: نشرية خاصة تحذر من رياح قوية وانخفاض تدريجي في درجات الحرارة بالسواحل الشرقية",
+              body: "نشرية جوية خاصة برياح شرقية إلى شمالية شرقية تتراوح سرعتها بين 40 و60 كم/سا على ولايات جيجل، بجاية، وسكيكدة مما يساعد في تبريد المناطق الجبلية ويسهل عمل فرق الإطفاء الأرضية.",
+              source: "الديوان الوطني للأرصاد الجوية (Météo Algérie)",
+              authority: "meteo",
+              url: "https://www.facebook.com/MeteoAlgerieOfficiel/",
+              update_type: "weather_warning",
+              wilaya: "جيجل",
+              is_urgent: false,
+              published_at: new Date(Date.now() - 1000 * 60 * 180).toISOString(),
+            },
+            {
+              title: "محافظة الغابات: تشديد دوريات المراقبة وتوجيه شاحنات الصهاريج نحو النقاط الحساسة في غابة بوعفرون بالميلية",
+              body: "انتشار فرق الغابات بالتنسيق مع المتطوعين المعتمدين لتزويد نقاط التزويد بالماء وفتح المسالك الترابية أمام سيارات التدخل السريع التابعة لمراكز الإيواء.",
+              source: "المديرية العامة للغابات",
+              authority: "forets",
+              url: "https://www.facebook.com/forets.algerie",
+              update_type: "safety_guidelines",
+              wilaya: "جيجل",
+              is_urgent: false,
+              published_at: new Date(Date.now() - 1000 * 60 * 360).toISOString(),
+            },
+            {
+              title: "خلية الأزمة الولائية: توجيه كافة التبرعات العينية الجديدة مباشرة إلى المركز الجهوي للتجميع بحي لعقابي",
+              body: "تهيب خلية الأزمة بالجمعيات والمتبرعين القادمين من مختلف الولايات التوجه إلى المستودع المركزي بجيجل لتنظيم التوزيع بالتساوي وتجنب التكدس في مراكز الإيواء المكتملة.",
+              source: "خلية الأزمة ومتابعة الطوارئ - ولاية جيجل",
+              authority: "wilaya",
+              url: "https://www.facebook.com/WilayadeJijel",
+              update_type: "statement",
+              wilaya: "جيجل",
+              is_urgent: true,
+              published_at: new Date(Date.now() - 1000 * 60 * 520).toISOString(),
+            },
+          ];
 
     // Try fetching from external feeds if enabled
     for (const source of OFFICIAL_ALGERIAN_SOURCES.filter((s) => s.enabled && s.feedUrl)) {
@@ -154,19 +158,22 @@ export async function syncOfficialNews(): Promise<{
     const allToSync = [...sampleOfficialBulletins, ...fetchedItems];
     let insertedCount = 0;
 
-    // Database persistence & deduplication
     try {
       const supabase = await getNewsDbClient();
 
       const { data: existing } = await supabase
         .from("official_updates")
-        .select("title, url");
+        .select("title, url, external_id");
 
       const existingTitles = new Set((existing ?? []).map((e) => e.title));
       const existingUrls = new Set((existing ?? []).map((e) => e.url).filter(Boolean));
+      const existingExtIds = new Set((existing ?? []).map((e) => (e as { external_id?: string | null }).external_id).filter(Boolean) as string[]);
 
       const newItemsToInsert = allToSync.filter(
-        (item) => !existingTitles.has(item.title) && (!item.url || !existingUrls.has(item.url)),
+        (item) =>
+          !existingTitles.has(item.title) &&
+          (!item.url || !existingUrls.has(item.url)) &&
+          (!item.external_id || !existingExtIds.has(item.external_id)),
       );
 
       if (newItemsToInsert.length > 0) {
@@ -177,6 +184,10 @@ export async function syncOfficialNews(): Promise<{
           source: item.source,
           url: item.url || null,
           update_type: item.update_type || "news",
+          wilaya: item.wilaya ?? null,
+          authority: item.authority ?? null,
+          is_urgent: item.is_urgent ?? false,
+          external_id: item.external_id ?? null,
           published_at: item.published_at,
         }));
 
@@ -185,7 +196,9 @@ export async function syncOfficialNews(): Promise<{
           .insert(rows)
           .select("id");
 
-        if (!insertErr && inserted) {
+        if (insertErr) {
+          console.error("[news-ingestion] insert:", insertErr);
+        } else if (inserted) {
           insertedCount = inserted.length;
         }
       }
@@ -196,7 +209,7 @@ export async function syncOfficialNews(): Promise<{
           revalidatePath("/admin/news");
           revalidatePath("/");
         } catch {
-          // Ignore cache revalidation errors during non-request execution contexts
+          // Ignore
         }
       }
     } catch (dbErr) {
@@ -205,7 +218,7 @@ export async function syncOfficialNews(): Promise<{
 
     return {
       success: true,
-      syncedCount: insertedCount > 0 ? insertedCount : allToSync.length,
+      syncedCount: insertedCount,
       items: allToSync,
     };
   } catch (error: unknown) {
