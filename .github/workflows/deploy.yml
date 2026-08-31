@@ -74,4 +74,4 @@ jobs:
           printf '%s\n' "$KNOWN_HOSTS" > ~/.ssh/known_hosts
           ssh -i ~/.ssh/id_ed25519 "$VPS_USER@$VPS_HOST" \
             "echo '$GHCR_TOKEN' | docker login ghcr.io -u '${{ github.actor }}' --password-stdin && \
-             /opt/najdat-jijel/deploy/deploy.sh '$RELEASE_TAG'"
+             /opt/habadz/deploy/deploy.sh '$RELEASE_TAG'"

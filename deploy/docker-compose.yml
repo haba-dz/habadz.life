@@ -1,9 +1,9 @@
-# Self-hosted stack for najdat-jijel on a single small VPS (~2GB RAM).
+# Self-hosted stack for habadz on a single small VPS (~2GB RAM).
 # Trimmed Supabase (no realtime/analytics/vector/imgproxy/functions/pooler — unused by the app).
 # Image pins taken from supabase/docker master on 2026-08-31 — bump deliberately, never :latest.
 #   supabase/postgres:17.6.1.136 · supabase/gotrue:v2.189.0 · postgrest/postgrest:v14.12
 #   supabase/storage-api:v1.60.4 · supabase/postgres-meta:v0.96.6 · supabase/studio:2026.08.03-sha-022b374
-name: najdat
+name: habadz
 
 services:
   app:
@@ -243,8 +243,8 @@ services:
       SUPABASE_ANON_KEY: ${ANON_KEY}
       SUPABASE_SERVICE_KEY: ${SERVICE_ROLE_KEY}
       AUTH_JWT_SECRET: ${JWT_SECRET}
-      DEFAULT_ORGANIZATION_NAME: Najdat Jijel
-      DEFAULT_PROJECT_NAME: najdat
+      DEFAULT_ORGANIZATION_NAME: Haba Dz
+      DEFAULT_PROJECT_NAME: habadz
 
   # One-shot migration runner: `docker compose --profile tools run --rm migrate`
   # postgres:17 client matches the server major (and can dump the cloud project too).

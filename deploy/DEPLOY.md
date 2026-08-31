@@ -1,4 +1,4 @@
-# VPS Deployment — najdat-jijel
+# VPS Deployment — habadz
 
 One small VPS (~2GB RAM) runs everything: the Next.js app, a trimmed self-hosted
 Supabase (Postgres, Kong, GoTrue, PostgREST, Storage, Studio) and Caddy for TLS.
@@ -21,8 +21,8 @@ Internet ──▶ Caddy (auto-TLS)
    echo '/swapfile none swap sw 0 0' >> /etc/fstab
    ```
    Firewall: allow 22/80/443 only.
-3. **Clone**: `git clone https://github.com/haba-dz/habadz.life /opt/najdat-jijel`
-4. **Configure**: `cd /opt/najdat-jijel/deploy && cp .env.example .env && ./gen-keys.sh`
+3. **Clone**: `git clone https://github.com/haba-dz/habadz.life /opt/habadz`
+4. **Configure**: `cd /opt/habadz/deploy && cp .env.example .env && ./gen-keys.sh`
    — paste the generated values into `.env`. For `STUDIO_PASSWORD_HASH`:
    ```sh
    docker run --rm caddy:2.10.2-alpine caddy hash-password --plaintext 'strong-password'
