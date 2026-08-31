@@ -1318,40 +1318,52 @@ export type Database = {
       }
       official_updates: {
         Row: {
+          authority: string | null
           body: string | null
           campaign_id: string
           created_at: string
           created_by: string | null
+          external_id: string | null
           id: string
+          is_urgent: boolean
           published_at: string
           source: string
           title: string
           update_type: string
           url: string | null
+          wilaya: string | null
         }
         Insert: {
+          authority?: string | null
           body?: string | null
           campaign_id: string
           created_at?: string
           created_by?: string | null
+          external_id?: string | null
           id?: string
+          is_urgent?: boolean
           published_at?: string
           source: string
           title: string
           update_type?: string
           url?: string | null
+          wilaya?: string | null
         }
         Update: {
+          authority?: string | null
           body?: string | null
           campaign_id?: string
           created_at?: string
           created_by?: string | null
+          external_id?: string | null
           id?: string
+          is_urgent?: boolean
           published_at?: string
           source?: string
           title?: string
           update_type?: string
           url?: string | null
+          wilaya?: string | null
         }
         Relationships: [
           {

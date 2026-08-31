@@ -1,27 +1,12 @@
 import { NextResponse } from "next/server";
 import { syncOfficialNews, OFFICIAL_ALGERIAN_SOURCES } from "@/lib/services/news-ingestion";
 import { createClient } from "@/lib/supabase/server";
+import { isApiRequestAuthorized } from "@/lib/api-auth";
 
 const staffRoles = ["admin", "coordinator", "volunteer"];
 
-function isAuthorizedByToken(req: Request): boolean {
-  const cronSecret = process.env.CRON_SECRET || process.env.WEBHOOK_SECRET;
-  // بلا سرّ مضبوط نرفض الطلب — ترك المزامنة مفتوحة للعموم يسمح باستنزاف المصادر الخارجية.
-  if (!cronSecret) return false;
-
-  const { searchParams } = new URL(req.url);
-  const token =
-    req.headers.get("authorization")?.replace(/^Bearer\s+/i, "") ||
-    searchParams.get("key") ||
-    searchParams.get("secret");
-
-  return token === cronSecret;
-}
-
-/** يقبل إمّا رمز الخدمة السرّي (Cron/webhook خارجي) أو جلسة عضو طاقم مسجَّل دخوله
- *  (زر "مزامنة المصادر الآن" داخل لوحة الإدارة). */
 async function isAuthorized(req: Request): Promise<boolean> {
-  if (isAuthorizedByToken(req)) return true;
+  if (isApiRequestAuthorized(req)) return true;
 
   try {
     const supabase = await createClient();
