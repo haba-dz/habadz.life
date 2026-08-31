@@ -143,6 +143,7 @@ export function MobileNav({ locale, isOpen, onOpenChange, trigger }: MobileNavPr
 
       <SheetContent
         side={isRtl ? "right" : "left"}
+        showCloseButton={false}
         className="w-[88vw] max-w-sm p-0 flex flex-col justify-between bg-background border-border z-50 overflow-hidden"
       >
         {/* Drawer Header */}
