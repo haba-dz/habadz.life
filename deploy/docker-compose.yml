@@ -7,7 +7,7 @@ name: najdat
 
 services:
   app:
-    image: ghcr.io/bm2ilabs/najdat-jijel:${APP_TAG:-latest}
+    image: ghcr.io/haba-dz/habadz.life:${APP_TAG:-latest}
     restart: unless-stopped
     stop_grace_period: 30s
     mem_limit: 512m
