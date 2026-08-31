@@ -39,14 +39,16 @@ export const viewport: Viewport = {
   themeColor: "#00843d",
   width: "device-width",
   initialScale: 1,
+  maximumScale: 5,
+  viewportFit: "cover",
 };
 
 export default async function RootLayout({ children }: { children: React.ReactNode }) {
   const { htmlLang, dir } = localeMeta[await getLocale()];
 
   return (
-    <html lang={htmlLang} dir={dir} className={`${vazirmatn.variable} h-full antialiased`}>
-      <body className="min-h-full flex flex-col bg-background text-foreground">
+    <html lang={htmlLang} dir={dir} className={`${vazirmatn.variable} h-full antialiased overflow-x-hidden`}>
+      <body className="min-h-full flex flex-col bg-background text-foreground overflow-x-hidden w-full max-w-full">
         <TooltipProvider>
           <Analytics />
           {children}
