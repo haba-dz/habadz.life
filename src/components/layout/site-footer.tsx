@@ -68,38 +68,38 @@ export async function SiteFooter() {
   ];
 
   return (
-    <footer className="mt-20 border-t border-border/80 bg-card/60 backdrop-blur-md pb-24 lg:pb-8">
+    <footer className="mt-16 border-t border-border/80 bg-card/60 backdrop-blur-md pb-28 lg:pb-12">
       {/* Top Emergency Strip */}
-      <div className="border-b border-border/60 bg-muted/40 px-4 py-6">
+      <div className="border-b border-border/60 bg-muted/40 px-3.5 sm:px-4 py-5 sm:py-6">
         <div className="mx-auto max-w-6xl">
-          <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between mb-4">
+          <div className="flex flex-col gap-2.5 sm:flex-row sm:items-center sm:justify-between mb-3.5">
             <div className="flex items-center gap-2">
-              <span className="flex size-8 items-center justify-center rounded-lg bg-priority-critical/10 text-priority-critical">
-                <PhoneCall className="size-4 animate-pulse" />
+              <span className="flex size-7 sm:size-8 items-center justify-center rounded-lg bg-priority-critical/10 text-priority-critical shrink-0">
+                <PhoneCall className="size-3.5 sm:size-4 animate-pulse" />
               </span>
               <div>
-                <p className="text-sm font-black text-foreground">
+                <p className="text-xs sm:text-sm font-black text-foreground">
                   {isFr ? "Numéros d'urgence nationaux gratuits (24h/24 & 7j/7)" : "أرقام الطوارئ الوطنية المجانية (تعمل على مدار الساعة)"}
                 </p>
-                <p className="text-xs text-muted-foreground">
-                  {isFr ? "Appel direct et gratuit depuis n'importe quel opérateur" : "اتصال مباشر ومجاني من كافة الشبكات والهواتف الثابتة والنقالة"}
+                <p className="text-[11px] sm:text-xs text-muted-foreground">
+                  {isFr ? "Appel direct et gratuit depuis tout opérateur" : "اتصال مباشر ومجاني من كافة الشبكات والهواتف"}
                 </p>
               </div>
             </div>
           </div>
 
-          <div className="grid grid-cols-2 gap-2.5 sm:grid-cols-4">
+          <div className="grid grid-cols-2 gap-2 sm:grid-cols-4 sm:gap-2.5">
             {emergencyHotlines.map((hl) => (
               <a
                 key={hl.number}
                 href={`tel:${hl.number}`}
-                className={`flex items-center justify-between rounded-2xl border p-3 transition-all active:scale-95 ${hl.color}`}
+                className={`flex items-center justify-between rounded-xl sm:rounded-2xl border p-2.5 sm:p-3 transition-all active:scale-95 ${hl.color}`}
               >
-                <div>
-                  <p className="text-xs font-bold leading-tight">{hl.name}</p>
-                  <p className="text-[10px] opacity-80">{hl.desc}</p>
+                <div className="min-w-0">
+                  <p className="text-[11px] sm:text-xs font-bold leading-tight truncate">{hl.name}</p>
+                  <p className="text-[9px] sm:text-[10px] opacity-80 truncate">{hl.desc}</p>
                 </div>
-                <span className="text-lg font-black tabular-nums ms-2">{hl.number}</span>
+                <span className="text-base sm:text-lg font-black tabular-nums ms-1.5 shrink-0">{hl.number}</span>
               </a>
             ))}
           </div>
@@ -107,19 +107,19 @@ export async function SiteFooter() {
       </div>
 
       {/* Main Footer Links */}
-      <div className="mx-auto max-w-6xl px-4 pt-12 pb-8">
-        <div className="grid gap-10 md:grid-cols-4 sm:grid-cols-2">
+      <div className="mx-auto max-w-6xl px-4 pt-10 sm:pt-12 pb-6 sm:pb-8">
+        <div className="grid gap-8 sm:gap-10 sm:grid-cols-2 md:grid-cols-4">
           {/* Brand & About */}
-          <div className="space-y-4 md:col-span-2">
-            <Link href="/" className="flex items-center gap-2.5 font-black text-lg group w-fit">
-              <span className="flex size-10 items-center justify-center rounded-xl bg-algeria-green text-white shadow-xs group-hover:scale-105 transition-transform">
-                <HeartHandshake className="size-6" />
+          <div className="space-y-3.5 sm:space-y-4 sm:col-span-2">
+            <Link href="/" className="flex items-center gap-2.5 font-black text-base sm:text-lg group w-fit">
+              <span className="flex size-9 sm:size-10 items-center justify-center rounded-xl bg-algeria-green text-white shadow-xs group-hover:scale-105 transition-transform shrink-0">
+                <HeartHandshake className="size-5 sm:size-6" />
               </span>
               <div>
-                <span className="text-lg font-black tracking-tight text-foreground block">
+                <span className="text-base sm:text-lg font-black tracking-tight text-foreground block leading-tight">
                   {siteConfig.name}
                 </span>
-                <span className="text-xs font-medium text-algeria-green block -mt-0.5">
+                <span className="text-[11px] sm:text-xs font-semibold text-algeria-green block">
                   {isFr ? "Plateforme citoyenne solidaire" : "منصة تضامنية مفتوحة لتنسيق الإغاثة"}
                 </span>
               </div>
@@ -129,28 +129,28 @@ export async function SiteFooter() {
               {siteConfig.description}
             </p>
 
-            <div className="inline-flex items-center gap-2 rounded-full border border-algeria-green/30 bg-algeria-green/10 px-3.5 py-1 text-xs font-bold text-algeria-green">
-              <Flame className="size-3.5 text-amber-500" />
+            <div className="inline-flex items-center gap-2 rounded-full border border-algeria-green/30 bg-algeria-green/10 px-3 py-1 text-[11px] sm:text-xs font-bold text-algeria-green">
+              <Flame className="size-3.5 text-amber-500 shrink-0" />
               <span>{isFr ? "Campagne active : Wilayas du Nord-Est" : "تغطية تضامنية نشطة لولايات الشرق والشمال"}</span>
             </div>
           </div>
 
           {/* Column 1: Solidarity & Volunteering */}
-          <div className="space-y-3">
-            <p className="font-bold text-sm text-foreground flex items-center gap-1.5">
-              <HeartHandshake className="size-4 text-algeria-green" />
+          <div className="space-y-2.5 sm:space-y-3">
+            <p className="font-bold text-xs sm:text-sm text-foreground flex items-center gap-1.5">
+              <HeartHandshake className="size-4 text-algeria-green shrink-0" />
               <span>{isFr ? "Solidarité & Bénévolat" : "سبل المساعدة والتطوع"}</span>
             </p>
-            <ul className="space-y-2">
+            <ul className="space-y-1">
               {solidarityLinks.map((item) => {
                 const Icon = item.icon;
                 return (
                   <li key={item.href}>
                     <Link
                       href={item.href}
-                      className="group flex items-center gap-2 text-xs font-medium text-muted-foreground transition-colors hover:text-foreground hover:translate-x-0.5"
+                      className="group flex items-center gap-2 py-1.5 text-xs font-medium text-muted-foreground transition-colors hover:text-foreground active:text-algeria-green"
                     >
-                      <Icon className="size-3.5 text-muted-foreground/60 transition-colors group-hover:text-algeria-green" />
+                      <Icon className="size-3.5 text-muted-foreground/60 transition-colors group-hover:text-algeria-green shrink-0" />
                       <span>{item.label}</span>
                     </Link>
                   </li>
@@ -160,21 +160,21 @@ export async function SiteFooter() {
           </div>
 
           {/* Column 2: Information & Tracking */}
-          <div className="space-y-3">
-            <p className="font-bold text-sm text-foreground flex items-center gap-1.5">
-              <ShieldCheck className="size-4 text-algeria-green" />
+          <div className="space-y-2.5 sm:space-y-3">
+            <p className="font-bold text-xs sm:text-sm text-foreground flex items-center gap-1.5">
+              <ShieldCheck className="size-4 text-algeria-green shrink-0" />
               <span>{isFr ? "Suivi & Transparence" : "المتابعة والبيانات"}</span>
             </p>
-            <ul className="space-y-2">
+            <ul className="space-y-1">
               {infoLinks.map((item) => {
                 const Icon = item.icon;
                 return (
                   <li key={item.href}>
                     <Link
                       href={item.href}
-                      className="group flex items-center gap-2 text-xs font-medium text-muted-foreground transition-colors hover:text-foreground hover:translate-x-0.5"
+                      className="group flex items-center gap-2 py-1.5 text-xs font-medium text-muted-foreground transition-colors hover:text-foreground active:text-algeria-green"
                     >
-                      <Icon className="size-3.5 text-muted-foreground/60 transition-colors group-hover:text-algeria-green" />
+                      <Icon className="size-3.5 text-muted-foreground/60 transition-colors group-hover:text-algeria-green shrink-0" />
                       <span>{item.label}</span>
                     </Link>
                   </li>
@@ -185,10 +185,10 @@ export async function SiteFooter() {
         </div>
 
         {/* Bottom Bar: Legal & Attribution */}
-        <div className="mt-12 border-t border-border/70 pt-6 flex flex-col gap-4 md:flex-row md:items-center md:justify-between text-xs text-muted-foreground">
+        <div className="mt-8 sm:mt-12 border-t border-border/70 pt-5 sm:pt-6 flex flex-col gap-3.5 md:flex-row md:items-center md:justify-between text-[11px] sm:text-xs text-muted-foreground">
           <div className="space-y-1">
-            <p>{siteConfig.legalNotice}</p>
-            <p className="text-[11px] text-muted-foreground/80">
+            <p className="leading-relaxed">{siteConfig.legalNotice}</p>
+            <p className="text-[10px] sm:text-[11px] text-muted-foreground/80 leading-relaxed">
               {t.footer.dataCreditBefore}{" "}
               <a
                 href="https://sanad-ca736.web.app"
@@ -203,10 +203,10 @@ export async function SiteFooter() {
             </p>
           </div>
 
-          <div className="flex items-center gap-4 shrink-0">
+          <div className="flex items-center gap-4 shrink-0 pt-1 md:pt-0">
             <Link
               href="/admin/login"
-              className="inline-flex items-center gap-1.5 rounded-xl border border-border bg-background px-3 py-1.5 font-bold text-foreground transition-all hover:bg-muted active:scale-95 shadow-2xs"
+              className="inline-flex items-center gap-1.5 rounded-xl border border-border bg-background px-3 py-1.5 font-bold text-foreground transition-all hover:bg-muted active:scale-95 shadow-2xs text-xs"
             >
               <Lock className="size-3 text-algeria-green" />
               <span>{t.footer.staffLogin}</span>

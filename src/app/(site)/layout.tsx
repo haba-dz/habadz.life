@@ -16,7 +16,7 @@ export default async function SiteLayout({ children }: { children: React.ReactNo
     <div className="flex min-h-screen flex-col">
       <NewsTicker />
       <SiteHeader />
-      <main className="flex-1 pb-16 md:pb-0">{children}</main>
+      <main className="flex-1">{children}</main>
       <SiteFooter />
       <MobileBottomNav locale={locale} />
       <EmergencyFab locale={locale} />
