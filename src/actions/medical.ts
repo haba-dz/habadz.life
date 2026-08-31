@@ -63,12 +63,27 @@ export async function updateMedicalVolunteerStatus(id: string, status: MedicalVe
   const {
     data: { user },
   } = await supabase.auth.getUser();
+  if (!user) return { success: false, error: "يجب تسجيل الدخول." };
 
-  const { error } = await supabase.from("medical_volunteers").update({ status }).eq("id", id);
+  const { data: me } = await supabase.from("profiles").select("role").eq("id", user.id).maybeSingle();
+  if (!me || (me.role !== "admin" && me.role !== "coordinator")) {
+    return { success: false, error: "ليست لديك صلاحية تغيير حالة التحقق (الأدمن فقط)." };
+  }
+
+  const { error } =
+    status === "pending"
+      ? await supabase
+          .from("medical_volunteers")
+          .update({ status, verified_by: null, verified_at: null })
+          .eq("id", id)
+      : await supabase
+          .from("medical_volunteers")
+          .update({ status, verified_by: user.id, verified_at: new Date().toISOString() })
+          .eq("id", id);
   if (error) return { success: false, error: "ليست لديك صلاحية تغيير حالة التحقق (الأدمن فقط)." };
 
   await logActivity(supabase, {
-    actorId: user?.id,
+    actorId: user.id,
     action: `غيّر حالة تحقق متطوع طبي إلى ${status}`,
     entityType: "medical_volunteer",
     entityId: id,

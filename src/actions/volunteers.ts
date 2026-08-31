@@ -68,11 +68,28 @@ export async function updateFieldVolunteerStatus(
   const {
     data: { user },
   } = await supabase.auth.getUser();
+  if (!user) {
+    return { success: false, error: "يجب تسجيل الدخول." };
+  }
 
-  const { error } = await supabase
-    .from("field_volunteers")
-    .update({ status })
-    .eq("id", id);
+  const { data: me } = await supabase.from("profiles").select("role").eq("id", user.id).maybeSingle();
+  if (!me || (me.role !== "admin" && me.role !== "coordinator")) {
+    return {
+      success: false,
+      error: "ليست لديك صلاحية تغيير حالة المتطوع (الأدمن فقط).",
+    };
+  }
+
+  const { error } =
+    status === "pending"
+      ? await supabase
+          .from("field_volunteers")
+          .update({ status, verified_by: null, verified_at: null })
+          .eq("id", id)
+      : await supabase
+          .from("field_volunteers")
+          .update({ status, verified_by: user.id, verified_at: new Date().toISOString() })
+          .eq("id", id);
 
   if (error) {
     return {
@@ -82,7 +99,7 @@ export async function updateFieldVolunteerStatus(
   }
 
   await logActivity(supabase, {
-    actorId: user?.id,
+    actorId: user.id,
     action: `غيّر حالة متطوع ميداني إلى ${status}`,
     entityType: "field_volunteer",
     entityId: id,
