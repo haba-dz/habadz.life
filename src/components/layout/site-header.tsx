@@ -3,6 +3,7 @@ import { HeartHandshake, Gift, MapPin, TriangleAlert, Users, Newspaper } from "l
 import { siteConfig } from "@/config/site";
 import { LinkButton } from "@/components/shared/link-button";
 import { LanguageSwitcher } from "@/components/layout/language-switcher";
+import { MobileNav } from "@/components/layout/mobile-nav";
 import { getDictionary } from "@/i18n/dictionaries";
 import { getLocale } from "@/i18n/server";
 
@@ -20,17 +21,23 @@ export async function SiteHeader() {
   ];
 
   return (
-    <header className="sticky top-0 z-40 border-b border-border bg-background/95 backdrop-blur-md supports-backdrop-filter:bg-background/80 shadow-2xs">
-      <div className="mx-auto flex h-14 sm:h-16 max-w-6xl items-center justify-between gap-3 px-4">
-        {/* Brand and Logo (Clean and spacious on mobile & desktop) */}
-        <Link href="/" className="flex items-center gap-2 font-black shrink-0 group">
-          <span className="flex size-8 sm:size-9 items-center justify-center rounded-xl bg-algeria-green text-white shadow-xs group-hover:scale-105 transition-transform shrink-0">
-            <HeartHandshake className="size-4 sm:size-5" />
-          </span>
-          <span className="font-black text-base sm:text-lg whitespace-nowrap tracking-tight text-foreground">
-            {siteConfig.shortName}
-          </span>
-        </Link>
+    <header className="sticky top-0 z-40 w-full border-b border-border bg-background/95 backdrop-blur-md supports-backdrop-filter:bg-background/85 shadow-2xs">
+      <div className="mx-auto flex h-14 sm:h-16 max-w-6xl items-center justify-between gap-2.5 px-3 sm:px-4">
+        {/* Start: List Button (Mobile Drawer) + Brand and Logo */}
+        <div className="flex items-center gap-1.5 sm:gap-2.5 shrink-0">
+          <div className="lg:hidden">
+            <MobileNav locale={locale} />
+          </div>
+
+          <Link href="/" className="flex items-center gap-2 font-black shrink-0 group">
+            <span className="flex size-8 sm:size-9 items-center justify-center rounded-xl bg-algeria-green text-white shadow-xs group-hover:scale-105 transition-transform shrink-0">
+              <HeartHandshake className="size-4 sm:size-5" />
+            </span>
+            <span className="font-black text-base sm:text-lg whitespace-nowrap tracking-tight text-foreground">
+              {siteConfig.shortName}
+            </span>
+          </Link>
+        </div>
 
         {/* Desktop Navigation Links */}
         <nav className="hidden lg:flex items-center gap-1" aria-label={isFr ? "Navigation principale" : "التنقل الرئيسي"}>
@@ -45,8 +52,8 @@ export async function SiteHeader() {
           ))}
         </nav>
 
-        {/* Right Side: Language Switcher (Always visible) + Desktop Action Buttons */}
-        <div className="flex items-center gap-2 shrink-0">
+        {/* End: Language Switcher + Desktop Action Buttons */}
+        <div className="flex items-center gap-1.5 sm:gap-2 shrink-0">
           <LanguageSwitcher current={locale} label={t.language.change} />
 
           <LinkButton

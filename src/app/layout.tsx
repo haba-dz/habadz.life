@@ -47,8 +47,8 @@ export default async function RootLayout({ children }: { children: React.ReactNo
   const { htmlLang, dir } = localeMeta[await getLocale()];
 
   return (
-    <html lang={htmlLang} dir={dir} className={`${vazirmatn.variable} h-full antialiased overflow-x-hidden`}>
-      <body className="min-h-full flex flex-col bg-background text-foreground overflow-x-hidden w-full max-w-full">
+    <html lang={htmlLang} dir={dir} className={`${vazirmatn.variable} h-full antialiased`}>
+      <body className="min-h-full flex flex-col bg-background text-foreground overflow-x-clip w-full max-w-full">
         <TooltipProvider>
           <Analytics />
           {children}
