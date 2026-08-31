@@ -1,8 +1,7 @@
 import type { Metadata, Viewport } from "next";
 import { Vazirmatn } from "next/font/google";
-import { Analytics } from "@vercel/analytics/next"
+import { Analytics } from "@vercel/analytics/next";
 import "./globals.css";
-import { TooltipProvider } from "@/components/ui/tooltip";
 import { Toaster } from "@/components/ui/sonner";
 import { siteConfig } from "@/config/site";
 import { getLocale } from "@/i18n/server";
@@ -49,11 +48,9 @@ export default async function RootLayout({ children }: { children: React.ReactNo
   return (
     <html lang={htmlLang} dir={dir} className={`${vazirmatn.variable} h-full antialiased`}>
       <body className="min-h-full flex flex-col bg-background text-foreground overflow-x-clip w-full max-w-full">
-        <TooltipProvider>
-          <Analytics />
-          {children}
-          <Toaster position="top-center" richColors dir={dir} />
-        </TooltipProvider>
+        <Analytics />
+        {children}
+        <Toaster position="top-center" richColors dir={dir} />
       </body>
     </html>
   );
