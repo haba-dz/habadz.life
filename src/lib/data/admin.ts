@@ -124,12 +124,12 @@ export async function getAllCategories(): Promise<CategoryRow[]> {
   }
 
   return [
-    { id: "cat-1", slug: "food_baskets", name_ar: "طرود غذائية", default_unit: "basket" as any, sort_order: 1, created_at: new Date().toISOString() },
-    { id: "cat-2", slug: "water", name_ar: "مياه شرب", default_unit: "box" as any, sort_order: 2, created_at: new Date().toISOString() },
-    { id: "cat-3", slug: "blankets_mattresses", name_ar: "أفرشة وأغطية", default_unit: "piece" as any, sort_order: 3, created_at: new Date().toISOString() },
-    { id: "cat-4", slug: "baby_supplies", name_ar: "مستلزمات أطفال", default_unit: "pack" as any, sort_order: 4, created_at: new Date().toISOString() },
-    { id: "cat-5", slug: "medicines_first_aid", name_ar: "أدوية ومستلزمات طبية", default_unit: "piece" as any, sort_order: 5, created_at: new Date().toISOString() },
-    { id: "cat-6", slug: "cooking_supplies", name_ar: "معدات طبخ", default_unit: "piece" as any, sort_order: 6, created_at: new Date().toISOString() },
+    { id: "cat-1", slug: "food_baskets", name_ar: "طرود غذائية", default_unit: "carton", sort_order: 1, created_at: new Date().toISOString() },
+    { id: "cat-2", slug: "water", name_ar: "مياه شرب", default_unit: "box", sort_order: 2, created_at: new Date().toISOString() },
+    { id: "cat-3", slug: "blankets_mattresses", name_ar: "أفرشة وأغطية", default_unit: "piece", sort_order: 3, created_at: new Date().toISOString() },
+    { id: "cat-4", slug: "baby_supplies", name_ar: "مستلزمات أطفال", default_unit: "bundle", sort_order: 4, created_at: new Date().toISOString() },
+    { id: "cat-5", slug: "medicines_first_aid", name_ar: "أدوية ومستلزمات طبية", default_unit: "piece", sort_order: 5, created_at: new Date().toISOString() },
+    { id: "cat-6", slug: "cooking_supplies", name_ar: "معدات طبخ", default_unit: "piece", sort_order: 6, created_at: new Date().toISOString() },
   ];
 }
 
@@ -303,7 +303,7 @@ export async function getAllCollectionPoints(): Promise<CollectionPointRow[]> {
   ];
 }
 
-export async function getTopCriticalNeeds(limit = 6): Promise<any[]> {
+export async function getTopCriticalNeeds(limit = 6): Promise<unknown[]> {
   try {
     const supabase = await createClient();
     const { data } = await supabase

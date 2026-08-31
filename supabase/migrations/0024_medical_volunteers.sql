@@ -5,6 +5,39 @@
 --
 -- Uses ALTER/CREATE OR REPLACE throughout (not CREATE TABLE) because the table
 -- and the medical_verification_status enum already exist live.
+--
+-- Guarded baseline below: on a FRESH database (self-hosted install) the live
+-- objects don't exist, so create them first exactly as they stand in
+-- production (shape mirrored from src/types/database.ts). No-ops on cloud.
+
+do $$ begin
+  create type public.medical_verification_status as enum ('pending', 'verified', 'rejected');
+exception when duplicate_object then null;
+end $$;
+
+create table if not exists public.medical_volunteers (
+  id uuid primary key default gen_random_uuid(),
+  full_name text not null,
+  specialty text not null,
+  phone text not null,
+  email text,
+  license_number text,
+  current_workplace text,
+  wilaya_code text not null,
+  commune_id text not null,
+  can_teleconsult boolean not null default false,
+  can_field_intervene boolean not null default false,
+  has_emergency_kit boolean not null default false,
+  notes text,
+  status public.medical_verification_status not null default 'pending',
+  show_phone_publicly boolean not null default false,
+  verified_by uuid references public.profiles(id),
+  verified_at timestamptz,
+  created_at timestamptz not null default now(),
+  updated_at timestamptz not null default now()
+);
+
+alter table public.medical_volunteers enable row level security;
 
 alter table public.medical_volunteers
   add column if not exists show_phone_publicly boolean not null default false,

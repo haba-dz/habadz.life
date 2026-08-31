@@ -6,7 +6,9 @@
 insert into public.affected_areas
   (campaign_id, wilaya, wilaya_fr, daira, daira_fr, commune, commune_fr,
    spot, spot_fr, status_raw, severity, source)
-select c.id, v.* , 'قائمة موثقة من فريق التنسيق — أوت 2026'
+select c.id, v.wilaya, v.wilaya_fr, v.daira, v.daira_fr, v.commune, v.commune_fr,
+       v.spot, v.spot_fr, v.status_raw, v.severity::affected_severity,
+       'قائمة موثقة من فريق التنسيق — أوت 2026'
 from public.campaigns c,
 (values
   ('جيجل','Jijel','الشقفة','Chekfa','برج الطهر','Bordj T''har','تغراست','Taghrast','Ravagé / dégâts importants','ravaged'),

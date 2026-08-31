@@ -1,0 +1,15 @@
+.git
+node_modules
+.next
+out
+build
+coverage
+.env*
+supabase
+deploy
+scripts
+docs
+*.md
+.github
+.claude
+.DS_Store

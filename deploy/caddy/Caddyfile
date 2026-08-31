@@ -1,0 +1,15 @@
+{$APP_HOST} {
+	encode zstd gzip
+	reverse_proxy app:3000
+}
+
+{$SUPABASE_HOST} {
+	reverse_proxy kong:8000
+}
+
+{$STUDIO_HOST} {
+	basic_auth {
+		{$STUDIO_USER} {$STUDIO_PASSWORD_HASH}
+	}
+	reverse_proxy studio:3000
+}

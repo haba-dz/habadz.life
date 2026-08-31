@@ -36,7 +36,8 @@ export async function POST(req: Request) {
     searchParams.get("secret") ||
     searchParams.get("key");
 
-  if (secret && token !== secret) {
+  // بلا سرّ مضبوط نرفض الطلب — قبول أي حمولة يعني حقن أخبار مزيّفة في الموقع.
+  if (!secret || token !== secret) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
@@ -73,7 +74,7 @@ export async function POST(req: Request) {
     const postUrl = url || "https://www.facebook.com/DGPC0018";
 
     // Deduplication check: check by exact title or url
-    let query = supabase.from("official_updates").select("id, title, url").eq("title", postTitle);
+    const query = supabase.from("official_updates").select("id, title, url").eq("title", postTitle);
     const { data: existing } = await query.maybeSingle();
 
     if (existing) {

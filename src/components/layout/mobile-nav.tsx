@@ -80,7 +80,7 @@ export function MobileNav({ locale, isOpen, onOpenChange, trigger }: MobileNavPr
     <Sheet open={open} onOpenChange={setOpen}>
       {trigger !== null &&
         (trigger ? (
-          <SheetTrigger render={trigger as any} nativeButton={true} />
+          <SheetTrigger render={trigger as React.ReactElement} nativeButton={true} />
         ) : (
           <SheetTrigger
             nativeButton={true}

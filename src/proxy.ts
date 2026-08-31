@@ -5,7 +5,7 @@ import { LOCALE_COOKIE, isAvailableLocale } from "@/i18n/locales";
 /** سنة كاملة — اختيار اللغة تفضيل شخصي، لا داعي لتكراره كل زيارة. */
 const LOCALE_COOKIE_MAX_AGE = 60 * 60 * 24 * 365;
 
-export async function middleware(request: NextRequest) {
+export async function proxy(request: NextRequest) {
   // `?lang=fr` يجعل الرابط قابلًا للمشاركة بلغة محددة: نثبّت الاختيار في كوكي
   // ثم نعيد التوجيه إلى الرابط نفسه بلا المعامل، حتى يبقى العنوان نظيفًا.
   const requested = request.nextUrl.searchParams.get("lang");

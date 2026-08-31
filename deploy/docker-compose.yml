@@ -1,0 +1,278 @@
+# Self-hosted stack for najdat-jijel on a single small VPS (~2GB RAM).
+# Trimmed Supabase (no realtime/analytics/vector/imgproxy/functions/pooler — unused by the app).
+# Image pins taken from supabase/docker master on 2026-08-31 — bump deliberately, never :latest.
+#   supabase/postgres:17.6.1.136 · supabase/gotrue:v2.189.0 · postgrest/postgrest:v14.12
+#   supabase/storage-api:v1.60.4 · supabase/postgres-meta:v0.96.6 · supabase/studio:2026.08.03-sha-022b374
+name: najdat
+
+services:
+  app:
+    image: ghcr.io/haba-dz/habadz.life:${APP_TAG:-latest}
+    restart: unless-stopped
+    stop_grace_period: 30s
+    mem_limit: 512m
+    depends_on:
+      kong:
+        condition: service_started
+    environment:
+      SUPABASE_SERVICE_ROLE_KEY: ${SERVICE_ROLE_KEY}
+      CRON_SECRET: ${CRON_SECRET}
+      WEBHOOK_SECRET: ${WEBHOOK_SECRET}
+      # NEXT_PUBLIC_* are baked into the client bundle at image build time;
+      # these copies cover server-side reads (SSR/actions) only.
+      NEXT_PUBLIC_SUPABASE_URL: https://${SUPABASE_HOST}
+      NEXT_PUBLIC_SUPABASE_ANON_KEY: ${ANON_KEY}
+      NEXT_PUBLIC_SITE_URL: https://${APP_HOST}
+
+  caddy:
+    image: caddy:2.10.2-alpine
+    restart: unless-stopped
+    mem_limit: 128m
+    ports:
+      - "80:80"
+      - "443:443"
+      - "443:443/udp"
+    environment:
+      APP_HOST: ${APP_HOST}
+      SUPABASE_HOST: ${SUPABASE_HOST}
+      STUDIO_HOST: ${STUDIO_HOST}
+      STUDIO_USER: ${STUDIO_USER}
+      STUDIO_PASSWORD_HASH: ${STUDIO_PASSWORD_HASH}
+    volumes:
+      - ./caddy/Caddyfile:/etc/caddy/Caddyfile:ro
+      - caddy-data:/data
+      - caddy-config:/config
+    networks:
+      default:
+        aliases:
+          # The app container resolves the public Supabase hostname to Caddy directly,
+          # so server-side calls short-circuit inside Docker with valid TLS/SNI.
+          - ${SUPABASE_HOST}
+
+  db:
+    image: supabase/postgres:17.6.1.136
+    restart: unless-stopped
+    mem_limit: 640m
+    command:
+      - postgres
+      - -c
+      - config_file=/etc/postgresql/postgresql.conf
+      - -c
+      - shared_buffers=128MB
+      - -c
+      - effective_cache_size=512MB
+      - -c
+      - max_connections=60
+      - -c
+      - work_mem=4MB
+      - -c
+      - log_min_messages=fatal
+    environment:
+      POSTGRES_HOST: /var/run/postgresql
+      PGPORT: 5432
+      POSTGRES_PORT: 5432
+      PGPASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      PGDATABASE: postgres
+      POSTGRES_DB: postgres
+      JWT_SECRET: ${JWT_SECRET}
+      JWT_EXP: 3600
+    volumes:
+      # Init scripts run ONLY on first boot of an empty db-data volume.
+      - ./db/roles.sql:/docker-entrypoint-initdb.d/init-scripts/99-roles.sql:ro
+      - ./db/jwt.sql:/docker-entrypoint-initdb.d/init-scripts/99-jwt.sql:ro
+      - db-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD", "pg_isready", "-U", "postgres", "-h", "localhost"]
+      interval: 5s
+      timeout: 5s
+      retries: 30
+      # First boot runs the image's full init/migration set — takes a while.
+      start_period: 40s
+
+  kong:
+    image: kong:2.8.1
+    restart: unless-stopped
+    mem_limit: 256m
+    # Renders env vars into the declarative config at start — kong.yml must not
+    # contain any other `$` or backticks.
+    entrypoint: bash -c 'eval "echo \"$$(cat ~/temp.yml)\"" > ~/kong.yml && /docker-entrypoint.sh kong docker-start'
+    environment:
+      KONG_DATABASE: "off"
+      KONG_DECLARATIVE_CONFIG: /home/kong/kong.yml
+      KONG_DNS_ORDER: LAST,A,CNAME
+      KONG_PLUGINS: request-transformer,cors,key-auth,acl
+      KONG_NGINX_WORKER_PROCESSES: "1"
+      KONG_NGINX_PROXY_PROXY_BUFFER_SIZE: 160k
+      KONG_NGINX_PROXY_PROXY_BUFFERS: 64 160k
+      SUPABASE_ANON_KEY: ${ANON_KEY}
+      SUPABASE_SERVICE_KEY: ${SERVICE_ROLE_KEY}
+    volumes:
+      - ./kong/kong.yml:/home/kong/temp.yml:ro
+
+  auth:
+    image: supabase/gotrue:v2.189.0
+    restart: unless-stopped
+    mem_limit: 128m
+    depends_on:
+      db:
+        condition: service_healthy
+    environment:
+      GOTRUE_API_HOST: 0.0.0.0
+      GOTRUE_API_PORT: 9999
+      API_EXTERNAL_URL: https://${SUPABASE_HOST}
+      GOTRUE_DB_DRIVER: postgres
+      GOTRUE_DB_DATABASE_URL: postgres://supabase_auth_admin:${POSTGRES_PASSWORD}@db:5432/postgres
+      GOTRUE_SITE_URL: https://${APP_HOST}
+      GOTRUE_URI_ALLOW_LIST: https://${APP_HOST}/*
+      # Staff-only platform: public forms are anonymous RLS inserts, never signups.
+      # create-admin.mjs uses the admin API, which bypasses this flag.
+      GOTRUE_DISABLE_SIGNUP: "true"
+      GOTRUE_JWT_ADMIN_ROLES: service_role
+      GOTRUE_JWT_AUD: authenticated
+      GOTRUE_JWT_DEFAULT_GROUP_NAME: authenticated
+      GOTRUE_JWT_EXP: 3600
+      GOTRUE_JWT_SECRET: ${JWT_SECRET}
+      GOTRUE_JWT_ISSUER: https://${SUPABASE_HOST}
+      GOTRUE_EXTERNAL_EMAIL_ENABLED: "true"
+      GOTRUE_EXTERNAL_PHONE_ENABLED: "false"
+      # No SMTP on this stack; accounts are created confirmed via the admin API.
+      GOTRUE_MAILER_AUTOCONFIRM: "true"
+    healthcheck:
+      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:9999/health"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  rest:
+    image: postgrest/postgrest:v14.12
+    restart: unless-stopped
+    mem_limit: 192m
+    depends_on:
+      db:
+        condition: service_healthy
+    environment:
+      PGRST_DB_URI: postgres://authenticator:${POSTGRES_PASSWORD}@db:5432/postgres
+      PGRST_DB_SCHEMAS: public,storage
+      PGRST_DB_ANON_ROLE: anon
+      PGRST_DB_MAX_ROWS: 1000
+      PGRST_JWT_SECRET: ${JWT_SECRET}
+      PGRST_DB_USE_LEGACY_GUCS: "false"
+      PGRST_APP_SETTINGS_JWT_SECRET: ${JWT_SECRET}
+      PGRST_APP_SETTINGS_JWT_EXP: 3600
+      PGRST_DB_POOL: 5
+      # `postgrest --ready` probes the admin server — without it the healthcheck fails.
+      PGRST_ADMIN_SERVER_PORT: 3001
+      PGRST_ADMIN_SERVER_HOST: localhost
+    healthcheck:
+      test: ["CMD", "postgrest", "--ready"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  storage:
+    image: supabase/storage-api:v1.60.4
+    restart: unless-stopped
+    mem_limit: 256m
+    depends_on:
+      db:
+        condition: service_healthy
+      rest:
+        condition: service_started
+    environment:
+      ANON_KEY: ${ANON_KEY}
+      SERVICE_KEY: ${SERVICE_ROLE_KEY}
+      AUTH_JWT_SECRET: ${JWT_SECRET}
+      DATABASE_URL: postgres://supabase_storage_admin:${POSTGRES_PASSWORD}@db:5432/postgres
+      POSTGREST_URL: http://rest:3000
+      STORAGE_PUBLIC_URL: https://${SUPABASE_HOST}
+      REQUEST_ALLOW_X_FORWARDED_PATH: "true"
+      FILE_SIZE_LIMIT: "52428800"
+      STORAGE_BACKEND: file
+      FILE_STORAGE_BACKEND_PATH: /var/lib/storage
+      TENANT_ID: stub
+      REGION: stub
+      GLOBAL_S3_BUCKET: stub
+      ENABLE_IMAGE_TRANSFORMATION: "false"
+    volumes:
+      - storage-data:/var/lib/storage
+    healthcheck:
+      # 127.0.0.1, not localhost: the image's busybox wget resolves localhost to
+      # ::1 first and storage-api listens on IPv4 only.
+      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://127.0.0.1:5000/status"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+      start_period: 10s
+
+  meta:
+    image: supabase/postgres-meta:v0.96.6
+    restart: unless-stopped
+    mem_limit: 128m
+    depends_on:
+      db:
+        condition: service_healthy
+    environment:
+      PG_META_PORT: 8080
+      PG_META_DB_HOST: db
+      PG_META_DB_PORT: 5432
+      PG_META_DB_NAME: postgres
+      PG_META_DB_USER: postgres
+      PG_META_DB_PASSWORD: ${POSTGRES_PASSWORD}
+      CRYPTO_KEY: ${PG_META_CRYPTO_KEY}
+
+  studio:
+    image: supabase/studio:2026.08.03-sha-022b374
+    restart: unless-stopped
+    mem_limit: 320m
+    depends_on:
+      meta:
+        condition: service_started
+    environment:
+      HOSTNAME: 0.0.0.0
+      STUDIO_PG_META_URL: http://meta:8080
+      POSTGRES_HOST: db
+      POSTGRES_PORT: 5432
+      POSTGRES_DB: postgres
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_USER_READ_WRITE: postgres
+      PG_META_CRYPTO_KEY: ${PG_META_CRYPTO_KEY}
+      PGRST_DB_SCHEMAS: public,storage
+      SUPABASE_URL: http://kong:8000
+      SUPABASE_PUBLIC_URL: https://${SUPABASE_HOST}
+      SUPABASE_ANON_KEY: ${ANON_KEY}
+      SUPABASE_SERVICE_KEY: ${SERVICE_ROLE_KEY}
+      AUTH_JWT_SECRET: ${JWT_SECRET}
+      DEFAULT_ORGANIZATION_NAME: Najdat Jijel
+      DEFAULT_PROJECT_NAME: najdat
+
+  # One-shot migration runner: `docker compose --profile tools run --rm migrate`
+  # postgres:17 client matches the server major (and can dump the cloud project too).
+  migrate:
+    profiles: ["tools"]
+    image: postgres:17-alpine
+    depends_on:
+      db:
+        condition: service_healthy
+      auth:
+        condition: service_healthy
+      # App migrations 0006/0027 write storage.buckets/objects — storage-api must
+      # have booted (and run its own schema migrations) first.
+      storage:
+        condition: service_healthy
+    environment:
+      PGHOST: db
+      PGUSER: supabase_admin
+      PGPASSWORD: ${POSTGRES_PASSWORD}
+      PGDATABASE: postgres
+    volumes:
+      - ../supabase/migrations:/migrations:ro
+      - ../supabase:/seeds:ro
+      - ./migrate/run-migrations.sh:/run-migrations.sh:ro
+    entrypoint: ["sh", "/run-migrations.sh"]
+
+volumes:
+  db-data:
+  storage-data:
+  caddy-data:
+  caddy-config:

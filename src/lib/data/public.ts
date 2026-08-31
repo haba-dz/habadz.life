@@ -228,7 +228,7 @@ export async function getPostBySlug(slug: string) {
 export async function getPublicMedicalVolunteers() {
   try {
     const supabase = await createClient();
-    const { data } = await (supabase as any).rpc("get_public_medical_volunteers");
+    const { data } = await supabase.rpc("get_public_medical_volunteers");
     return data ?? [];
   } catch {
     return [];
@@ -238,7 +238,9 @@ export async function getPublicMedicalVolunteers() {
 export async function getPublicFieldVolunteers() {
   try {
     const supabase = await createClient();
-    const { data } = await (supabase as any).rpc("get_public_field_volunteers");
+    // الدالة غير موجودة في الأنواع المولَّدة بعد (أُنشئت يدويًا في الإنتاج) — جسر نوعي مؤقت.
+    const rpc = supabase.rpc as unknown as (fn: string) => PromiseLike<{ data: unknown[] | null }>;
+    const { data } = await rpc("get_public_field_volunteers");
     return data ?? [];
   } catch {
     return [];

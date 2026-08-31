@@ -6,7 +6,8 @@ const staffRoles = ["admin", "coordinator", "volunteer"];
 
 function isAuthorizedByToken(req: Request): boolean {
   const cronSecret = process.env.CRON_SECRET || process.env.WEBHOOK_SECRET;
-  if (!cronSecret) return true;
+  // بلا سرّ مضبوط نرفض الطلب — ترك المزامنة مفتوحة للعموم يسمح باستنزاف المصادر الخارجية.
+  if (!cronSecret) return false;
 
   const { searchParams } = new URL(req.url);
   const token =
