@@ -26,17 +26,17 @@ export function MobileBottomNav({ locale }: { locale: AvailableLocale }) {
       active: pathname === "/",
     },
     {
-      href: "/help",
-      label: isFr ? "Besoin d'aide" : "طلب إغاثة",
-      icon: TriangleAlert,
-      active: pathname === "/help",
-      tone: "text-priority-critical",
-    },
-    {
       href: "/donate",
       label: isFr ? "Faire un don" : "تقديم مساعدة",
       icon: Gift,
       active: pathname === "/donate",
+      tone: "text-algeria-green",
+    },
+    {
+      href: "/help",
+      label: isFr ? "Besoin d'aide" : "طلب إغاثة",
+      icon: TriangleAlert,
+      active: pathname === "/help",
       isCta: true,
     },
     {
@@ -66,16 +66,16 @@ export function MobileBottomNav({ locale }: { locale: AvailableLocale }) {
                 >
                   <div
                     className={cn(
-                      "flex size-12 items-center justify-center rounded-full bg-algeria-green text-white shadow-lg shadow-algeria-green/25 transition-transform duration-200 active:scale-95 group-hover:scale-105",
-                      item.active && "scale-105 shadow-algeria-green/40"
+                      "flex size-12 items-center justify-center rounded-full bg-priority-critical text-white shadow-lg shadow-priority-critical/30 transition-transform duration-200 active:scale-95 group-hover:scale-105",
+                      item.active && "scale-105 shadow-priority-critical/50 ring-2 ring-priority-critical/30"
                     )}
                   >
-                    <Icon className="size-6 shrink-0" />
+                    <Icon className="size-6 shrink-0 animate-pulse" />
                   </div>
                   <span
                     className={cn(
-                      "mt-1 text-[10px] font-bold truncate leading-tight transition-colors",
-                      item.active ? "text-algeria-green font-extrabold" : "text-algeria-green"
+                      "mt-1 text-[10px] font-extrabold truncate leading-tight transition-colors",
+                      item.active ? "text-priority-critical font-black" : "text-priority-critical"
                     )}
                   >
                     {item.label}
@@ -95,12 +95,12 @@ export function MobileBottomNav({ locale }: { locale: AvailableLocale }) {
                     : "text-muted-foreground hover:text-foreground"
                 )}
               >
-                <Icon className={cn("size-5 transition-transform", item.active && "scale-110", !item.active && item.tone ? "text-priority-critical/70" : "")} />
+                <Icon className={cn("size-5 transition-transform", item.active && "scale-110")} />
                 <span className="mt-1 text-[10px] font-semibold leading-none truncate">
                   {item.label}
                 </span>
                 {item.active && (
-                  <span className={cn("mt-0.5 size-1 rounded-full", item.tone ? "bg-priority-critical" : "bg-algeria-green")} />
+                  <span className={cn("mt-0.5 size-1 rounded-full", item.tone === "text-algeria-green" ? "bg-algeria-green" : "bg-primary")} />
                 )}
               </Link>
             );

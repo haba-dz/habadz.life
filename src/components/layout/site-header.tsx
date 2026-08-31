@@ -52,28 +52,27 @@ export async function SiteHeader() {
           ))}
         </nav>
 
-        {/* End: Language Switcher + Actions (Need Help & Donate) */}
+        {/* End: Language Switcher + Actions (Need Help Main & Donate Side) */}
         <div className="flex items-center gap-1.5 sm:gap-2 shrink-0">
           <LanguageSwitcher current={locale} label={t.language.change} />
 
           <LinkButton
-            href="/help"
+            href="/donate"
             size="sm"
             variant="outline"
-            className="hidden sm:inline-flex border-priority-critical/40 text-priority-critical hover:bg-priority-critical/10 font-bold rounded-xl h-9 whitespace-nowrap"
+            className="hidden sm:inline-flex border-algeria-green/40 text-algeria-green hover:bg-algeria-green/10 font-bold rounded-xl h-9 whitespace-nowrap"
           >
-            <TriangleAlert className="size-3.5" />
-            <span>{isFr ? "Besoin d'aide" : "أحتاج مساعدة"}</span>
+            <Gift className="size-3.5" />
+            <span>{t.cta.haveAid}</span>
           </LinkButton>
 
           <LinkButton
-            href="/donate"
+            href="/help"
             size="sm"
-            className="bg-algeria-green hover:bg-algeria-green/90 text-white font-bold rounded-xl h-9 shadow-xs whitespace-nowrap text-xs sm:text-sm"
+            className="bg-priority-critical hover:bg-priority-critical/90 text-white font-extrabold rounded-xl h-9 shadow-xs whitespace-nowrap text-xs sm:text-sm"
           >
-            <Gift className="size-3.5" />
-            <span className="hidden md:inline">{t.cta.haveAid}</span>
-            <span className="md:hidden">{isFr ? "Dons" : "تقديم مساعدة"}</span>
+            <TriangleAlert className="size-3.5 animate-pulse" />
+            <span>{isFr ? "Besoin d'aide" : "أحتاج مساعدة"}</span>
           </LinkButton>
         </div>
       </div>
