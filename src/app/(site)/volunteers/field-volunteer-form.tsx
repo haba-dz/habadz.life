@@ -127,22 +127,22 @@ export function FieldVolunteerForm({
   const selectedEquipment = watch("equipment") || [];
   const showPhone = watch("show_phone_publicly");
 
-  function toggleSkill(skill: string) {
-    if (selectedSkills.includes(skill)) {
+  function toggleSkill(skill: (typeof fieldVolunteerSkills)[number]) {
+    if ((selectedSkills as string[]).includes(skill)) {
       setValue(
         "skills",
-        selectedSkills.filter((s) => s !== skill)
+        (selectedSkills as string[]).filter((s) => s !== skill) as FieldVolunteerInput["skills"],
       );
     } else {
       setValue("skills", [...selectedSkills, skill]);
     }
   }
 
-  function toggleEquipment(item: string) {
-    if (selectedEquipment.includes(item)) {
+  function toggleEquipment(item: (typeof fieldVolunteerEquipmentOptions)[number]) {
+    if ((selectedEquipment as string[]).includes(item)) {
       setValue(
         "equipment",
-        selectedEquipment.filter((e) => e !== item)
+        (selectedEquipment as string[]).filter((e) => e !== item) as FieldVolunteerInput["equipment"],
       );
     } else {
       setValue("equipment", [...selectedEquipment, item]);
