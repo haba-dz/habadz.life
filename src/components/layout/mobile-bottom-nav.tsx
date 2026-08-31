@@ -60,18 +60,23 @@ export function MobileBottomNav({ locale }: { locale: AvailableLocale }) {
                 <Link
                   key={item.href}
                   href={item.href}
-                  className="flex flex-col items-center justify-center -mt-6 relative group z-10"
+                  className="flex flex-col items-center justify-center -mt-5 relative group"
                   aria-label={item.label}
                 >
                   <div
                     className={cn(
-                      "flex size-13 sm:size-14 items-center justify-center rounded-full bg-algeria-green text-white shadow-md shadow-algeria-green/30 transition-all active:scale-95 group-hover:scale-105 border-4 border-background",
-                      item.active && "ring-2 ring-algeria-green ring-offset-2 ring-offset-background scale-105"
+                      "flex size-12 items-center justify-center rounded-full bg-algeria-green text-white shadow-lg shadow-algeria-green/25 transition-transform duration-200 active:scale-95 group-hover:scale-105",
+                      item.active && "scale-105 shadow-algeria-green/40"
                     )}
                   >
                     <Icon className="size-6 shrink-0" />
                   </div>
-                  <span className="mt-0.5 text-[10px] font-black text-algeria-green truncate leading-tight">
+                  <span
+                    className={cn(
+                      "mt-1 text-[10px] font-bold truncate leading-tight transition-colors",
+                      item.active ? "text-algeria-green font-extrabold" : "text-algeria-green"
+                    )}
+                  >
                     {item.label}
                   </span>
                 </Link>
