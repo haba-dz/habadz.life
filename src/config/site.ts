@@ -7,8 +7,11 @@ export const siteConfig = {
     "منصة جزائرية لتنسيق المساعدات وتوجيهها إلى المناطق والأسر الأكثر احتياجًا في ولايات جيجل وبجاية وميلة وسكيكدة.",
   url: process.env.NEXT_PUBLIC_SITE_URL || "http://localhost:3000",
   legalNotice: "مبادرة رقمية مستقلة لتنسيق التضامن — غير حكومية وغير تابعة لأي جهة رسمية.",
-  /** وضع الصيانة للموقع: تفعيل الشاشة للمستخدمين أثناء الإصلاح والترقية */
-  maintenanceMode: process.env.NEXT_PUBLIC_MAINTENANCE_MODE === "false" ? false : true,
+  /**
+   * وضع الصيانة للموقع: تفعيل الشاشة للمستخدمين أثناء الإصلاح والترقية.
+   * معطّل افتراضيًا — يُفعَّل فقط بضبط NEXT_PUBLIC_MAINTENANCE_MODE="true" عند البناء.
+   */
+  maintenanceMode: process.env.NEXT_PUBLIC_MAINTENANCE_MODE === "true",
 } as const;
 
 // الحملة النشطة حاليًا (slug من جدول campaigns في قاعدة البيانات)
