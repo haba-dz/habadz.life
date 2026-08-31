@@ -70,37 +70,37 @@ export function OfficialInfoClient({
     }
   };
 
-  // Stat computations
   const stats = useMemo(() => {
-    const fireAlerts = updates.filter((u) => u.update_type === "fire_alert" || u.title.includes("حريق")).length;
-    const roadAlerts = updates.filter((u) => u.update_type === "road_status" || u.title.includes("طريق")).length;
-    const weatherAlerts = updates.filter((u) => u.update_type === "weather_warning" || u.title.includes("جوية")).length;
+    const fireAlerts = updates.filter((u) => u.update_type === "fire_alert" || (u.is_urgent && u.title.includes("حريق"))).length;
+    const roadAlerts = updates.filter((u) => u.update_type === "road_status").length;
+    const weatherAlerts = updates.filter((u) => u.update_type === "weather_warning").length;
     return { fireAlerts, roadAlerts, weatherAlerts, total: updates.length };
   }, [updates]);
 
   const filtered = useMemo(() => {
     return updates.filter((u) => {
-      // 1. Search filter
       const q = search.trim().toLowerCase();
       if (q) {
-        const matchesTitle = u.title.toLowerCase().includes(q);
-        const matchesBody = u.body?.toLowerCase().includes(q) ?? false;
-        const matchesSource = u.source.toLowerCase().includes(q);
-        if (!matchesTitle && !matchesBody && !matchesSource) return false;
+        const haystack = `${u.title} ${u.body ?? ""} ${u.source} ${u.wilaya ?? ""} ${u.authority ?? ""}`.toLowerCase();
+        if (!haystack.includes(q)) return false;
       }
 
-      // 2. Authority filter
       if (selectedAuthority !== "all") {
-        const s = `${u.source} ${u.title}`.toLowerCase();
-        if (selectedAuthority === "protection_civile_jijel" && (!s.includes("0018") && !s.includes("جيجل") && !s.includes("عوانة"))) return false;
-        if (selectedAuthority === "protection_civile" && !s.includes("حماية")) return false;
-        if (selectedAuthority === "gendarmerie" && !s.includes("درك") && !s.includes("طريقي")) return false;
-        if (selectedAuthority === "forets" && !s.includes("غابات")) return false;
-        if (selectedAuthority === "police" && !s.includes("أمن")) return false;
-        if (selectedAuthority === "wilaya" && !s.includes("ولاية") && !s.includes("أزمة") && !s.includes("أرصاد")) return false;
+        const backendAuth = (u.authority ?? "").toLowerCase();
+        if (backendAuth) {
+          if (selectedAuthority === "protection_civile_jijel" && backendAuth !== "protection_civile") return false;
+          if (selectedAuthority !== "protection_civile_jijel" && backendAuth !== selectedAuthority) return false;
+        } else {
+          const s = `${u.source} ${u.title}`.toLowerCase();
+          if (selectedAuthority === "protection_civile_jijel" && (!s.includes("0018") && !s.includes("جيجل") && !s.includes("عوانة"))) return false;
+          if (selectedAuthority === "protection_civile" && !s.includes("حماية")) return false;
+          if (selectedAuthority === "gendarmerie" && !s.includes("درك") && !s.includes("طريقي")) return false;
+          if (selectedAuthority === "forets" && !s.includes("غابات")) return false;
+          if (selectedAuthority === "police" && !s.includes("أمن")) return false;
+          if (selectedAuthority === "wilaya" && !s.includes("ولاية") && !s.includes("أزمة") && !s.includes("أرصاد")) return false;
+        }
       }
 
-      // 3. Category filter
       if (selectedCategory !== "all") {
         if (u.update_type !== selectedCategory) return false;
       }

@@ -31,6 +31,9 @@ export interface OfficialUpdateItem {
   url?: string | null;
   update_type?: string;
   published_at: string;
+  wilaya?: string | null;
+  authority?: string | null;
+  is_urgent?: boolean | null;
 }
 
 const authorityStyles: Record<
@@ -163,14 +166,15 @@ export function OfficialUpdateCard({
   const isFr = locale === "fr";
 
   const fullText = `${update.title} ${update.body || ""}`;
-  const authorityKey = inferAuthority(update.source || "", update.title);
+  const authorityKey = update.authority || inferAuthority(update.source || "", update.title);
   const auth = authorityStyles[authorityKey] || authorityStyles.wilaya;
   const AuthIcon = auth.icon;
   const tag = categoryTags[update.update_type || "statement"] || categoryTags.statement;
   const TagIcon = tag.icon;
-  const wilaya = inferWilaya(fullText, isFr);
+  const wilaya = update.wilaya || inferWilaya(fullText, isFr);
 
   const isUrgent =
+    (update.is_urgent ?? false) ||
     update.title.includes("عاجل") ||
     update.title.includes("إنذار") ||
     update.update_type === "fire_alert";
