@@ -517,9 +517,11 @@ export default async function HomePage() {
           </div>
         )}
 
-        <LinkButton href="/medical" variant="outline" className="mt-5 w-full sm:hidden">
-          {t.home.medical.registerBtnMobile}
-        </LinkButton>
+        {medicalVolunteers && medicalVolunteers.length > 0 && (
+          <LinkButton href="/medical" variant="outline" className="mt-5 w-full sm:hidden">
+            {t.home.medical.registerBtnMobile}
+          </LinkButton>
+        )}
       </section>
 
       {/* ————————————————————————————————— سواعد الإغاثة والتطوع الميداني */}

@@ -338,21 +338,6 @@ export function MedicalVolunteerForm({
             </label>
           </div>
 
-          {/* Public Phone Privacy Control */}
-          <div className="pt-2 border-t border-border/50">
-            <label className="flex items-center gap-2 text-xs text-muted-foreground cursor-pointer">
-              <Checkbox
-                checked={showPhonePublicly}
-                onCheckedChange={(v) => setValue("show_phone_publicly", Boolean(v))}
-              />
-              <span>
-                {isFr
-                  ? "Afficher mon numéro dans l'annuaire public des médecins bénévoles du site"
-                  : "إظهار رقم هاتفي في الدليل المفتوح للأطباء والبياطرة المتطوعين بالمنصة"}
-              </span>
-            </label>
-          </div>
-
           <div>
             <Label className="mb-1.5">{isFr ? "Remarques (facultatif)" : "ملاحظات إضافية (اختياري)"}</Label>
             <Textarea
@@ -363,6 +348,90 @@ export function MedicalVolunteerForm({
               }
               {...register("notes")}
             />
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* 3. Visibility & Privacy Decision */}
+      <Card className="border-border">
+        <CardContent className="space-y-4 px-5 pt-6">
+          <div className="flex items-center gap-2 text-foreground font-bold">
+            <span className="flex size-7 items-center justify-center rounded-lg bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 text-sm font-extrabold">
+              3
+            </span>
+            <h2>{isFr ? "Option de visibilité dans l'annuaire" : "خيارات الظهور في الدليل العام للمنصة"}</h2>
+          </div>
+
+          <p className="text-xs text-muted-foreground leading-relaxed">
+            {isFr
+              ? "Veuillez choisir si vous souhaitez être répertorié dans l'annuaire public du site ou uniquement pour la coordination interne :"
+              : "يرجى تحديد رغبتك: هل ترغب بنشر بياناتك وتخصصك في الدليل المفتوح للمواطنين، أم للاستعمال الداخلي لفرق الإغاثة فقط؟"}
+          </p>
+
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-1">
+            {/* Option 1: Public Directory */}
+            <button
+              type="button"
+              onClick={() => setValue("show_phone_publicly", true, { shouldValidate: true })}
+              className={cn(
+                "flex flex-col justify-between p-4 rounded-2xl border text-start transition-all cursor-pointer",
+                showPhonePublicly
+                  ? "border-emerald-600 bg-emerald-500/10 shadow-xs ring-2 ring-emerald-600/30"
+                  : "border-border bg-card/60 hover:bg-secondary/40"
+              )}
+            >
+              <div className="space-y-2">
+                <div className="flex items-center justify-between">
+                  <span className="flex items-center gap-1.5 font-bold text-xs sm:text-sm text-foreground">
+                    <Phone className="size-4 text-emerald-600 shrink-0" />
+                    <span>{isFr ? "نشر في الدليل العام" : "نعم، النشر في الدليل العام"}</span>
+                  </span>
+                  <span className={cn(
+                    "size-4.5 rounded-full border flex items-center justify-center shrink-0",
+                    showPhonePublicly ? "border-emerald-600 bg-emerald-600 text-white" : "border-muted-foreground/50"
+                  )}>
+                    {showPhonePublicly && <CheckCircle2 className="size-3.5" />}
+                  </span>
+                </div>
+                <p className="text-[11px] text-muted-foreground leading-relaxed">
+                  {isFr
+                    ? "Mon nom, spécialité et numéro seront visibles par les citoyens pour des téléconsultations directes."
+                    : "يظهر اسمي وتخصصي ورقم هاتفي في الدليل المفتوح ليتمكن المتضررون والمواطنون من الاتصال بي للاستشارة الطبية."}
+                </p>
+              </div>
+            </button>
+
+            {/* Option 2: Internal Coordination Only */}
+            <button
+              type="button"
+              onClick={() => setValue("show_phone_publicly", false, { shouldValidate: true })}
+              className={cn(
+                "flex flex-col justify-between p-4 rounded-2xl border text-start transition-all cursor-pointer",
+                !showPhonePublicly
+                  ? "border-blue-600 bg-blue-500/10 shadow-xs ring-2 ring-blue-600/30"
+                  : "border-border bg-card/60 hover:bg-secondary/40"
+              )}
+            >
+              <div className="space-y-2">
+                <div className="flex items-center justify-between">
+                  <span className="flex items-center gap-1.5 font-bold text-xs sm:text-sm text-foreground">
+                    <ShieldCheck className="size-4 text-blue-600 shrink-0" />
+                    <span>{isFr ? "للتنسيق الداخلي فقط" : "لا، للتنسيق الداخلي فقط (سري)"}</span>
+                  </span>
+                  <span className={cn(
+                    "size-4.5 rounded-full border flex items-center justify-center shrink-0",
+                    !showPhonePublicly ? "border-blue-600 bg-blue-600 text-white" : "border-muted-foreground/50"
+                  )}>
+                    {!showPhonePublicly && <CheckCircle2 className="size-3.5" />}
+                  </span>
+                </div>
+                <p className="text-[11px] text-muted-foreground leading-relaxed">
+                  {isFr
+                    ? "Mes coordonnées restent strictement confidentielles et ne seront utilisées que par les équipes de secours et la cellule de crise."
+                    : "تبقى بياناتي سرية تماماً لدى إدارة المنصة وتتواصل معي خلايا الإغاثة ولجان الطوارئ حصراً دون نشر رقمي."}
+                </p>
+              </div>
+            </button>
           </div>
         </CardContent>
       </Card>
