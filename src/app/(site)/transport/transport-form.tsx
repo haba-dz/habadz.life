@@ -3,28 +3,45 @@
 import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { Loader2 } from "lucide-react";
+import {
+  Loader2,
+  Truck,
+  Car,
+  Calendar,
+  Clock,
+  MapPin,
+  CheckCircle2,
+  HeartHandshake,
+  Package,
+  Zap,
+} from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { Checkbox } from "@/components/ui/checkbox";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
 import { Card, CardContent } from "@/components/ui/card";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { EmptyState } from "@/components/shared/empty-state";
-import { transportOfferSchema, vehicleOptions, type TransportOfferInput } from "@/schemas/transport-offer";
+import {
+  transportOfferSchema,
+  vehicleOptions,
+  type TransportOfferInput,
+} from "@/schemas/transport-offer";
 import { WilayaSelect } from "@/components/ui/wilaya-select";
+import { priorityWilayas } from "@/lib/algeria-cities";
 import { formatQuantity, getVehicleLabel } from "@/lib/constants";
 import { SuccessPanel } from "@/components/shared/success-panel";
 import { submitTransportOffer, type SubmitTransportResult } from "@/actions/transport";
 import type { AvailableLocale } from "@/i18n/locales";
+import { cn } from "@/lib/utils";
+
+const vehicleIcons: Record<string, typeof Car> = {
+  car: Car,
+  van: Truck,
+  small_truck: Truck,
+  large_truck: Truck,
+};
 
 export function TransportForm({
   locale = "ar",
@@ -47,7 +64,7 @@ export function TransportForm({
     defaultValues: {
       driver_name: "",
       phone: "",
-      origin_wilaya: "",
+      origin_wilaya: "الجزائر",
       origin_note: "",
       destination_wilaya: "جيجل",
       destination_note: "",
@@ -59,6 +76,11 @@ export function TransportForm({
     },
   });
 
+  const selectedOrigin = watch("origin_wilaya");
+  const selectedDest = watch("destination_wilaya");
+  const selectedVehicle = watch("vehicle_type");
+  const hasEmptySpace = watch("has_empty_space");
+
   async function onSubmit(values: TransportOfferInput) {
     setSubmitting(true);
     setSubmitError(null);
@@ -69,7 +91,7 @@ export function TransportForm({
           res.error ??
             (isFr
               ? "Une erreur est survenue lors de l'enregistrement. Veuillez réessayer."
-              : "حدث خطأ أثناء التسجيل. حاول مرة أخرى."),
+              : "حدث خطأ أثناء التسجيل. حاول مرة أخرى.")
         );
         return;
       }
@@ -78,7 +100,7 @@ export function TransportForm({
       setSubmitError(
         isFr
           ? "Une erreur est survenue lors de l'enregistrement. Veuillez réessayer."
-          : "حدث خطأ أثناء التسجيل. حاول مرة أخرى.",
+          : "حدث خطأ أثناء التسجيل. حاول مرة أخرى."
       );
     } finally {
       setSubmitting(false);
@@ -87,152 +109,273 @@ export function TransportForm({
 
   if (result?.success) {
     return (
-      <div className="animate-rise space-y-5">
+      <div className="animate-rise space-y-6">
         <SuccessPanel
-          title={isFr ? "Offre de transport enregistrée avec succès" : "تم تسجيل عرض النقل بنجاح"}
+          title={isFr ? "Offre de transport enregistrée avec succès" : "تم تسجيل عرض النقل والشحن بنجاح"}
           description={
             isFr
-              ? "L'équipe de coordination vous contactera pour planifier un trajet. Ci-dessous les dons pouvant être acheminés sur votre parcours."
-              : "سيتواصل فريق التنسيق معك لتأكيد التفاصيل والمسار. في الأسفل المساعدات التي يمكن تحميلها على مسارك."
+              ? "L'équipe de coordination logistique vous contactera pour planifier l'acheminement. Ci-dessous les dons prêts à être transportés sur votre trajet."
+              : "بورك في مسعاكم. سيتواصل فريق التنسيق اللوجستي معكم لتحديد نقاط الاستلام والتفريغ. في الأسفل المساعدات المسجلة على نفس مساركم."
           }
           primaryHref="/map"
-          primaryLabel={isFr ? "Voir les points de dépôt" : "عرض نقاط الاستلام"}
+          primaryLabel={isFr ? "Voir les points de collecte" : "عرض خريطة نقاط الشحن"}
         />
 
-        <h2 className="font-bold">{isFr ? "Dons pouvant être acheminés sur votre trajet" : "مساعدات يمكن تحميلها على مسارك"}</h2>
-        {!result.candidates || result.candidates.length === 0 ? (
-          <EmptyState
-            title={isFr ? "Aucun don ne nécessite de transport sur votre trajet actuellement" : "لا توجد حاليًا مساعدات تحتاج نقلًا على مسارك"}
-            description={isFr ? "La liste est mise à jour régulièrement." : "سيتم تحديث القائمة باستمرار — يمكنك مراجعة لوحة الإشعارات لاحقًا."}
-          />
-        ) : (
-          <div className="space-y-3">
-            {result.candidates.map((c) => (
-              <Card key={c.donationId}>
-                <CardContent className="flex items-center justify-between gap-3 px-5">
-                  <div>
-                    <p className="font-bold">{c.itemsSummary || (isFr ? "Dons divers" : "مساعدات متنوعة")}</p>
-                    <p className="text-sm text-muted-foreground">{isFr ? "De : " : "من: "}{c.donorWilaya}</p>
-                  </div>
-                  {c.distanceKm !== null && (
-                    <span className="shrink-0 text-sm text-muted-foreground">
-                      ~{formatQuantity(c.distanceKm, locale)} km
-                    </span>
-                  )}
-                </CardContent>
-              </Card>
-            ))}
-          </div>
-        )}
+        <div className="space-y-3">
+          <h2 className="text-base sm:text-lg font-bold text-foreground flex items-center gap-2">
+            <Package className="size-5 text-blue-600 dark:text-blue-400" />
+            <span>{isFr ? "Dons pouvant être acheminés sur votre trajet" : "مساعدات بانتظار وسيلة شحن على مسارك"}</span>
+          </h2>
+
+          {!result.candidates || result.candidates.length === 0 ? (
+            <EmptyState
+              title={
+                isFr
+                  ? "Aucun don ne nécessite de transport immédiat sur votre trajet"
+                  : "لا توجد حاليًا شحنات معلقة على هذا المسار بالتحديد"
+              }
+              description={
+                isFr
+                  ? "Votre offre est enregistrée et sera activée dès qu'un besoin se présente."
+                  : "تم حفظ بيانات مركبتك في بنك النقل، وسيتواصل معك منسقو الإغاثة فور توفر شحنة في منطقتك."
+              }
+            />
+          ) : (
+            <div className="grid gap-3 sm:grid-cols-2">
+              {result.candidates.map((c) => (
+                <Card key={c.donationId} className="border-border shadow-xs">
+                  <CardContent className="flex items-center justify-between gap-3 p-4">
+                    <div className="space-y-1">
+                      <p className="font-bold text-sm text-foreground">
+                        {c.itemsSummary || (isFr ? "Dons divers" : "مساعدات إغاثية")}
+                      </p>
+                      <p className="text-xs text-muted-foreground flex items-center gap-1">
+                        <MapPin className="size-3.5 shrink-0" />
+                        <span>{isFr ? "De : " : "نقطة الانطلاق: "}{c.donorWilaya}</span>
+                      </p>
+                    </div>
+                    {c.distanceKm !== null && (
+                      <span className="shrink-0 rounded-full bg-blue-500/10 px-2.5 py-1 text-xs font-black text-blue-700 dark:text-blue-300">
+                        ~{formatQuantity(c.distanceKm, locale)} km
+                      </span>
+                    )}
+                  </CardContent>
+                </Card>
+              ))}
+            </div>
+          )}
+        </div>
       </div>
     );
   }
 
   return (
     <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
+      {/* 1. Driver Identity */}
       <Card>
-        <CardContent className="space-y-4 px-5">
-          <h2 className="font-bold">{isFr ? "Vos coordonnées" : "بياناتك"}</h2>
-          <div>
-            <Label className="mb-1.5">{isFr ? "Nom complet" : "الاسم الكامل"}</Label>
-            <Input {...register("driver_name")} />
-            {errors.driver_name && (
-              <p className="mt-1 text-sm text-destructive">{errors.driver_name.message}</p>
-            )}
+        <CardContent className="space-y-4 px-5 pt-6">
+          <div className="flex items-center gap-2 text-foreground font-bold">
+            <span className="flex size-7 items-center justify-center rounded-lg bg-blue-500/10 text-blue-600 dark:text-blue-400 text-sm font-extrabold">
+              1
+            </span>
+            <h2>{isFr ? "Informations du chauffeur" : "بيانات السائق أو الناقل"}</h2>
           </div>
-          <div>
-            <Label className="mb-1.5">{isFr ? "Numéro de téléphone" : "رقم الهاتف"}</Label>
-            <Input dir="ltr" placeholder="0555xxxxxx" {...register("phone")} />
-            {errors.phone && <p className="mt-1 text-sm text-destructive">{errors.phone.message}</p>}
+
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
+            <div>
+              <Label className="mb-1.5">{isFr ? "Nom et prénom *" : "الاسم الكامل *"}</Label>
+              <Input
+                placeholder={isFr ? "Ex : Samir Amari" : "مثال: سمير عماري"}
+                {...register("driver_name")}
+              />
+              {errors.driver_name && (
+                <p className="mt-1 text-xs text-destructive">{errors.driver_name.message}</p>
+              )}
+            </div>
+
+            <div>
+              <Label className="mb-1.5">{isFr ? "Numéro de téléphone *" : "رقم الهاتف للتواصل *"}</Label>
+              <Input dir="ltr" placeholder="0555xxxxxx" {...register("phone")} />
+              {errors.phone && (
+                <p className="mt-1 text-xs text-destructive">{errors.phone.message}</p>
+              )}
+            </div>
           </div>
         </CardContent>
       </Card>
 
+      {/* 2. Route & Destination */}
       <Card>
-        <CardContent className="space-y-4 px-5">
-          <h2 className="font-bold">{isFr ? "Itinéraire et véhicule" : "المسار والمركبة"}</h2>
+        <CardContent className="space-y-4 px-5 pt-6">
+          <div className="flex items-center gap-2 text-foreground font-bold">
+            <span className="flex size-7 items-center justify-center rounded-lg bg-blue-500/10 text-blue-600 dark:text-blue-400 text-sm font-extrabold">
+              2
+            </span>
+            <h2>{isFr ? "Itinéraire du trajet" : "مسار الرحلة ونقاط العبور"}</h2>
+          </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            {/* Origin Wilaya */}
             <div>
-              <Label className="mb-1.5">{isFr ? "Point de départ (Wilaya)" : "نقطة الانطلاق (الولاية)"}</Label>
+              <Label className="mb-1.5">{isFr ? "Point de départ (Wilaya) *" : "ولاية الانطلاق *"}</Label>
+              <div className="mb-2 flex flex-wrap gap-1.5">
+                {priorityWilayas.map((pw) => {
+                  const isSelected =
+                    selectedOrigin === pw.name_ar || selectedOrigin === pw.codeStr || selectedOrigin === String(pw.code);
+                  return (
+                    <button
+                      key={pw.code}
+                      type="button"
+                      onClick={() => setValue("origin_wilaya", pw.name_ar, { shouldValidate: true })}
+                      className={cn(
+                        "inline-flex items-center gap-1 rounded-lg px-2.5 py-1 text-xs font-bold transition-all active:scale-95",
+                        isSelected
+                          ? "bg-priority-critical text-white shadow-xs"
+                          : "bg-priority-critical/10 text-priority-critical hover:bg-priority-critical/20"
+                      )}
+                    >
+                      <Zap className="size-3 text-amber-500 shrink-0 fill-amber-500" />
+                      <span>{isFr ? `${pw.codeStr} - ${pw.name_fr}` : `${pw.codeStr} - ${pw.name_ar}`}</span>
+                    </button>
+                  );
+                })}
+              </div>
               <WilayaSelect
                 locale={locale}
-                value={watch("origin_wilaya")}
+                value={selectedOrigin}
                 onChange={(e) => setValue("origin_wilaya", e.target.value, { shouldValidate: true })}
               />
               {errors.origin_wilaya && (
-                <p className="mt-1 text-sm text-destructive">{errors.origin_wilaya.message}</p>
+                <p className="mt-1 text-xs text-destructive">{errors.origin_wilaya.message}</p>
               )}
             </div>
+
+            {/* Destination Wilaya with Priority Chips */}
             <div>
-              <Label className="mb-1.5">{isFr ? "Destination (Wilaya)" : "الوجهة (الولاية)"}</Label>
+              <Label className="mb-1.5">{isFr ? "Destination (Wilaya) *" : "ولاية الوصول / الوجهة *"}</Label>
+              <div className="mb-2 flex flex-wrap gap-1.5">
+                {priorityWilayas.map((pw) => {
+                  const isSelected =
+                    selectedDest === pw.name_ar || selectedDest === pw.codeStr || selectedDest === String(pw.code);
+                  return (
+                    <button
+                      key={pw.code}
+                      type="button"
+                      onClick={() => setValue("destination_wilaya", pw.name_ar, { shouldValidate: true })}
+                      className={cn(
+                        "inline-flex items-center gap-1 rounded-lg px-2.5 py-1 text-xs font-bold transition-all active:scale-95",
+                        isSelected
+                          ? "bg-priority-critical text-white shadow-xs"
+                          : "bg-priority-critical/10 text-priority-critical hover:bg-priority-critical/20"
+                      )}
+                    >
+                      <Zap className="size-3 text-amber-500 shrink-0 fill-amber-500" />
+                      <span>{isFr ? `${pw.codeStr} - ${pw.name_fr}` : `${pw.codeStr} - ${pw.name_ar}`}</span>
+                    </button>
+                  );
+                })}
+              </div>
               <WilayaSelect
                 locale={locale}
-                value={watch("destination_wilaya")}
+                value={selectedDest}
                 onChange={(e) => setValue("destination_wilaya", e.target.value, { shouldValidate: true })}
               />
               {errors.destination_wilaya && (
-                <p className="mt-1 text-sm text-destructive">{errors.destination_wilaya.message}</p>
+                <p className="mt-1 text-xs text-destructive">{errors.destination_wilaya.message}</p>
               )}
             </div>
           </div>
+        </CardContent>
+      </Card>
 
-          <div>
-            <Label className="mb-1.5">{isFr ? "Type de véhicule" : "نوع المركبة"}</Label>
-            <Select
-              value={watch("vehicle_type")}
-              onValueChange={(v: string | null) =>
-                v && setValue("vehicle_type", v as TransportOfferInput["vehicle_type"])
-              }
-            >
-              <SelectTrigger className="w-full">
-                <SelectValue>
-                  {(value: string) => getVehicleLabel(value as TransportOfferInput["vehicle_type"], locale)}
-                </SelectValue>
-              </SelectTrigger>
-              <SelectContent>
-                {vehicleOptions.map((o) => (
-                  <SelectItem key={o.value} value={o.value}>
-                    {getVehicleLabel(o.value, locale)}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
+      {/* 3. Vehicle & Capacity */}
+      <Card>
+        <CardContent className="space-y-4 px-5 pt-6">
+          <div className="flex items-center gap-2 text-foreground font-bold">
+            <span className="flex size-7 items-center justify-center rounded-lg bg-blue-500/10 text-blue-600 dark:text-blue-400 text-sm font-extrabold">
+              3
+            </span>
+            <h2>{isFr ? "Type de véhicule & Disponibilité" : "نوع المركبة والقدرة الاستيعابية"}</h2>
           </div>
 
-          <div className="grid grid-cols-2 gap-3">
+          {/* Vehicle Type Visual Cards */}
+          <div className="space-y-2">
+            <Label className="text-xs font-semibold text-muted-foreground">
+              {isFr ? "Sélectionnez votre type de véhicule :" : "اختر نوع المركبة المتوفرة لديك :"}
+            </Label>
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
+              {vehicleOptions.map((v) => {
+                const isSelected = selectedVehicle === v.value;
+                const Icon = vehicleIcons[v.value] || Truck;
+                return (
+                  <button
+                    key={v.value}
+                    type="button"
+                    onClick={() => setValue("vehicle_type", v.value as TransportOfferInput["vehicle_type"])}
+                    className={cn(
+                      "flex flex-col items-center justify-center p-3 rounded-2xl border text-center transition-all cursor-pointer",
+                      isSelected
+                        ? "border-blue-500 bg-blue-500/10 text-foreground font-bold shadow-xs"
+                        : "border-border bg-card/60 text-muted-foreground hover:bg-secondary/40"
+                    )}
+                  >
+                    <Icon className="size-5 mb-1.5 text-blue-600 dark:text-blue-400" />
+                    <span className="text-xs leading-tight">{getVehicleLabel(v.value, locale)}</span>
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
             <div>
-              <Label className="mb-1.5">{isFr ? "Capacité maximale (kg) — facultatif" : "الحمولة القصوى (كغ) — اختياري"}</Label>
+              <Label className="mb-1.5">{isFr ? "Capacité estimée (kg)" : "الحمولة التقريبية (كغ)"}</Label>
               <Input
                 type="number"
                 min={0}
+                placeholder="500"
                 {...register("max_capacity_kg", {
                   setValueAs: (v) => (v === "" || v === null || isNaN(Number(v)) ? undefined : Number(v)),
                 })}
               />
             </div>
+
             <div>
-              <Label className="mb-1.5">{isFr ? "Date (facultatif)" : "التاريخ (اختياري)"}</Label>
+              <Label className="mb-1.5">{isFr ? "Date du trajet" : "تاريخ الانطلاق"}</Label>
               <Input type="date" {...register("travel_date")} />
+            </div>
+
+            <div>
+              <Label className="mb-1.5">{isFr ? "Créneau horaire" : "التوقيت المفضل"}</Label>
+              <Input
+                placeholder={isFr ? "Ex : Matin 08h" : "مثال: الصباح الباكر"}
+                {...register("time_window")}
+              />
             </div>
           </div>
 
-          <div>
-            <Label className="mb-1.5">{isFr ? "Créneau horaire (facultatif)" : "الوقت المتاح (اختياري)"}</Label>
-            <Input placeholder={isFr ? "Ex: Matin, après-midi" : "مثال: صباحًا، بعد الظهر"} {...register("time_window")} />
-          </div>
-
-          <label className="flex items-center gap-2 text-sm">
+          <label className="flex items-center gap-2 text-xs font-semibold cursor-pointer pt-1">
             <Checkbox
-              checked={watch("has_empty_space")}
+              checked={hasEmptySpace}
               onCheckedChange={(v) => setValue("has_empty_space", Boolean(v))}
             />
-            {isFr ? "J'ai de l'espace disponible dans le véhicule" : "لدي مساحة فارغة متاحة"}
+            <span>
+              {isFr
+                ? "J'ai un espace libre disponible prêt à charger des colis d'urgence"
+                : "أملك مساحة فارغة في المركبة وجاهز لتحميل طرود ومساعدات إغاثية"}
+            </span>
           </label>
 
           <div>
-            <Label className="mb-1.5">{isFr ? "Remarques (facultatif)" : "ملاحظات (اختياري)"}</Label>
-            <Textarea {...register("notes")} />
+            <Label className="mb-1.5">{isFr ? "Remarques (facultatif)" : "ملاحظات إضافية عن الرحلة (اختياري)"}</Label>
+            <Textarea
+              placeholder={
+                isFr
+                  ? "Villes de passage, contraintes de volume..."
+                  : "المدن التي ستمر عليها، نوع الصناديق التي تفضل حملها..."
+              }
+              {...register("notes")}
+            />
           </div>
         </CardContent>
       </Card>
@@ -243,9 +386,18 @@ export function TransportForm({
         </Alert>
       )}
 
-      <Button type="submit" size="lg" className="w-full" disabled={submitting}>
-        {submitting && <Loader2 className="size-4 animate-spin" />}
-        {isFr ? "Envoyer l'offre" : "إرسال"}
+      <Button
+        type="submit"
+        size="lg"
+        className="w-full bg-blue-600 hover:bg-blue-700 text-white font-extrabold text-base shadow-md h-12 rounded-2xl"
+        disabled={submitting}
+      >
+        {submitting ? (
+          <Loader2 className="size-5 animate-spin" />
+        ) : (
+          <Truck className="size-5 ms-1" />
+        )}
+        <span>{isFr ? "Enregistrer mon offre de transport" : "تأكيد تسجيل عرض النقل والشحن"}</span>
       </Button>
     </form>
   );

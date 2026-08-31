@@ -3,7 +3,20 @@
 import { useState } from "react";
 import { useFieldArray, useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { Plus, Trash2, Loader2, MapPin, Clock, CircleCheck } from "lucide-react";
+import {
+  Plus,
+  Trash2,
+  Loader2,
+  MapPin,
+  Clock,
+  CircleCheck,
+  Gift,
+  Truck,
+  Car,
+  HeartHandshake,
+  Minus,
+  Zap,
+} from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -23,13 +36,14 @@ import { PointStatusBadge } from "@/components/shared/status-badge";
 import { donationSchema, unitOptions, type DonationInput } from "@/schemas/donation";
 import { formatQuantity, getUnitLabel, getCategoryLabel } from "@/lib/constants";
 import { CategoryIcon } from "@/components/shared/category-icon";
-import { wilayaNames } from "@/lib/wilayas";
 import { WilayaSelect } from "@/components/ui/wilaya-select";
 import { CommuneSelect } from "@/components/ui/commune-select";
+import { priorityWilayas } from "@/lib/algeria-cities";
 import { SuccessPanel } from "@/components/shared/success-panel";
 import { submitDonation, type SubmitDonationResult } from "@/actions/donations";
 import type { Database } from "@/types/database";
 import type { AvailableLocale } from "@/i18n/locales";
+import { cn } from "@/lib/utils";
 
 type Category = Database["public"]["Tables"]["categories"]["Row"];
 
@@ -61,10 +75,10 @@ export function DonationForm({
     defaultValues: {
       donor_name: "",
       donor_phone: "",
-      current_wilaya: "",
+      current_wilaya: "جيجل",
       current_commune: "",
       needs_transport: false,
-      can_deliver_self: false,
+      can_deliver_self: true,
       notes: "",
       items: defaultCategory
         ? [
@@ -79,6 +93,10 @@ export function DonationForm({
         : [],
     },
   });
+
+  const selectedWilaya = watch("current_wilaya");
+  const needsTransport = watch("needs_transport");
+  const canDeliverSelf = watch("can_deliver_self");
 
   const { fields, append, remove } = useFieldArray({ control, name: "items" });
 
@@ -96,7 +114,7 @@ export function DonationForm({
           res.error ??
             (isFr
               ? "Une erreur est survenue lors de l'enregistrement. Veuillez réessayer."
-              : "حدث خطأ أثناء تسجيل المساعدة. حاول مرة أخرى."),
+              : "حدث خطأ أثناء تسجيل المساعدة. حاول مرة أخرى.")
         );
         return;
       }
@@ -105,7 +123,7 @@ export function DonationForm({
       setSubmitError(
         isFr
           ? "Une erreur est survenue lors de l'enregistrement. Veuillez réessayer."
-          : "حدث خطأ أثناء تسجيل المساعدة. حاول مرة أخرى.",
+          : "حدث خطأ أثناء تسجيل المساعدة. حاول مرة أخرى."
       );
     } finally {
       setSubmitting(false);
@@ -114,38 +132,41 @@ export function DonationForm({
 
   if (result?.success) {
     return (
-      <div className="animate-rise space-y-5">
+      <div className="animate-rise space-y-6">
         <SuccessPanel
           title={isFr ? "Votre don a été enregistré avec succès" : "تم تسجيل مساعدتك بنجاح"}
           description={
             isFr
               ? "Merci pour votre contribution. L'équipe de coordination vous contactera bientôt. Ci-dessous, le besoin correspondant et le point de collecte recommandé."
-              : "شكرًا لك. سيتواصل فريق التنسيق معك قريبًا لتأكيد التفاصيل. في الأسفل أقرب احتياج مطابق ونقطة التسليم المقترحة."
+              : "شكرًا لك وبورك في عطائك. سيتواصل فريق التنسيق معك قريبًا لتأكيد التفاصيل. في الأسفل أقرب احتياج مطابق ونقطة التسليم المقترحة."
           }
           primaryHref="/map"
-          primaryLabel={isFr ? "Voir les points de dépôt" : "عرض نقاط التسليم"}
+          primaryLabel={isFr ? "Voir les points de dépôt sur la carte" : "عرض نقاط التسليم على الخريطة"}
         />
 
         {result.matches && result.matches.length > 0 && (
-          <div>
-            <h2 className="mb-2 font-bold">
-              {isFr ? "Meilleures correspondances pour vos dons" : "أفضل تطابق لمساعدتك"}
+          <div className="space-y-3">
+            <h2 className="text-base sm:text-lg font-bold text-foreground flex items-center gap-2">
+              <Gift className="size-5 text-algeria-green" />
+              <span>{isFr ? "Meilleures correspondances pour vos dons" : "أفضل تطابق ميداني لمساعدتك"}</span>
             </h2>
-            <div className="space-y-3">
+            <div className="grid gap-3 sm:grid-cols-2">
               {result.matches.map((m) => (
-                <Card key={m.need.id}>
-                  <CardContent className="flex items-start justify-between gap-3 px-5">
-                    <div>
-                      <p className="flex items-center gap-1 font-bold">
-                        <CategoryIcon slug={m.categorySlug} className="size-3.5" />
-                        {m.need.title ?? categories.find((c) => c.slug === m.categorySlug)?.name_ar ?? m.categorySlug}
+                <Card key={m.need.id} className="border-border shadow-xs">
+                  <CardContent className="flex items-start justify-between gap-3 p-4">
+                    <div className="space-y-1">
+                      <p className="flex items-center gap-1.5 font-bold text-sm text-foreground">
+                        <CategoryIcon slug={m.categorySlug} className="size-4 text-algeria-green" />
+                        <span>
+                          {m.need.title ?? categories.find((c) => c.slug === m.categorySlug)?.name_ar ?? m.categorySlug}
+                        </span>
                       </p>
-                      <p className="text-sm text-muted-foreground">
+                      <p className="text-xs text-muted-foreground">
                         {m.need.commune}، {isFr ? `Wilaya de ${m.need.wilaya}` : `ولاية ${m.need.wilaya}`}
                       </p>
-                      <p className="mt-1 text-sm">
-                        {isFr ? "Manque : " : "النقص: "}
-                        <strong className="text-priority-critical">
+                      <p className="text-xs pt-1">
+                        {isFr ? "Manque estimé : " : "الخصاص المسجل: "}
+                        <strong className="text-priority-critical font-bold">
                           {formatQuantity(m.deficit, locale)} {getUnitLabel(m.need.unit, locale)}
                         </strong>
                       </p>
@@ -159,33 +180,38 @@ export function DonationForm({
         )}
 
         {result.suggestedPoints && result.suggestedPoints.length > 0 && (
-          <div>
-            <h2 className="mb-2 font-bold">
-              {isFr ? "Point de dépôt recommandé" : "نقطة التسليم المقترحة"}
+          <div className="space-y-3">
+            <h2 className="text-base sm:text-lg font-bold text-foreground flex items-center gap-2">
+              <MapPin className="size-5 text-blue-600 dark:text-blue-400" />
+              <span>{isFr ? "Points de dépôt recommandés" : "نقاط التسليم المعتمدة المقترحة"}</span>
             </h2>
-            <div className="space-y-3">
+            <div className="grid gap-3 sm:grid-cols-2">
               {result.suggestedPoints.map((p) => (
-                <Card key={p.id}>
-                  <CardContent className="space-y-2 px-5">
+                <Card key={p.id} className="border-border shadow-xs">
+                  <CardContent className="space-y-2 p-4">
                     <div className="flex items-start justify-between gap-2">
-                      <p className="font-bold">{p.name}</p>
+                      <p className="font-bold text-sm sm:text-base text-foreground">{p.name}</p>
                       <PointStatusBadge status={p.status} />
                     </div>
-                    <p className="flex items-center gap-1.5 text-sm text-muted-foreground">
-                      <MapPin className="size-3.5" />
-                      {p.address ?? `${p.commune}، ${isFr ? `Wilaya de ${p.wilaya}` : `ولاية ${p.wilaya}`}`}
-                      {p.distanceKm !== null
-                        ? isFr
-                          ? ` — à environ ${formatQuantity(p.distanceKm, locale)} km`
-                          : ` — على بعد ${formatQuantity(p.distanceKm, locale)} كم تقريبًا`
-                        : ""}
+                    <p className="flex items-center gap-1.5 text-xs text-muted-foreground">
+                      <MapPin className="size-3.5 shrink-0" />
+                      <span>
+                        {p.address ?? `${p.commune}، ${isFr ? `Wilaya de ${p.wilaya}` : `ولاية ${p.wilaya}`}`}
+                      </span>
+                      {p.distanceKm !== null && (
+                        <span className="font-semibold text-foreground">
+                          {isFr
+                            ? ` (~${formatQuantity(p.distanceKm, locale)} km)`
+                            : ` (تبعد ~${formatQuantity(p.distanceKm, locale)} كم)`}
+                        </span>
+                      )}
                     </p>
-                    {p.openingHours ? (
-                      <p className="flex items-center gap-1.5 text-sm text-muted-foreground">
-                        <Clock className="size-3.5" />
-                        {p.openingHours}
+                    {p.openingHours && (
+                      <p className="flex items-center gap-1.5 text-xs text-muted-foreground">
+                        <Clock className="size-3.5 shrink-0" />
+                        <span>{p.openingHours}</span>
                       </p>
-                    ) : null}
+                    )}
                   </CardContent>
                 </Card>
               ))}
@@ -194,15 +220,15 @@ export function DonationForm({
         )}
 
         {(!result.matches || result.matches.length === 0) && (
-          <Alert>
-            <AlertTitle className="flex items-center gap-1.5">
-              <CircleCheck className="size-4 text-algeria-green" />{" "}
-              {isFr ? "Cet article est actuellement bien approvisionné" : "هذه المادة متوفرة حاليًا بشكل جيد"}
+          <Alert className="border-algeria-green/40 bg-algeria-green/5">
+            <AlertTitle className="flex items-center gap-2 text-algeria-green font-bold">
+              <CircleCheck className="size-4" />
+              <span>{isFr ? "Don enregistré avec succès" : "تم تسجيل نوع المساعدة بنجاح"}</span>
             </AlertTitle>
-            <AlertDescription>
+            <AlertDescription className="text-xs sm:text-sm text-muted-foreground mt-1">
               {isFr
-                ? "Nous n'avons pas constaté de manque critique pour cet article. L'équipe de coordination orientera votre don vers le point le plus approprié."
-                : "لم نجد نقصًا حرجًا في هذه المادة حاليًا. سيراجع فريق التنسيق تسجيلك ويوجّهه لأقرب نقطة مناسبة، أو يمكنك مراجعة صفحة الاحتياجات لرؤية ما هو أكثر إلحاحًا الآن."}
+                ? "L'équipe de coordination orientera votre don vers le point de collecte ou l'association la plus appropriée."
+                : "سيراجع فريق التنسيق تسجيلك ويوجّهه لأقرب مركز إغاثة محتاج، لضمان وصول المساعدات بالعدل ودون تكدس."}
             </AlertDescription>
           </Alert>
         )}
@@ -212,79 +238,142 @@ export function DonationForm({
 
   return (
     <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
+      {/* 1. Donation Items */}
       <Card>
-        <CardContent className="space-y-4 px-5">
-          <h2 className="font-bold">{isFr ? "Articles disponibles" : "المواد التي تملكها"}</h2>
+        <CardContent className="space-y-4 px-5 pt-6">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-2 text-foreground font-bold">
+              <span className="flex size-7 items-center justify-center rounded-lg bg-algeria-green/10 text-algeria-green text-sm font-extrabold">
+                1
+              </span>
+              <h2>{isFr ? "Articles & Dons disponibles *" : "المواد والمساعدات المتوفرة لديك *"}</h2>
+            </div>
+            <span className="text-xs font-semibold text-muted-foreground">
+              {fields.length} {isFr ? "article(s)" : "مادة"}
+            </span>
+          </div>
+
           {fields.map((field, index) => {
             const categoryId = watch(`items.${index}.category_id`);
+            const quantity = watch(`items.${index}.quantity`) || 1;
+
             return (
-              <div key={field.id} className="space-y-3 rounded-lg border border-border p-3">
+              <div
+                key={field.id}
+                className="space-y-3 rounded-2xl border border-border/80 bg-background/50 p-3.5 sm:p-4 transition-all"
+              >
                 <div className="flex items-center justify-between">
-                  <Label>{isFr ? `Article ${index + 1}` : `المادة ${index + 1}`}</Label>
+                  <span className="inline-flex items-center gap-1.5 text-xs font-extrabold text-foreground">
+                    <Gift className="size-3.5 text-algeria-green" />
+                    <span>{isFr ? `Article #${index + 1}` : `المادة #${index + 1}`}</span>
+                  </span>
                   {fields.length > 1 && (
                     <Button
                       type="button"
                       variant="ghost"
-                      size="icon-sm"
+                      size="icon-xs"
                       onClick={() => remove(index)}
+                      className="text-destructive hover:bg-destructive/10"
                       aria-label={isFr ? "Supprimer cet article" : "حذف هذه المادة"}
                     >
-                      <Trash2 className="size-4 text-destructive" />
+                      <Trash2 className="size-4" />
                     </Button>
                   )}
                 </div>
 
-                <Select
-                  value={categoryId}
-                  onValueChange={(v: string | null) => {
-                    if (!v) return;
-                    setValue(`items.${index}.category_id`, v);
-                    const cat = categories.find((c) => c.id === v);
-                    if (cat) setValue(`items.${index}.unit`, cat.default_unit);
-                  }}
-                >
-                  <SelectTrigger className="w-full">
-                    <SelectValue placeholder={isFr ? "Catégorie" : "نوع المساعدة"}>
-                      {(value: string) => {
-                        const c = categories.find((cat) => cat.id === value);
-                        return c ? (
-                          <>
-                            <CategoryIcon slug={c.slug} className="inline size-3.5" /> {getCategoryLabel(c.slug, c.name_ar, locale)}
-                          </>
-                        ) : (
-                          isFr ? "Catégorie" : "نوع المساعدة"
-                        );
-                      }}
-                    </SelectValue>
-                  </SelectTrigger>
-                  <SelectContent>
-                    {categories.map((c) => (
-                      <SelectItem key={c.id} value={c.id}>
-                        <CategoryIcon slug={c.slug} className="inline size-3.5" /> {getCategoryLabel(c.slug, c.name_ar, locale)}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
+                {/* Category Selector */}
+                <div>
+                  <Label className="mb-1.5 text-xs font-semibold text-muted-foreground">
+                    {isFr ? "Type d'aide / Catégorie *" : "نوع المادة أو المساعدة *"}
+                  </Label>
+                  <Select
+                    value={categoryId}
+                    onValueChange={(v: string | null) => {
+                      if (!v) return;
+                      setValue(`items.${index}.category_id`, v);
+                      const cat = categories.find((c) => c.id === v);
+                      if (cat) setValue(`items.${index}.unit`, cat.default_unit);
+                    }}
+                  >
+                    <SelectTrigger className="w-full h-11 rounded-xl">
+                      <SelectValue placeholder={isFr ? "Choisir une catégorie" : "اختر نوع المساعدة"}>
+                        {(value: string) => {
+                          const c = categories.find((cat) => cat.id === value);
+                          return c ? (
+                            <span className="flex items-center gap-2">
+                              <CategoryIcon slug={c.slug} className="size-4 text-algeria-green" />
+                              <span className="font-bold">{getCategoryLabel(c.slug, c.name_ar, locale)}</span>
+                            </span>
+                          ) : (
+                            isFr ? "Choisir une catégorie" : "اختر نوع المساعدة"
+                          );
+                        }}
+                      </SelectValue>
+                    </SelectTrigger>
+                    <SelectContent>
+                      {categories.map((c) => (
+                        <SelectItem key={c.id} value={c.id}>
+                          <span className="flex items-center gap-2">
+                            <CategoryIcon slug={c.slug} className="size-4 text-algeria-green" />
+                            <span>{getCategoryLabel(c.slug, c.name_ar, locale)}</span>
+                          </span>
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
 
-                <div className="grid grid-cols-2 gap-3">
+                {/* Quantity and Unit */}
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                   <div>
-                    <Label className="mb-1.5">{isFr ? "Quantité" : "الكمية"}</Label>
-                    <Input
-                      type="number"
-                      step="any"
-                      min={0}
-                      {...register(`items.${index}.quantity`, { valueAsNumber: true })}
-                    />
+                    <Label className="mb-1.5 text-xs font-semibold text-muted-foreground">
+                      {isFr ? "Quantité estimée *" : "الكمية التقديرية *"}
+                    </Label>
+                    <div className="flex items-center gap-2">
+                      <Button
+                        type="button"
+                        variant="outline"
+                        size="icon"
+                        className="size-10 shrink-0 rounded-xl"
+                        onClick={() => {
+                          const q = Math.max(1, (quantity || 1) - 1);
+                          setValue(`items.${index}.quantity`, q);
+                        }}
+                      >
+                        <Minus className="size-3.5" />
+                      </Button>
+                      <Input
+                        type="number"
+                        min={1}
+                        className="text-center font-black text-base h-10 rounded-xl"
+                        {...register(`items.${index}.quantity`, { valueAsNumber: true })}
+                      />
+                      <Button
+                        type="button"
+                        variant="outline"
+                        size="icon"
+                        className="size-10 shrink-0 rounded-xl"
+                        onClick={() => {
+                          const q = (quantity || 1) + 1;
+                          setValue(`items.${index}.quantity`, q);
+                        }}
+                      >
+                        <Plus className="size-3.5" />
+                      </Button>
+                    </div>
                   </div>
+
                   <div>
-                    <Label className="mb-1.5">{isFr ? "Unité" : "الوحدة"}</Label>
+                    <Label className="mb-1.5 text-xs font-semibold text-muted-foreground">
+                      {isFr ? "Unité *" : "الوحدة *"}
+                    </Label>
                     <Select
                       value={watch(`items.${index}.unit`)}
                       onValueChange={(v: string | null) =>
                         v && setValue(`items.${index}.unit`, v as DonationInput["items"][number]["unit"])
                       }
                     >
-                      <SelectTrigger className="w-full">
+                      <SelectTrigger className="w-full h-10 rounded-xl">
                         <SelectValue>
                           {(value: string) => getUnitLabel(value, locale)}
                         </SelectValue>
@@ -300,21 +389,33 @@ export function DonationForm({
                   </div>
                 </div>
 
-                <Input
-                  placeholder={isFr ? "Description courte (facultatif)" : "وصف مختصر (اختياري)"}
-                  {...register(`items.${index}.description`)}
-                />
+                {/* Short description */}
+                <div>
+                  <Label className="mb-1.5 text-xs font-semibold text-muted-foreground">
+                    {isFr ? "Précisions ou état du matériel (facultatif)" : "ملاحظات وتفاصيل عن المادة (اختياري)"}
+                  </Label>
+                  <Input
+                    placeholder={
+                      isFr
+                        ? "Ex : Bouteilles d'eau 1.5L, couvertures neuves, etc."
+                        : "مثال: مياه معدنية 1.5 لتر، أغطية جديدة، حفاظات مقاس 4..."
+                    }
+                    className="rounded-xl"
+                    {...register(`items.${index}.description`)}
+                  />
+                </div>
               </div>
             );
           })}
+
           {errors.items?.message && (
-            <p className="text-sm text-destructive">{errors.items.message as string}</p>
+            <p className="text-xs text-destructive">{errors.items.message as string}</p>
           )}
 
           <Button
             type="button"
             variant="outline"
-            className="w-full"
+            className="w-full border-dashed rounded-xl h-11 font-bold"
             onClick={() =>
               append({
                 category_id: categories[0]?.id ?? "",
@@ -325,83 +426,196 @@ export function DonationForm({
               })
             }
           >
-            <Plus className="size-4" /> {isFr ? "Ajouter un autre article" : "إضافة مادة أخرى"}
+            <Plus className="size-4 text-algeria-green" />
+            <span>{isFr ? "Ajouter un autre type de don" : "إضافة مادة إضافية أخرى"}</span>
           </Button>
         </CardContent>
       </Card>
 
+      {/* 2. Location and Delivery Method */}
       <Card>
-        <CardContent className="space-y-4 px-5">
-          <h2 className="font-bold">{isFr ? "Localisation et acheminement" : "موقعك وطريقة التسليم"}</h2>
+        <CardContent className="space-y-4 px-5 pt-6">
+          <div className="flex items-center gap-2 text-foreground font-bold">
+            <span className="flex size-7 items-center justify-center rounded-lg bg-algeria-green/10 text-algeria-green text-sm font-extrabold">
+              2
+            </span>
+            <h2>{isFr ? "Localisation & Acheminement" : "الموقع وطريقة التسليم"}</h2>
+          </div>
 
+          {/* Wilaya Selection */}
           <div>
-            <Label className="mb-1.5">{isFr ? "Wilaya actuelle" : "الولاية الحالية"}</Label>
+            <Label className="mb-1.5">{isFr ? "Wilaya où se trouvent les dons *" : "الولاية التي تتوفر بها المساعدات *"}</Label>
+            {/* Quick Select for Priority Affected Wilayas */}
+            <div className="mb-2 flex flex-wrap gap-1.5">
+              {priorityWilayas.map((pw) => {
+                const isSelected =
+                  selectedWilaya === pw.name_ar || selectedWilaya === pw.codeStr || selectedWilaya === String(pw.code);
+                return (
+                  <button
+                    key={pw.code}
+                    type="button"
+                    onClick={() => {
+                      setValue("current_wilaya", pw.name_ar, { shouldValidate: true });
+                      setValue("current_commune", "", { shouldValidate: true });
+                    }}
+                    className={cn(
+                      "inline-flex items-center gap-1 rounded-lg px-2.5 py-1 text-xs font-bold transition-all active:scale-95",
+                      isSelected
+                        ? "bg-priority-critical text-white shadow-xs"
+                        : "bg-priority-critical/10 text-priority-critical hover:bg-priority-critical/20"
+                    )}
+                  >
+                    <Zap className="size-3 text-amber-500 shrink-0 fill-amber-500" />
+                    <span>{isFr ? `${pw.codeStr} - ${pw.name_fr}` : `${pw.codeStr} - ${pw.name_ar}`}</span>
+                  </button>
+                );
+              })}
+            </div>
+
             <WilayaSelect
               locale={locale}
-              value={watch("current_wilaya")}
+              value={selectedWilaya}
               onChange={(e) => {
-                setValue("current_wilaya", e.target.value);
-                setValue("current_commune", "");
+                setValue("current_wilaya", e.target.value, { shouldValidate: true });
+                setValue("current_commune", "", { shouldValidate: true });
               }}
             />
             {errors.current_wilaya && (
-              <p className="mt-1 text-sm text-destructive">{errors.current_wilaya.message}</p>
+              <p className="mt-1 text-xs text-destructive">{errors.current_wilaya.message}</p>
             )}
           </div>
 
           <div>
-            <Label className="mb-1.5">{isFr ? "Commune / Quartier (facultatif)" : "البلدية / الحي (اختياري)"}</Label>
+            <Label className="mb-1.5">{isFr ? "Commune / Quartier" : "البلدية / الحي"}</Label>
             <CommuneSelect
-              wilaya={watch("current_wilaya")}
+              wilaya={selectedWilaya}
               locale={locale}
               value={watch("current_commune")}
               onChange={(e) => setValue("current_commune", e.target.value)}
             />
           </div>
 
-          <label className="flex items-center gap-2 text-sm">
-            <Checkbox
-              checked={watch("needs_transport")}
-              onCheckedChange={(v) => setValue("needs_transport", Boolean(v))}
-            />
-            {isFr ? "J'ai besoin d'une aide pour le transport" : "أحتاج مساعدة في النقل"}
-          </label>
+          {/* Delivery Mode Toggle Cards */}
+          <div className="space-y-2 pt-2">
+            <Label className="text-xs font-semibold text-muted-foreground">
+              {isFr ? "Comment souhaitez-vous acheminer ces dons ?" : "كيف سيتم إيصال هذه المساعدات ؟"}
+            </Label>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+              <button
+                type="button"
+                onClick={() => {
+                  setValue("can_deliver_self", true);
+                  setValue("needs_transport", false);
+                }}
+                className={cn(
+                  "flex items-start gap-3 p-3.5 rounded-2xl border text-start transition-all cursor-pointer",
+                  canDeliverSelf && !needsTransport
+                    ? "border-algeria-green bg-algeria-green/10 text-foreground font-bold shadow-xs"
+                    : "border-border bg-card/60 text-muted-foreground hover:bg-secondary/40"
+                )}
+              >
+                <span
+                  className={cn(
+                    "flex size-9 shrink-0 items-center justify-center rounded-xl",
+                    canDeliverSelf && !needsTransport
+                      ? "bg-algeria-green text-white"
+                      : "bg-muted text-muted-foreground"
+                  )}
+                >
+                  <Car className="size-4" />
+                </span>
+                <div className="space-y-0.5">
+                  <p className="text-xs sm:text-sm font-bold leading-snug">
+                    {isFr ? "Je peux déposer moi-même" : "أستطيع نقلها بنفسي لنقطة تجميع"}
+                  </p>
+                  <p className="text-[11px] text-muted-foreground font-normal leading-relaxed">
+                    {isFr
+                      ? "Dépôt direct dans un centre de collecte agréé"
+                      : "تسليم المواد لأقرب مركز استقبال أو جمعية معتمدة"}
+                  </p>
+                </div>
+              </button>
 
-          <label className="flex items-center gap-2 text-sm">
-            <Checkbox
-              checked={watch("can_deliver_self")}
-              onCheckedChange={(v) => setValue("can_deliver_self", Boolean(v))}
-            />
-            {isFr ? "Je peux déposer les dons moi-même" : "أستطيع توصيلها بنفسي"}
-          </label>
-
-          <div>
-            <Label className="mb-1.5">{isFr ? "Disponibilité (facultatif)" : "متى ستكون جاهزة؟ (اختياري)"}</Label>
-            <Input type="date" {...register("ready_at")} />
+              <button
+                type="button"
+                onClick={() => {
+                  setValue("needs_transport", true);
+                  setValue("can_deliver_self", false);
+                }}
+                className={cn(
+                  "flex items-start gap-3 p-3.5 rounded-2xl border text-start transition-all cursor-pointer",
+                  needsTransport
+                    ? "border-blue-500 bg-blue-500/10 text-foreground font-bold shadow-xs"
+                    : "border-border bg-card/60 text-muted-foreground hover:bg-secondary/40"
+                )}
+              >
+                <span
+                  className={cn(
+                    "flex size-9 shrink-0 items-center justify-center rounded-xl",
+                    needsTransport
+                      ? "bg-blue-600 text-white"
+                      : "bg-muted text-muted-foreground"
+                  )}
+                >
+                  <Truck className="size-4" />
+                </span>
+                <div className="space-y-0.5">
+                  <p className="text-xs sm:text-sm font-bold leading-snug">
+                    {isFr ? "J'ai besoin d'un transporteur" : "أحتاج إلى وسيلة شحن / نقل"}
+                  </p>
+                  <p className="text-[11px] text-muted-foreground font-normal leading-relaxed">
+                    {isFr
+                      ? "Un chauffeur bénévole viendra récupérer les dons"
+                      : "ربطك بسائقين متطوعين لاستلام المواد ونقلها"}
+                  </p>
+                </div>
+              </button>
+            </div>
           </div>
         </CardContent>
       </Card>
 
+      {/* 3. Donor Contact Info */}
       <Card>
-        <CardContent className="space-y-4 px-5">
-          <h2 className="font-bold">{isFr ? "Vos coordonnées" : "بياناتك"}</h2>
-          <div>
-            <Label className="mb-1.5">{isFr ? "Nom complet ou organisation" : "الاسم الكامل"}</Label>
-            <Input {...register("donor_name")} />
-            {errors.donor_name && (
-              <p className="mt-1 text-sm text-destructive">{errors.donor_name.message}</p>
-            )}
+        <CardContent className="space-y-4 px-5 pt-6">
+          <div className="flex items-center gap-2 text-foreground font-bold">
+            <span className="flex size-7 items-center justify-center rounded-lg bg-algeria-green/10 text-algeria-green text-sm font-extrabold">
+              3
+            </span>
+            <h2>{isFr ? "Coordonnées du donateur" : "بيانات المتبرع أو الجهة المانحة"}</h2>
           </div>
-          <div>
-            <Label className="mb-1.5">{isFr ? "Numéro de téléphone" : "رقم الهاتف"}</Label>
-            <Input dir="ltr" placeholder="0555xxxxxx" {...register("donor_phone")} />
-            {errors.donor_phone && (
-              <p className="mt-1 text-sm text-destructive">{errors.donor_phone.message}</p>
-            )}
+
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
+            <div>
+              <Label className="mb-1.5">{isFr ? "Nom complet ou association *" : "الاسم الكامل أو اسم الجمعية *"}</Label>
+              <Input
+                placeholder={isFr ? "Ex : Karim Benali" : "مثال: كريم بن علي"}
+                {...register("donor_name")}
+              />
+              {errors.donor_name && (
+                <p className="mt-1 text-xs text-destructive">{errors.donor_name.message}</p>
+              )}
+            </div>
+
+            <div>
+              <Label className="mb-1.5">{isFr ? "Numéro de téléphone *" : "رقم الهاتف للتواصل *"}</Label>
+              <Input dir="ltr" placeholder="0555xxxxxx" {...register("donor_phone")} />
+              {errors.donor_phone && (
+                <p className="mt-1 text-xs text-destructive">{errors.donor_phone.message}</p>
+              )}
+            </div>
           </div>
+
           <div>
-            <Label className="mb-1.5">{isFr ? "Remarques (facultatif)" : "ملاحظات (اختياري)"}</Label>
-            <Textarea {...register("notes")} />
+            <Label className="mb-1.5">{isFr ? "Remarques ou instructions de livraison (facultatif)" : "ملاحظات إضافية أو تفاصيل الاستلام (اختياري)"}</Label>
+            <Textarea
+              placeholder={
+                isFr
+                  ? "Créneaux pour récupérer les dons, détails d'accès, etc."
+                  : "أوقات التواجد، تفاصيل المكان، أو أي معلومات تفيد فريق التنسيق..."
+              }
+              {...register("notes")}
+            />
           </div>
         </CardContent>
       </Card>
@@ -412,9 +626,18 @@ export function DonationForm({
         </Alert>
       )}
 
-      <Button type="submit" size="lg" className="w-full" disabled={submitting}>
-        {submitting && <Loader2 className="size-4 animate-spin" />}
-        {isFr ? "Envoyer le don" : "إرسال"}
+      <Button
+        type="submit"
+        size="lg"
+        className="w-full bg-algeria-green hover:bg-algeria-green/90 text-white font-extrabold text-base shadow-md h-12 rounded-2xl"
+        disabled={submitting}
+      >
+        {submitting ? (
+          <Loader2 className="size-5 animate-spin" />
+        ) : (
+          <HeartHandshake className="size-5 ms-1" />
+        )}
+        <span>{isFr ? "Valider et enregistrer les dons" : "تأكيد وتسجيل المساعدات"}</span>
       </Button>
     </form>
   );

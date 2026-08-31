@@ -23,6 +23,7 @@ import {
   ShieldCheck,
   MapPin,
   ExternalLink,
+  Zap,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -355,7 +356,7 @@ export function FieldVolunteerForm({
                         : "bg-priority-critical/10 text-priority-critical hover:bg-priority-critical/20"
                     )}
                   >
-                    <span>⚡</span>
+                    <Zap className="size-3 text-amber-500 shrink-0 fill-amber-500" />
                     <span>{isFr ? `${pw.codeStr} - ${pw.name_fr}` : `${pw.codeStr} - ${pw.name_ar}`}</span>
                   </button>
                 );
