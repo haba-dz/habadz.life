@@ -13,7 +13,7 @@ import {
   ExternalLink,
   Phone,
 } from "lucide-react";
-import { getOfficialUpdates } from "@/lib/data/public";
+import { getOfficialUpdateById } from "@/lib/data/public";
 import { formatRelativeTime } from "@/lib/constants";
 import { getLocale } from "@/i18n/server";
 
@@ -23,8 +23,7 @@ export async function generateMetadata({
   params: Promise<{ id: string }>;
 }): Promise<Metadata> {
   const { id } = await params;
-  const updates = await getOfficialUpdates(50);
-  const update = updates.find((u) => u.id === id) || updates[0];
+  const update = await getOfficialUpdateById(id);
 
   if (!update) return { title: "البيان غير موجود" };
 
@@ -62,8 +61,7 @@ export default async function OfficialUpdateDetailPage({
   const { id } = await params;
   const locale = await getLocale();
   const isFr = locale === "fr";
-  const updates = await getOfficialUpdates(50);
-  const update = updates.find((u) => u.id === id);
+  const update = await getOfficialUpdateById(id);
 
   if (!update) {
     notFound();
@@ -71,7 +69,7 @@ export default async function OfficialUpdateDetailPage({
 
   const auth = inferAuthority(update.source, update.title, isFr);
   const AuthIcon = auth.icon;
-  const isUrgent = update.title.includes("عاجل") || update.title.includes("إنذار") || update.update_type === "fire_alert";
+  const isUrgent = (update.is_urgent ?? false) || update.title.includes("عاجل") || update.title.includes("إنذار") || update.update_type === "fire_alert";
 
   const exactDate = new Intl.DateTimeFormat(isFr ? "fr-DZ" : "ar-DZ", {
     dateStyle: "full",
