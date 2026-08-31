@@ -1,4 +1,7 @@
-{$APP_HOST} {
+{$APP_HOST}, www.{$APP_HOST} {
+	@www host www.{$APP_HOST}
+	redir @www https://{$APP_HOST}{uri} permanent
+
 	encode zstd gzip
 	reverse_proxy app:3000
 }
