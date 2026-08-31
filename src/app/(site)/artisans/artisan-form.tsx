@@ -3,7 +3,17 @@
 import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { Loader2 } from "lucide-react";
+import {
+  Loader2,
+  Hammer,
+  Paintbrush,
+  Wrench,
+  Zap,
+  Home,
+  ShieldCheck,
+  CheckCircle2,
+  Package,
+} from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -15,10 +25,22 @@ import { WilayaSelect } from "@/components/ui/wilaya-select";
 import { CommuneSelect } from "@/components/ui/commune-select";
 import { priorityWilayas } from "@/lib/algeria-cities";
 import { cn } from "@/lib/utils";
-import { artisanVolunteerSchema, type ArtisanVolunteerInput } from "@/schemas/artisan-volunteer";
+import {
+  artisanVolunteerSchema,
+  type ArtisanVolunteerInput,
+} from "@/schemas/artisan-volunteer";
 import { SuccessPanel } from "@/components/shared/success-panel";
 import { submitArtisanVolunteer } from "@/actions/artisans";
 import type { AvailableLocale } from "@/i18n/locales";
+
+const popularCrafts = [
+  { ar: "بناء وترميم جدران", fr: "Maçonnerie", icon: Hammer },
+  { ar: "دهان وطلاء", fr: "Peinture", icon: Paintbrush },
+  { ar: "سباكة وترصيص صحي", fr: "Plomberie", icon: Wrench },
+  { ar: "كهرباء معمارية", fr: "Électricité", icon: Zap },
+  { ar: "أسقف وقرميد وعزل", fr: "Toiture & Étanchéité", icon: Home },
+  { ar: "نجارة وأبواب ونوافذ", fr: "Menuiserie", icon: Package },
+];
 
 export function ArtisanForm({ locale = "ar" }: { locale?: AvailableLocale }) {
   const isFr = locale === "fr";
@@ -48,6 +70,7 @@ export function ArtisanForm({ locale = "ar" }: { locale?: AvailableLocale }) {
   });
 
   const selectedWilaya = watch("wilaya_code");
+  const selectedSpecialty = watch("specialty");
   const canTravel = watch("can_travel");
   const hasOwnTools = watch("has_own_tools");
   const showPhonePublicly = watch("show_phone_publicly");
@@ -62,7 +85,7 @@ export function ArtisanForm({ locale = "ar" }: { locale?: AvailableLocale }) {
           res.message ??
             (isFr
               ? "Une erreur est survenue lors de l'enregistrement. Veuillez réessayer."
-              : "حدث خطأ أثناء تسجيل بياناتك. حاول مرة أخرى."),
+              : "حدث خطأ أثناء تسجيل بياناتك. حاول مرة أخرى.")
         );
         return;
       }
@@ -71,7 +94,7 @@ export function ArtisanForm({ locale = "ar" }: { locale?: AvailableLocale }) {
       setSubmitError(
         isFr
           ? "Une erreur est survenue lors de l'enregistrement. Veuillez réessayer."
-          : "حدث خطأ أثناء تسجيل بياناتك. حاول مرة أخرى.",
+          : "حدث خطأ أثناء تسجيل بياناتك. حاول مرة أخرى."
       );
     } finally {
       setSubmitting(false);
@@ -80,80 +103,118 @@ export function ArtisanForm({ locale = "ar" }: { locale?: AvailableLocale }) {
 
   if (submitted) {
     return (
-      <SuccessPanel
-        title={isFr ? "Merci pour votre engagement solidaire" : "شكراً لمبادرتكم الإنسانية"}
-        description={
-          isFr
-            ? "Vos informations ont été enregistrées avec succès. L'équipe de coordination vous contactera dès que des travaux nécessiteront votre expertise."
-            : "تم تسجيل بياناتكم بنجاح. ستتواصل معكم خلية التنسيق عند وجود أعمال ترميم تحتاج تخصصكم."
-        }
-        primaryHref="/"
-        primaryLabel={isFr ? "Retour à l'accueil" : "العودة للرئيسية"}
-      />
+      <div className="animate-rise space-y-6">
+        <SuccessPanel
+          title={isFr ? "Merci pour votre engagement solidaire !" : "شكراً لمبادرتكم الحرفية النبيلة"}
+          description={
+            isFr
+              ? "Vos informations ont été enregistrées avec succès. L'équipe de coordination vous contactera dès que des chantiers de réhabilitation nécessiteront votre expertise."
+              : "تم تسجيل استعدادكم بنجاح. ستتواصل معكم خلايا التنسيق فور فتح ورشات ترميم المنازل المتضررة في منطقتكم."
+          }
+          primaryHref="/help/damage-assessment"
+          primaryLabel={isFr ? "Voir le programme de reconstruction" : "برنامج ترميم السكنات"}
+        />
+      </div>
     );
   }
 
   return (
     <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
+      {/* 1. Identity & Specialty */}
       <Card>
         <CardContent className="space-y-4 px-5 pt-6">
-          <h2 className="font-bold">{isFr ? "Informations professionnelles et personnelles" : "المعلومات المهنية والشخصية"}</h2>
-
-          <div>
-            <Label className="mb-1.5">{isFr ? "Nom et prénom *" : "الاسم واللقب *"}</Label>
-            <Input placeholder={isFr ? "Mohamed Belhadj" : "محمد بلحاج"} {...register("full_name")} />
-            {errors.full_name && (
-              <p className="mt-1 text-sm text-destructive">{errors.full_name.message}</p>
-            )}
+          <div className="flex items-center gap-2 text-foreground font-bold">
+            <span className="flex size-7 items-center justify-center rounded-lg bg-orange-500/10 text-orange-600 dark:text-orange-400 text-sm font-extrabold">
+              1
+            </span>
+            <h2>{isFr ? "Informations personnelles & Métier" : "البيانات المهنية والتخصص"}</h2>
           </div>
 
-          <div>
-            <Label className="mb-1.5">{isFr ? "Numéro de téléphone *" : "رقم الهاتف *"}</Label>
-            <Input dir="ltr" placeholder="0555xxxxxx" {...register("phone")} />
-            {errors.phone && (
-              <p className="mt-1 text-sm text-destructive">{errors.phone.message}</p>
-            )}
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
+            <div>
+              <Label className="mb-1.5">{isFr ? "Nom et prénom *" : "الاسم واللقب *"}</Label>
+              <Input
+                placeholder={isFr ? "Ex : Mohamed Belhadj" : "مثال: محمد بلحاج"}
+                {...register("full_name")}
+              />
+              {errors.full_name && (
+                <p className="mt-1 text-xs text-destructive">{errors.full_name.message}</p>
+              )}
+            </div>
+
+            <div>
+              <Label className="mb-1.5">{isFr ? "Numéro de téléphone *" : "رقم الهاتف للتواصل *"}</Label>
+              <Input dir="ltr" placeholder="0555xxxxxx" {...register("phone")} />
+              {errors.phone && (
+                <p className="mt-1 text-xs text-destructive">{errors.phone.message}</p>
+              )}
+            </div>
           </div>
 
-          <div>
-            <Label className="mb-1.5">{isFr ? "Spécialité artisanale *" : "التخصص الحرفي *"}</Label>
-            <Input placeholder={isFr ? "Peintre, maçon, plombier, électricien..." : "دهان، بناء، سباك، كهربائي..."} {...register("specialty")} />
+          {/* Craft / Trade Selection Cards */}
+          <div className="space-y-2">
+            <Label className="text-xs font-semibold text-muted-foreground">
+              {isFr ? "Sélectionnez votre corps de métier :" : "اختر مهنتك أو تخصصك الحرفي :"}
+            </Label>
+            <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
+              {popularCrafts.map((c) => {
+                const isSelected = selectedSpecialty === (isFr ? c.fr : c.ar);
+                const Icon = c.icon;
+                return (
+                  <button
+                    key={c.ar}
+                    type="button"
+                    onClick={() => setValue("specialty", isFr ? c.fr : c.ar, { shouldValidate: true })}
+                    className={cn(
+                      "flex items-center gap-2 p-2.5 rounded-xl border text-start transition-all cursor-pointer",
+                      isSelected
+                        ? "border-orange-500 bg-orange-500/10 text-foreground font-bold shadow-xs"
+                        : "border-border bg-card/60 text-muted-foreground hover:bg-secondary/40"
+                    )}
+                  >
+                    <Icon className="size-4 text-orange-600 dark:text-orange-400 shrink-0" />
+                    <span className="text-xs leading-snug">{isFr ? c.fr : c.ar}</span>
+                  </button>
+                );
+              })}
+            </div>
+            <Input
+              placeholder={
+                isFr
+                  ? "Ou précisez un autre métier..."
+                  : "أو اكتب مهنة أخرى (نجار ألمنيوم، تركيب بلاط، لحام...)"
+              }
+              {...register("specialty")}
+            />
             {errors.specialty && (
-              <p className="mt-1 text-sm text-destructive">{errors.specialty.message}</p>
+              <p className="mt-1 text-xs text-destructive">{errors.specialty.message}</p>
             )}
           </div>
 
           {/* Wilaya selection */}
           <div>
-            <Label className="mb-2 flex items-center justify-between">
-              <span>{isFr ? "Wilaya de résidence ou d'activité *" : "الولاية (مقر الإقامة أو النشاط) *"}</span>
-              <span className="text-xs font-bold text-priority-critical flex items-center gap-1">
-                <span className="inline-block size-1.5 rounded-full bg-priority-critical animate-pulse" />
-                {isFr ? "Zones sinistrées prioritaires" : "المناطق المتضررة ذات الأولوية"}
-              </span>
-            </Label>
-
+            <Label className="mb-1.5">{isFr ? "Wilaya de résidence ou d'intervention *" : "الولاية (مقر الإقامة أو الاستعداد للتدخل) *"}</Label>
             {/* Quick Priority Wilaya Buttons */}
-            <div className="flex flex-wrap gap-2 mb-3">
+            <div className="flex flex-wrap gap-1.5 mb-2">
               {priorityWilayas.map((pw) => {
-                const active = selectedWilaya === pw.name_ar || selectedWilaya === pw.codeStr || selectedWilaya === String(pw.code);
+                const active =
+                  selectedWilaya === pw.name_ar || selectedWilaya === pw.codeStr || selectedWilaya === String(pw.code);
                 return (
                   <button
                     key={pw.code}
                     type="button"
-                    aria-pressed={active}
                     onClick={() => {
                       setValue("wilaya_code", pw.name_ar, { shouldValidate: true });
                       setValue("commune_id", "");
                     }}
                     className={cn(
-                      "rounded-xl border px-3.5 py-1.5 text-xs font-bold transition-all cursor-pointer flex items-center gap-1.5",
+                      "rounded-lg px-2.5 py-1 text-xs font-bold transition-all cursor-pointer",
                       active
-                        ? "border-priority-critical bg-priority-critical text-white shadow-sm scale-105"
-                        : "border-priority-critical/30 bg-priority-critical/10 text-priority-critical hover:bg-priority-critical/20",
+                        ? "bg-priority-critical text-white shadow-xs"
+                        : "bg-priority-critical/10 text-priority-critical hover:bg-priority-critical/20"
                     )}
                   >
-                    <span>⚡</span>
+                    <Zap className="size-3 text-amber-500 shrink-0 fill-amber-500" />
                     <span>{isFr ? `${pw.codeStr} - ${pw.name_fr}` : `${pw.codeStr} - ${pw.name_ar}`}</span>
                   </button>
                 );
@@ -169,13 +230,13 @@ export function ArtisanForm({ locale = "ar" }: { locale?: AvailableLocale }) {
               }}
             />
             {errors.wilaya_code && (
-              <p className="mt-1 text-sm text-destructive">{errors.wilaya_code.message}</p>
+              <p className="mt-1 text-xs text-destructive">{errors.wilaya_code.message}</p>
             )}
           </div>
 
           {/* Commune selection */}
           <div>
-            <Label className="mb-1.5">{isFr ? "Commune de résidence *" : "البلدية (مكان الإقامة أو الورشة) *"}</Label>
+            <Label className="mb-1.5">{isFr ? "Commune de présence / intervention *" : "البلدية (مكان التواجد / التدخل) *"}</Label>
             <CommuneSelect
               wilaya={selectedWilaya}
               locale={locale}
@@ -183,43 +244,70 @@ export function ArtisanForm({ locale = "ar" }: { locale?: AvailableLocale }) {
               onChange={(e) => setValue("commune_id", e.target.value, { shouldValidate: true })}
             />
             {errors.commune_id && (
-              <p className="mt-1 text-sm text-destructive">{errors.commune_id.message}</p>
+              <p className="mt-1 text-xs text-destructive">{errors.commune_id.message}</p>
             )}
           </div>
         </CardContent>
       </Card>
 
+      {/* 2. Tools & Availability */}
       <Card>
         <CardContent className="space-y-4 px-5 pt-6">
-          <h2 className="font-bold">{isFr ? "Disponibilités et équipements" : "مجالات التطوع والاستعداد"}</h2>
+          <div className="flex items-center gap-2 text-foreground font-bold">
+            <span className="flex size-7 items-center justify-center rounded-lg bg-orange-500/10 text-orange-600 dark:text-orange-400 text-sm font-extrabold">
+              2
+            </span>
+            <h2>{isFr ? "Outils & Déplacement" : "العتاد والأدوات وجاهزية التنقل"}</h2>
+          </div>
 
-          <label className="flex items-center gap-2 text-sm">
-            <Checkbox
-              checked={canTravel}
-              onCheckedChange={(v) => setValue("can_travel", Boolean(v))}
-            />
-            {isFr ? "Prêt à se déplacer vers d'autres zones sinistrées" : "الاستعداد للتنقل إلى المناطق المتضررة الأخرى"}
-          </label>
+          <div className="space-y-2.5">
+            <label className="flex items-start gap-3 p-3 rounded-2xl border border-border bg-card/60 cursor-pointer hover:bg-secondary/40 transition-colors">
+              <Checkbox
+                checked={canTravel}
+                onCheckedChange={(v) => setValue("can_travel", Boolean(v))}
+                className="mt-0.5"
+              />
+              <div className="space-y-0.5 text-start">
+                <p className="text-xs sm:text-sm font-bold text-foreground">
+                  {isFr ? "Prêt à se déplacer dans les communes sinistrées" : "الاستعداد للتنقل إلى القرى والبلديات المتضررة"}
+                </p>
+                <p className="text-[11px] text-muted-foreground">
+                  {isFr
+                    ? "Participer aux chantiers collectifs de réparation des toits et murs"
+                    : "المشاركة في ورشات ترميم المنازل وإصلاح شبكات المياه والكهرباء"}
+                </p>
+              </div>
+            </label>
 
-          <label className="flex items-center gap-2 text-sm">
-            <Checkbox
-              checked={hasOwnTools}
-              onCheckedChange={(v) => setValue("has_own_tools", Boolean(v))}
-            />
-            {isFr ? "Dispose de ses propres outils de travail" : "حيازة أدوات العمل الخاصة"}
-          </label>
-
-          <label className="flex items-center gap-2 text-sm">
-            <Checkbox
-              checked={showPhonePublicly}
-              onCheckedChange={(v) => setValue("show_phone_publicly", Boolean(v))}
-            />
-            {isFr ? "J'accepte la publication de mon numéro dans l'annuaire des artisans après vérification" : "أوافق على نشر رقم هاتفي للعموم في قائمة الحرفيين بعد التحقق من انضمامي"}
-          </label>
+            <label className="flex items-start gap-3 p-3 rounded-2xl border border-border bg-card/60 cursor-pointer hover:bg-secondary/40 transition-colors">
+              <Checkbox
+                checked={hasOwnTools}
+                onCheckedChange={(v) => setValue("has_own_tools", Boolean(v))}
+                className="mt-0.5"
+              />
+              <div className="space-y-0.5 text-start">
+                <p className="text-xs sm:text-sm font-bold text-foreground">
+                  {isFr ? "Dispose de son propre outillage de travail" : "أملك عتادي وأدوات عملي الخاصة"}
+                </p>
+                <p className="text-[11px] text-muted-foreground">
+                  {isFr
+                    ? "Échelles, perceuses, outils de plomberie/peinture prêts"
+                    : "سلالم، مثاقب، أدوات سباكة أو دهان جاهزة للاستخدام"}
+                </p>
+              </div>
+            </label>
+          </div>
 
           <div>
-            <Label className="mb-1.5">{isFr ? "Remarques supplémentaires (créneaux de disponibilité...)" : "ملاحظات إضافية (أوقات التوفر...)"}</Label>
-            <Textarea placeholder={isFr ? "Toute précision utile pour l'équipe de coordination..." : "أي تفاصيل تساعد فريق التنسيق..."} {...register("notes")} />
+            <Label className="mb-1.5">{isFr ? "Remarques (facultatif)" : "ملاحظات إضافية (اختياري)"}</Label>
+            <Textarea
+              placeholder={
+                isFr
+                  ? "Créneaux de disponibilité, matériel spécifique disponible..."
+                  : "أيام التفرغ، إمكانية توفير عمال مساعدين، معدات خاصة..."
+              }
+              {...register("notes")}
+            />
           </div>
         </CardContent>
       </Card>
@@ -230,9 +318,18 @@ export function ArtisanForm({ locale = "ar" }: { locale?: AvailableLocale }) {
         </Alert>
       )}
 
-      <Button type="submit" size="lg" className="w-full" disabled={submitting}>
-        {submitting && <Loader2 className="size-4 animate-spin" />}
-        {isFr ? "Confirmer l'inscription" : "تأكيد تسجيل التطوع"}
+      <Button
+        type="submit"
+        size="lg"
+        className="w-full bg-orange-600 hover:bg-orange-700 text-white font-extrabold text-base shadow-md h-12 rounded-2xl"
+        disabled={submitting}
+      >
+        {submitting ? (
+          <Loader2 className="size-5 animate-spin" />
+        ) : (
+          <Hammer className="size-5 ms-1" />
+        )}
+        <span>{isFr ? "Confirmer mon inscription artisan" : "تأكيد تسجيل التطوع الحرفي"}</span>
       </Button>
     </form>
   );
