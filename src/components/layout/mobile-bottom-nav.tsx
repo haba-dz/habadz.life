@@ -3,7 +3,7 @@
 import { useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { Home, MapPin, LifeBuoy, Gift, Menu } from "lucide-react";
+import { Home, MapPin, Gift, Users, Menu } from "lucide-react";
 import { MobileNav } from "./mobile-nav";
 import type { AvailableLocale } from "@/i18n/locales";
 import { cn } from "@/lib/utils";
@@ -32,17 +32,17 @@ export function MobileBottomNav({ locale }: { locale: AvailableLocale }) {
       active: pathname === "/map",
     },
     {
-      href: "/help",
-      label: isFr ? "Urgence" : "طلب إغاثة",
-      icon: LifeBuoy,
-      active: pathname === "/help" || pathname?.startsWith("/help/"),
+      href: "/donate",
+      label: isFr ? "Faire un don" : "تقديم مساعدة",
+      icon: Gift,
+      active: pathname === "/donate",
       isCta: true,
     },
     {
-      href: "/donate",
-      label: isFr ? "Dons" : "مساعدات",
-      icon: Gift,
-      active: pathname === "/donate",
+      href: "/volunteers",
+      label: isFr ? "Bénévoles" : "المتطوعون",
+      icon: Users,
+      active: pathname === "/volunteers",
     },
   ];
 
@@ -65,13 +65,13 @@ export function MobileBottomNav({ locale }: { locale: AvailableLocale }) {
                 >
                   <div
                     className={cn(
-                      "flex size-13 items-center justify-center rounded-2xl bg-priority-critical text-white shadow-md shadow-priority-critical/30 transition-all active:scale-95 group-hover:scale-105",
-                      item.active && "ring-4 ring-priority-critical/25 scale-105"
+                      "flex size-13 items-center justify-center rounded-2xl bg-algeria-green text-white shadow-md shadow-algeria-green/30 transition-all active:scale-95 group-hover:scale-105",
+                      item.active && "ring-4 ring-algeria-green/25 scale-105"
                     )}
                   >
-                    <Icon className="size-6 animate-pulse" />
+                    <Icon className="size-6" />
                   </div>
-                  <span className="mt-1 text-[10px] font-black text-priority-critical truncate">
+                  <span className="mt-1 text-[10px] font-black text-algeria-green truncate">
                     {item.label}
                   </span>
                 </Link>

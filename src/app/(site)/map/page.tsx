@@ -93,21 +93,11 @@ export default async function MapPage() {
 
           <Button
             size="sm"
-            variant="outline"
             render={<Link href="/donate" />}
-            className="rounded-xl font-bold gap-1.5"
+            className="rounded-xl bg-algeria-green hover:bg-algeria-green/90 text-white font-bold gap-1.5 shadow-xs"
           >
-            <HeartHandshake className="size-4 text-algeria-green" />
-            <span>{isFr ? "Enregistrer un don" : "تسجيل مساعدات"}</span>
-          </Button>
-
-          <Button
-            size="sm"
-            render={<Link href="/help" />}
-            className="rounded-xl bg-algeria-green hover:bg-algeria-green/90 text-white font-bold gap-1.5 shadow-sm"
-          >
-            <ShieldCheck className="size-4" />
-            <span>{isFr ? "Demander de l'aide" : "طلب إغاثة"}</span>
+            <HeartHandshake className="size-4" />
+            <span>{isFr ? "Enregistrer un don" : "تقديم مساعدات"}</span>
           </Button>
         </div>
       </div>

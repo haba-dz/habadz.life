@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import { HeartHandshake, Gift, Truck, Stethoscope, MapPin, LifeBuoy } from "lucide-react";
+import { HeartHandshake, Gift, Truck, MapPin } from "lucide-react";
 import {
   Dialog,
   DialogContent,
@@ -17,17 +17,17 @@ import type { AvailableLocale } from "@/i18n/locales";
 const STORAGE_KEY = "haba_welcome_seen_v1";
 
 const rolesAr = [
-  { href: "/donate", icon: Gift, title: "لدي مساعدات", desc: "أملك مواد وأريد إيصالها لمن يحتاجها" },
-  { href: "/transport", icon: Truck, title: "أستطيع النقل", desc: "لدي مركبة ومساحة فارغة على الطريق" },
-  { href: "/medical", icon: Stethoscope, title: "أنا طبيب / بيطري", desc: "تقديم الرعاية والاستشارات الميدانية" },
-  { href: "/map", icon: MapPin, title: "خريطة الإغاثة", desc: "مراكز التجميع ونقاط الاستقبال" },
+  { href: "/donate", icon: Gift, title: "لدي مساعدات عينية", desc: "أملك مواد وإعانات وأريد إيصالها للمتضررين" },
+  { href: "/volunteers", icon: HeartHandshake, title: "أريد التطوع ميدانيًا", desc: "المشاركة في فرز الطرود والدعم على الأرض" },
+  { href: "/transport", icon: Truck, title: "أستطيع النقل والشحن", desc: "لدي مركبة أو شاحنة لنقل الشحنات" },
+  { href: "/map", icon: MapPin, title: "خريطة المراكز", desc: "الاطلاع على نقاط التجميع ومراكز الإغاثة" },
 ];
 
 const rolesFr = [
-  { href: "/help", icon: LifeBuoy, title: "J'ai besoin d'aide", desc: "Aide urgente pour moi ou ma famille" },
-  { href: "/donate", icon: Gift, title: "J'ai des dons", desc: "Fournir des dons matériels utiles" },
-  { href: "/transport", icon: Truck, title: "Je peux transporter", desc: "Véhicule disponible pour acheminer" },
-  { href: "/map", icon: MapPin, title: "Carte des secours", desc: "Consulter les points de collecte" },
+  { href: "/donate", icon: Gift, title: "J'ai des dons matériels", desc: "Fournir des vivres et produits de première nécessité" },
+  { href: "/volunteers", icon: HeartHandshake, title: "Volontariat de terrain", desc: "Aider au tri des colis et logistique sur place" },
+  { href: "/transport", icon: Truck, title: "Transport & Logistique", desc: "Véhicule disponible pour acheminer les dons" },
+  { href: "/map", icon: MapPin, title: "Carte des secours", desc: "Consulter les centres et points de collecte" },
 ];
 
 export function WelcomeDialog({ locale = "ar" }: { locale?: AvailableLocale }) {
@@ -60,40 +60,47 @@ export function WelcomeDialog({ locale = "ar" }: { locale?: AvailableLocale }) {
       }}
     >
       <DialogContent className="sm:max-w-md">
-        <DialogHeader>
-          <div className="mx-auto mb-1 flex size-12 items-center justify-center rounded-full bg-algeria-green text-algeria-green-foreground">
+        <DialogHeader className="text-center sm:text-start">
+          <div className="mx-auto mb-2 flex size-12 items-center justify-center rounded-2xl bg-algeria-green/10 text-algeria-green sm:mx-0">
             <HeartHandshake className="size-6" />
           </div>
-          <DialogTitle className="text-center text-xl">
-            {isFr ? `Bienvenue sur ${siteConfig.shortName}` : `أهلاً بك في ${siteConfig.shortName}`}
+          <DialogTitle className="text-xl">
+            {isFr ? `Bienvenue sur ${siteConfig.name}` : `مرحبًا بك في ${siteConfig.name}`}
           </DialogTitle>
-          <DialogDescription className="text-center">
+          <DialogDescription>
             {isFr
-              ? "Nous coordonnons la solidarité — Choisissez votre situation pour être orienté directement."
-              : `${siteConfig.tagline} — اختر ما ينطبق عليك لنوجّهك مباشرة.`}
+              ? "Plateforme solidaire pour coordonner les secours. Comment souhaitez-vous participer ?"
+              : "منصة وطنية لتنسيق التضامن وتقديم المساعدات. كيف ترغب في المشاركة اليوم؟"}
           </DialogDescription>
         </DialogHeader>
 
-        <div className="grid gap-2 sm:grid-cols-2">
-          {roles.map((r) => (
-            <button
-              key={r.href}
-              type="button"
-              onClick={() => choose(r.href)}
-              className="flex flex-col items-center gap-1 rounded-xl border border-border p-4 text-center transition-all hover:-translate-y-0.5 hover:border-algeria-green hover:bg-algeria-green/5 cursor-pointer"
-            >
-              <span className="flex size-11 items-center justify-center rounded-full bg-algeria-green/10 text-algeria-green">
-                <r.icon className="size-5" aria-hidden />
-              </span>
-              <span className="font-bold">{r.title}</span>
-              <span className="text-xs text-muted-foreground">{r.desc}</span>
-            </button>
-          ))}
+        <div className="grid gap-2.5 py-2">
+          {roles.map((r) => {
+            const Icon = r.icon;
+            return (
+              <button
+                key={r.href}
+                type="button"
+                onClick={() => choose(r.href)}
+                className="flex items-center gap-3.5 rounded-xl border border-border bg-card p-3.5 text-start transition-all hover:border-algeria-green hover:bg-muted/50 active:scale-[0.98] cursor-pointer"
+              >
+                <div className="flex size-10 shrink-0 items-center justify-center rounded-xl bg-algeria-green/10 text-algeria-green">
+                  <Icon className="size-5" />
+                </div>
+                <div className="flex-1 min-w-0">
+                  <div className="font-bold text-sm leading-tight text-foreground">{r.title}</div>
+                  <div className="text-xs text-muted-foreground line-clamp-1">{r.desc}</div>
+                </div>
+              </button>
+            );
+          })}
         </div>
 
-        <Button variant="ghost" onClick={dismiss} className="w-full text-muted-foreground">
-          {isFr ? "Passer" : "تخطّي"}
-        </Button>
+        <div className="flex justify-end pt-1">
+          <Button variant="ghost" size="sm" onClick={dismiss}>
+            {isFr ? "Continuer vers le site" : "تخطي ومتابعة التصفح"}
+          </Button>
+        </div>
       </DialogContent>
     </Dialog>
   );

@@ -7,7 +7,6 @@ import {
   Menu,
   X,
   HeartHandshake,
-  LifeBuoy,
   Gift,
   MapPin,
   TriangleAlert,
@@ -17,12 +16,10 @@ import {
   Newspaper,
   ShieldCheck,
   PhoneCall,
-  Home,
   ChevronLeft,
   ChevronRight,
   ExternalLink,
   Users,
-  ShieldAlert,
 } from "lucide-react";
 import {
   Sheet,
@@ -52,30 +49,7 @@ export function MobileNav({ locale, isOpen, onOpenChange, trigger }: MobileNavPr
   const isRtl = locale === "ar";
   const Chevron = isRtl ? ChevronLeft : ChevronRight;
 
-  // 1. Services aux sinistrés (Need Help)
-  const victimsLinks = [
-    {
-      href: "/help",
-      label: isFr ? "Demander de l'aide urgente" : "طلب إغاثة وإعانة عاجلة",
-      desc: isFr ? "Formulaire de secours pour les familles" : "تسجيل احتياجات الأسرة والمساعدات",
-      icon: LifeBuoy,
-      highlight: true,
-    },
-    {
-      href: "/help/damage-assessment",
-      label: isFr ? "Évaluation des dégâts du logement" : "تصريح أضرار السكن والترميم",
-      desc: isFr ? "Pour mobiliser artisans et matériaux" : "تقدير مواد البناء وورشات الحرفيين",
-      icon: Hammer,
-    },
-    {
-      href: "/map",
-      label: isFr ? "Centres d'hébergement & d'accueil" : "مراكز الإيواء والاستقبال",
-      desc: isFr ? "Localisation des hébergements ouverts" : "المدارس ومراكز الاستقبال المجهزة",
-      icon: Home,
-    },
-  ];
-
-  // 2. Bénévolat & Dons (Want to Help)
+  // 1. Bénévolat & Dons (Solidarité)
   const volunteerLinks = [
     {
       href: "/donate",
@@ -83,6 +57,7 @@ export function MobileNav({ locale, isOpen, onOpenChange, trigger }: MobileNavPr
       desc: isFr ? "Vivres, eau, couvertures, couches" : "أغذية، أفرشة، أدوية، مياه",
       icon: Gift,
       color: "text-algeria-green",
+      badge: isFr ? "Prioritaire" : "أولوية",
     },
     {
       href: "/volunteers",
@@ -107,14 +82,14 @@ export function MobileNav({ locale, isOpen, onOpenChange, trigger }: MobileNavPr
     },
     {
       href: "/artisans",
-      label: isFr ? "Artisans du bâtiment" : "الحرفيون وترميم المنازل",
+      label: isFr ? "Artisans & Travaux de réparation" : "الحرفيون وترميم السكنات",
       desc: isFr ? "Électricité, plomberie, maçonnerie" : "بناء، سباكة، كهرباء، دهان وأسقف",
       icon: Hammer,
       color: "text-orange-600 dark:text-orange-400",
     },
   ];
 
-  // 3. Suivi & Transparence (Tracking & Info)
+  // 2. Suivi & Transparence (Tracking & Info)
   const infoLinks = [
     {
       href: "/map",
@@ -196,14 +171,14 @@ export function MobileNav({ locale, isOpen, onOpenChange, trigger }: MobileNavPr
 
         {/* Categorized Content */}
         <div className="flex-1 overflow-y-auto px-3.5 py-4 space-y-5">
-          {/* Section 1: Services Sinistrés */}
-          <div className="rounded-2xl border border-priority-critical/20 bg-priority-critical/[0.03] p-3 space-y-2">
-            <div className="flex items-center gap-1.5 px-1 text-xs font-black text-priority-critical">
-              <ShieldAlert className="size-3.5" />
-              <span>{isFr ? "Services aux sinistrés & Urgence" : "خدمات المتضررين وطلب الإغاثة"}</span>
+          {/* Section 1: Solidarité & Bénévolat */}
+          <div className="rounded-2xl border border-algeria-green/25 bg-algeria-green/[0.03] p-3.5 space-y-2.5">
+            <div className="flex items-center gap-1.5 px-1 text-xs font-black text-algeria-green">
+              <HeartHandshake className="size-4" />
+              <span>{isFr ? "Solidarité & Bénévolat" : "سبل المساعدة والمشاركة"}</span>
             </div>
-            <div className="space-y-1">
-              {victimsLinks.map((link) => {
+            <div className="space-y-1.5">
+              {volunteerLinks.map((link) => {
                 const active = pathname === link.href;
                 const Icon = link.icon;
                 return (
@@ -214,19 +189,26 @@ export function MobileNav({ locale, isOpen, onOpenChange, trigger }: MobileNavPr
                     className={cn(
                       "flex items-center justify-between rounded-xl p-2.5 text-xs transition-all active:scale-[0.98]",
                       active
-                        ? "bg-priority-critical text-white shadow-xs font-bold"
-                        : "bg-background/80 hover:bg-background text-foreground border border-border/60"
+                        ? "bg-algeria-green text-white shadow-xs font-bold"
+                        : "bg-background/80 hover:bg-background text-foreground border border-border/50"
                     )}
                   >
                     <div className="flex items-center gap-2.5">
                       <span className={cn(
-                        "flex size-7 shrink-0 items-center justify-center rounded-lg",
-                        active ? "bg-white/20 text-white" : "bg-priority-critical/10 text-priority-critical"
+                        "flex size-8 shrink-0 items-center justify-center rounded-lg",
+                        active ? "bg-white/20 text-white" : "bg-algeria-green/10 text-algeria-green"
                       )}>
-                        <Icon className="size-3.5" />
+                        <Icon className={cn("size-4 shrink-0", active ? "text-white" : link.color)} />
                       </span>
                       <div>
-                        <p className="font-bold leading-tight">{link.label}</p>
+                        <div className="flex items-center gap-1.5">
+                          <p className="font-bold leading-tight">{link.label}</p>
+                          {link.badge && !active && (
+                            <span className="rounded-full bg-algeria-green/10 px-1.5 py-0.2 text-[9px] font-extrabold text-algeria-green">
+                              {link.badge}
+                            </span>
+                          )}
+                        </div>
                         <p className={cn("text-[10px] line-clamp-1", active ? "text-white/80" : "text-muted-foreground")}>
                           {link.desc}
                         </p>
@@ -239,45 +221,7 @@ export function MobileNav({ locale, isOpen, onOpenChange, trigger }: MobileNavPr
             </div>
           </div>
 
-          {/* Section 2: Solidarité & Bénévolat */}
-          <div className="rounded-2xl border border-algeria-green/20 bg-algeria-green/[0.03] p-3 space-y-2">
-            <div className="flex items-center gap-1.5 px-1 text-xs font-black text-algeria-green">
-              <HeartHandshake className="size-3.5" />
-              <span>{isFr ? "Solidarité & Bénévolat" : "سبل المساعدة والتطوع"}</span>
-            </div>
-            <div className="space-y-1">
-              {volunteerLinks.map((link) => {
-                const active = pathname === link.href;
-                const Icon = link.icon;
-                return (
-                  <Link
-                    key={link.href}
-                    href={link.href}
-                    onClick={() => setOpen(false)}
-                    className={cn(
-                      "flex items-center justify-between rounded-xl p-2 text-xs transition-all active:scale-[0.98]",
-                      active
-                        ? "bg-algeria-green text-white shadow-xs font-bold"
-                        : "hover:bg-muted text-foreground"
-                    )}
-                  >
-                    <div className="flex items-center gap-2.5">
-                      <Icon className={cn("size-4 shrink-0", active ? "text-white" : link.color)} />
-                      <div>
-                        <p className="font-bold leading-tight">{link.label}</p>
-                        <p className={cn("text-[10px] line-clamp-1", active ? "text-white/80" : "text-muted-foreground")}>
-                          {link.desc}
-                        </p>
-                      </div>
-                    </div>
-                    <Chevron className="size-3.5 opacity-40 shrink-0 ms-1" />
-                  </Link>
-                );
-              })}
-            </div>
-          </div>
-
-          {/* Section 3: Suivi & Transparence */}
+          {/* Section 2: Suivi & Transparence */}
           <div className="space-y-1.5 px-1">
             <p className="text-[11px] font-bold text-muted-foreground uppercase tracking-wider">
               {isFr ? "Suivi & Transparence" : "المتابعة والمستجدات"}
@@ -292,14 +236,14 @@ export function MobileNav({ locale, isOpen, onOpenChange, trigger }: MobileNavPr
                     href={link.href}
                     onClick={() => setOpen(false)}
                     className={cn(
-                      "flex items-center justify-between rounded-xl px-3 py-2 text-xs font-semibold transition-colors",
+                      "flex items-center justify-between rounded-xl px-3 py-2.5 text-xs font-semibold transition-colors",
                       active
                         ? "bg-muted text-foreground font-bold"
                         : "text-muted-foreground hover:bg-muted/60 hover:text-foreground"
                     )}
                   >
                     <div className="flex items-center gap-2.5">
-                      <Icon className="size-3.5 shrink-0" />
+                      <Icon className="size-4 shrink-0" />
                       <span>{link.label}</span>
                     </div>
                     <Chevron className="size-3 opacity-30" />

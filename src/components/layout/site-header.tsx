@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { HeartHandshake, LifeBuoy, Gift, MapPin, TriangleAlert, Users, Newspaper } from "lucide-react";
+import { HeartHandshake, Gift, MapPin, TriangleAlert, Users, Newspaper } from "lucide-react";
 import { siteConfig } from "@/config/site";
 import { LinkButton } from "@/components/shared/link-button";
 import { LanguageSwitcher } from "@/components/layout/language-switcher";
@@ -54,13 +54,13 @@ export async function SiteHeader() {
           <LanguageSwitcher current={locale} label={t.language.change} />
 
           <LinkButton
-            href="/help"
+            href="/volunteers"
             size="sm"
             variant="outline"
-            className="hidden md:inline-flex border-priority-critical/40 text-priority-critical hover:bg-priority-critical/10 font-bold rounded-xl h-9 whitespace-nowrap"
+            className="hidden md:inline-flex border-algeria-green/30 text-algeria-green hover:bg-algeria-green/10 font-bold rounded-xl h-9 whitespace-nowrap"
           >
-            <LifeBuoy className="size-3.5 animate-pulse" />
-            <span>{t.cta.needHelp}</span>
+            <Users className="size-3.5" />
+            <span>{isFr ? "Bénévolat" : "التطوع الميداني"}</span>
           </LinkButton>
 
           <LinkButton
@@ -70,7 +70,7 @@ export async function SiteHeader() {
           >
             <Gift className="size-3.5" />
             <span className="hidden xs:inline">{t.cta.haveAid}</span>
-            <span className="xs:hidden">{isFr ? "Dons" : "تبرع"}</span>
+            <span className="xs:hidden">{isFr ? "Dons" : "تقديم مساعدة"}</span>
           </LinkButton>
         </div>
       </div>
