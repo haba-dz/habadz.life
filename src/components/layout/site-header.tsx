@@ -3,7 +3,6 @@ import { HeartHandshake, Gift, MapPin, TriangleAlert, Users, Newspaper } from "l
 import { siteConfig } from "@/config/site";
 import { LinkButton } from "@/components/shared/link-button";
 import { LanguageSwitcher } from "@/components/layout/language-switcher";
-import { MobileNav } from "@/components/layout/mobile-nav";
 import { getDictionary } from "@/i18n/dictionaries";
 import { getLocale } from "@/i18n/server";
 
@@ -21,22 +20,19 @@ export async function SiteHeader() {
   ];
 
   return (
-    <header className="sticky top-0 z-40 border-b border-border bg-background/95 backdrop-blur-md supports-backdrop-filter:bg-background/80 shadow-xs">
-      <div className="mx-auto flex h-16 max-w-6xl items-center justify-between gap-3 px-3 sm:px-4">
-        {/* Brand and Logo */}
-        <div className="flex items-center gap-2 sm:gap-3 shrink-0">
-          <MobileNav locale={locale} />
-          <Link href="/" className="flex items-center gap-2 font-black shrink-0 group">
-            <span className="flex size-9 items-center justify-center rounded-xl bg-algeria-green text-white shadow-xs group-hover:scale-105 transition-transform shrink-0">
-              <HeartHandshake className="size-5" />
-            </span>
-            <span className="font-black text-base sm:text-lg whitespace-nowrap tracking-tight text-foreground">
-              {siteConfig.shortName}
-            </span>
-          </Link>
-        </div>
+    <header className="sticky top-0 z-40 border-b border-border bg-background/95 backdrop-blur-md supports-backdrop-filter:bg-background/80 shadow-2xs">
+      <div className="mx-auto flex h-14 sm:h-16 max-w-6xl items-center justify-between gap-3 px-4">
+        {/* Brand and Logo (Clean and spacious on mobile & desktop) */}
+        <Link href="/" className="flex items-center gap-2 font-black shrink-0 group">
+          <span className="flex size-8 sm:size-9 items-center justify-center rounded-xl bg-algeria-green text-white shadow-xs group-hover:scale-105 transition-transform shrink-0">
+            <HeartHandshake className="size-4 sm:size-5" />
+          </span>
+          <span className="font-black text-base sm:text-lg whitespace-nowrap tracking-tight text-foreground">
+            {siteConfig.shortName}
+          </span>
+        </Link>
 
-        {/* Simplified Desktop Nav Links */}
+        {/* Desktop Navigation Links */}
         <nav className="hidden lg:flex items-center gap-1" aria-label={isFr ? "Navigation principale" : "التنقل الرئيسي"}>
           {primaryNav.map((link) => (
             <Link
@@ -49,8 +45,8 @@ export async function SiteHeader() {
           ))}
         </nav>
 
-        {/* Header Action Buttons & Language Switcher */}
-        <div className="flex items-center gap-1.5 sm:gap-2 shrink-0">
+        {/* Right Side: Language Switcher (Always visible) + Desktop Action Buttons */}
+        <div className="flex items-center gap-2 shrink-0">
           <LanguageSwitcher current={locale} label={t.language.change} />
 
           <LinkButton
@@ -66,11 +62,10 @@ export async function SiteHeader() {
           <LinkButton
             href="/donate"
             size="sm"
-            className="bg-algeria-green hover:bg-algeria-green/90 text-white font-bold rounded-xl h-9 shadow-xs whitespace-nowrap"
+            className="hidden sm:inline-flex bg-algeria-green hover:bg-algeria-green/90 text-white font-bold rounded-xl h-9 shadow-xs whitespace-nowrap"
           >
             <Gift className="size-3.5" />
-            <span className="hidden xs:inline">{t.cta.haveAid}</span>
-            <span className="xs:hidden">{isFr ? "Dons" : "تقديم مساعدة"}</span>
+            <span>{t.cta.haveAid}</span>
           </LinkButton>
         </div>
       </div>
