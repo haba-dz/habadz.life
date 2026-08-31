@@ -256,6 +256,9 @@
     width: 100%;
     position: relative;
   }
+  select {
+    padding-inline-end: 2.5rem;
+  }
 }
 
 @layer utilities {
