@@ -51,7 +51,7 @@ export function AdminTopbar({
     : "مشرف";
 
   return (
-    <header className="sticky top-0 z-30 flex h-14 items-center justify-between border-b border-border bg-surface/95 px-4 backdrop-blur-md md:px-6">
+    <header className="sticky top-0 z-30 flex h-14 items-center justify-between border-b border-border bg-background/95 px-4 backdrop-blur-md md:px-6">
       <div className="flex items-center gap-3">
         <Sheet open={open} onOpenChange={setOpen}>
           <SheetTrigger
@@ -61,8 +61,8 @@ export function AdminTopbar({
               </Button>
             }
           />
-          <SheetContent side="right" className="w-72 bg-ops-bg p-4 text-ops-fg">
-            <SheetTitle className="mb-4 text-right text-sm font-bold text-ops-fg">
+          <SheetContent side="right" className="w-72 bg-card p-4 text-card-foreground">
+            <SheetTitle className="mb-4 text-right text-sm font-bold text-card-foreground">
               قائمة العمليات
             </SheetTitle>
             <div className="overflow-y-auto max-h-[calc(100vh-80px)]">
@@ -78,13 +78,13 @@ export function AdminTopbar({
       </div>
 
       <div className="flex items-center gap-3">
-        <div className="hidden items-center gap-1.5 rounded-full border border-verified/30 bg-verified/10 px-2.5 py-1 text-xs font-bold text-verified-deep sm:inline-flex">
-          <Radio className="size-3 animate-pulse text-verified" />
+        <div className="hidden items-center gap-1.5 rounded-full border border-verify-verified/30 bg-verify-verified/10 px-2.5 py-1 text-xs font-bold text-verify-verified sm:inline-flex">
+          <Radio className="size-3 animate-pulse text-verify-verified" />
           <span>العمليات الميدانية نشطة</span>
         </div>
 
-        <div className="flex items-center gap-2.5 rounded-lg border border-border bg-surface-2/60 px-2.5 py-1">
-          <div className="flex size-7 items-center justify-center rounded-full bg-verified/20 text-xs font-bold text-verified-deep">
+        <div className="flex items-center gap-2.5 rounded-lg border border-border bg-muted px-2.5 py-1">
+          <div className="flex size-7 items-center justify-center rounded-full bg-verify-verified/20 text-xs font-bold text-verify-verified">
             {initials}
           </div>
           <div className="hidden text-end sm:block">
