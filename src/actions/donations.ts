@@ -2,6 +2,7 @@
 
 import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
+import { updateTag } from "next/cache";
 import { donationSchema, type DonationInput } from "@/schemas/donation";
 import { activeCampaignSlug } from "@/config/site";
 import {
@@ -129,6 +130,8 @@ export async function submitDonation(input: DonationInput): Promise<SubmitDonati
     });
   } catch {}
 
+  updateTag("admin-stats");
+  updateTag("public-reads");
   return {
     success: true,
     matches: matchResults.slice(0, 5).map((m) => ({

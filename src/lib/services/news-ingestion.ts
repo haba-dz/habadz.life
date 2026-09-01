@@ -113,45 +113,47 @@ export async function syncOfficialNews(): Promise<{
             },
           ];
 
-    // Try fetching from external feeds if enabled
-    for (const source of OFFICIAL_ALGERIAN_SOURCES.filter((s) => s.enabled && s.feedUrl)) {
-      try {
-        const res = await fetch(source.feedUrl!, { next: { revalidate: 300 } });
-        if (res.ok) {
-          const json = await res.json();
-          const items = json.items ?? [];
-          for (const item of items.slice(0, 5)) {
-            const fullText = `${item.title || ""} ${item.description || ""}`;
-            const { update_type, wilaya, is_urgent } = classifyNewsItem(fullText);
+    const sources = OFFICIAL_ALGERIAN_SOURCES.filter((s) => s.enabled && s.feedUrl);
+    const feedResults = await Promise.allSettled(
+      sources.map((source) =>
+        fetch(source.feedUrl!, { next: { revalidate: 300 } })
+          .then((res) => (res.ok ? res.json() : null))
+          .then((json) => ({ source, items: json?.items ?? [] }))
+          .catch(() => ({ source, items: [] })),
+      ),
+    );
 
-            if (
-              fullText.includes("حريق") ||
-              fullText.includes("حماية") ||
-              fullText.includes("غابات") ||
-              fullText.includes("طريق") ||
-              fullText.includes("جيجل") ||
-              fullText.includes("بجاية") ||
-              fullText.includes("سطيف") ||
-              fullText.includes("ميلة") ||
-              fullText.includes("سكيكدة")
-            ) {
-              fetchedItems.push({
-                title: item.title,
-                body: item.description?.replace(/<[^>]*>?/gm, "").slice(0, 300),
-                source: source.name,
-                authority: source.authority,
-                url: item.link || source.sourceUrl,
-                update_type,
-                wilaya,
-                is_urgent,
-                published_at: item.pubDate ? new Date(item.pubDate).toISOString() : new Date().toISOString(),
-                external_id: item.guid || item.link,
-              });
-            }
-          }
+    for (const result of feedResults) {
+      if (result.status !== "fulfilled") continue;
+      const { source, items } = result.value;
+      for (const item of items.slice(0, 5)) {
+        const fullText = `${item.title || ""} ${item.description || ""}`;
+        const { update_type, wilaya, is_urgent } = classifyNewsItem(fullText);
+
+        if (
+          fullText.includes("حريق") ||
+          fullText.includes("حماية") ||
+          fullText.includes("غابات") ||
+          fullText.includes("طريق") ||
+          fullText.includes("جيجل") ||
+          fullText.includes("بجاية") ||
+          fullText.includes("سطيف") ||
+          fullText.includes("ميلة") ||
+          fullText.includes("سكيكدة")
+        ) {
+          fetchedItems.push({
+            title: item.title,
+            body: item.description?.replace(/<[^>]*>?/gm, "").slice(0, 300),
+            source: source.name,
+            authority: source.authority,
+            url: item.link || source.sourceUrl,
+            update_type,
+            wilaya,
+            is_urgent,
+            published_at: item.pubDate ? new Date(item.pubDate).toISOString() : new Date().toISOString(),
+            external_id: item.guid || item.link,
+          });
         }
-      } catch (err) {
-        console.warn(`Feed fetch warning for ${source.name}:`, err);
       }
     }
 

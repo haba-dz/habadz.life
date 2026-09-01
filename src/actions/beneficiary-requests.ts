@@ -2,6 +2,7 @@
 
 import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
+import { updateTag } from "next/cache";
 import {
   beneficiaryRequestSchema,
   type BeneficiaryRequestInput,
@@ -93,5 +94,6 @@ export async function submitBeneficiaryRequest(
     // silent — logging must not break user flow
   }
 
+  updateTag("admin-stats");
   return { success: true };
 }
