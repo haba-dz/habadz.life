@@ -1,4 +1,5 @@
 import "server-only";
+import { unstable_cache } from "next/cache";
 import { createClient } from "@/lib/supabase/server";
 import { activeCampaignSlug } from "@/config/site";
 import type { Database } from "@/types/database";
@@ -59,19 +60,23 @@ export async function getAdminDashboardStats() {
   }
 }
 
-export async function getActiveCampaignId() {
-  try {
-    const supabase = await createClient();
-    const { data } = await supabase
-      .from("campaigns")
-      .select("id")
-      .eq("slug", activeCampaignSlug)
-      .maybeSingle();
-    return data?.id ?? "demo-campaign-id";
-  } catch {
-    return "demo-campaign-id";
-  }
-}
+export const getActiveCampaignId = unstable_cache(
+  async () => {
+    try {
+      const supabase = await createClient();
+      const { data } = await supabase
+        .from("campaigns")
+        .select("id")
+        .eq("slug", activeCampaignSlug)
+        .maybeSingle();
+      return data?.id ?? "demo-campaign-id";
+    } catch {
+      return "demo-campaign-id";
+    }
+  },
+  ["master-data", "active-campaign-id"],
+  { revalidate: 300, tags: ["master-data"] },
+);
 
 export async function getRecentActivity(limit = 10) {
   try {
@@ -114,24 +119,28 @@ export async function getRecentActivity(limit = 10) {
   ];
 }
 
-export async function getAllCategories(): Promise<CategoryRow[]> {
-  try {
-    const supabase = await createClient();
-    const { data } = await supabase.from("categories").select("*").order("sort_order");
-    if (data && data.length > 0) return data as CategoryRow[];
-  } catch {
-    // Fallback demo categories
-  }
+export const getAllCategories = unstable_cache(
+  async (): Promise<CategoryRow[]> => {
+    try {
+      const supabase = await createClient();
+      const { data } = await supabase.from("categories").select("*").order("sort_order");
+      if (data && data.length > 0) return data as CategoryRow[];
+    } catch {
+      // Fallback demo categories
+    }
 
-  return [
-    { id: "cat-1", slug: "food_baskets", name_ar: "طرود غذائية", default_unit: "carton", sort_order: 1, created_at: new Date().toISOString() },
-    { id: "cat-2", slug: "water", name_ar: "مياه شرب", default_unit: "box", sort_order: 2, created_at: new Date().toISOString() },
-    { id: "cat-3", slug: "blankets_mattresses", name_ar: "أفرشة وأغطية", default_unit: "piece", sort_order: 3, created_at: new Date().toISOString() },
-    { id: "cat-4", slug: "baby_supplies", name_ar: "مستلزمات أطفال", default_unit: "bundle", sort_order: 4, created_at: new Date().toISOString() },
-    { id: "cat-5", slug: "medicines_first_aid", name_ar: "أدوية ومستلزمات طبية", default_unit: "piece", sort_order: 5, created_at: new Date().toISOString() },
-    { id: "cat-6", slug: "cooking_supplies", name_ar: "معدات طبخ", default_unit: "piece", sort_order: 6, created_at: new Date().toISOString() },
-  ];
-}
+    return [
+      { id: "cat-1", slug: "food_baskets", name_ar: "طرود غذائية", default_unit: "carton", sort_order: 1, created_at: new Date().toISOString() },
+      { id: "cat-2", slug: "water", name_ar: "مياه شرب", default_unit: "box", sort_order: 2, created_at: new Date().toISOString() },
+      { id: "cat-3", slug: "blankets_mattresses", name_ar: "أفرشة وأغطية", default_unit: "piece", sort_order: 3, created_at: new Date().toISOString() },
+      { id: "cat-4", slug: "baby_supplies", name_ar: "مستلزمات أطفال", default_unit: "bundle", sort_order: 4, created_at: new Date().toISOString() },
+      { id: "cat-5", slug: "medicines_first_aid", name_ar: "أدوية ومستلزمات طبية", default_unit: "piece", sort_order: 5, created_at: new Date().toISOString() },
+      { id: "cat-6", slug: "cooking_supplies", name_ar: "معدات طبخ", default_unit: "piece", sort_order: 6, created_at: new Date().toISOString() },
+    ];
+  },
+  ["master-data", "categories"],
+  { revalidate: 300, tags: ["master-data"] },
+);
 
 export async function getAllReliefHubs(): Promise<ReliefHubRow[]> {
   try {
@@ -522,39 +531,44 @@ export async function getWeekOverWeekDelta() {
 }
 
 /**
- * عدّادات "قيد الانتظار" لكل قسم — تُعرض كشارات حيّة في القائمة الجانبية.
- * استعلامات count فقط (head: true) لتبقى خفيفة.
+ * Pending counts per section, shown as live badges in the sidebar.
+ * Lightweight count-only (head: true) queries.
+ * Cached briefly so repeat admin navigations do not refire 4 queries.
  */
-export async function getPendingCounts() {
-  const supabase = await createClient();
-  const [
-    { count: pendingVerification },
-    { count: pendingDamageAssessments },
-    { count: pendingArtisans },
-    { count: pendingMedical },
-  ] = await Promise.all([
-    supabase
-      .from("beneficiary_requests")
-      .select("*", { count: "exact", head: true })
-      .in("status", ["pending", "under_review"]),
-    supabase
-      .from("damage_assessments")
-      .select("*", { count: "exact", head: true })
-      .eq("status", "pending"),
-    supabase
-      .from("artisan_volunteers")
-      .select("*", { count: "exact", head: true })
-      .eq("status", "pending"),
-    supabase
-      .from("medical_volunteers")
-      .select("*", { count: "exact", head: true })
-      .eq("status", "pending"),
-  ]);
+export const getPendingCounts = unstable_cache(
+  async () => {
+    const supabase = await createClient();
+    const [
+      { count: pendingVerification },
+      { count: pendingDamageAssessments },
+      { count: pendingArtisans },
+      { count: pendingMedical },
+    ] = await Promise.all([
+      supabase
+        .from("beneficiary_requests")
+        .select("*", { count: "exact", head: true })
+        .in("status", ["pending", "under_review"]),
+      supabase
+        .from("damage_assessments")
+        .select("*", { count: "exact", head: true })
+        .eq("status", "pending"),
+      supabase
+        .from("artisan_volunteers")
+        .select("*", { count: "exact", head: true })
+        .eq("status", "pending"),
+      supabase
+        .from("medical_volunteers")
+        .select("*", { count: "exact", head: true })
+        .eq("status", "pending"),
+    ]);
 
-  return {
-    "/admin/verification": pendingVerification ?? 0,
-    "/admin/damage-assessments": pendingDamageAssessments ?? 0,
-    "/admin/artisans": pendingArtisans ?? 0,
-    "/admin/medical": pendingMedical ?? 0,
-  } as Record<string, number>;
-}
+    return {
+      "/admin/verification": pendingVerification ?? 0,
+      "/admin/damage-assessments": pendingDamageAssessments ?? 0,
+      "/admin/artisans": pendingArtisans ?? 0,
+      "/admin/medical": pendingMedical ?? 0,
+    } as Record<string, number>;
+  },
+  ["admin-pending-counts"],
+  { revalidate: 30 },
+);
