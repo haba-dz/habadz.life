@@ -14,9 +14,19 @@ git -C .. checkout -q -f "refs/tags/$TAG"
 
 sed -i "s/^APP_TAG=.*/APP_TAG=$TAG/" .env
 
+mkdir -p /opt/habadz/backups
+if docker compose ps | grep -q db; then
+  docker compose exec -T db pg_dump -Fc -U supabase_admin postgres > /opt/habadz/backups/pre-$TAG.dump 2>/dev/null || true
+  ls -t /opt/habadz/backups/pre-*.dump | tail -n +4 | xargs -r rm --
+fi
+
+if ! docker compose --profile tools run --rm migrate; then
+  echo "migrate failed — keeping old app"
+  exit 1
+fi
+
 docker compose pull app
 docker compose up -d --remove-orphans
-docker compose --profile tools run --rm migrate
 
 # Small VPS: reclaim disk from old deploys — images no container uses + build cache.
 docker image prune -af

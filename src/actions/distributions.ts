@@ -68,6 +68,10 @@ export async function createDistributionAction(formData: FormData) {
     .eq("category_id", data.category_id)
     .maybeSingle();
 
+  if (beforeStock && Number(beforeStock.quantity) < data.quantity) {
+    return { success: false, error: "الكمية تتجاوز المخزون المتاح." };
+  }
+
   let proofFilePath: string | undefined;
   const proofFile = formData.get("proof_file");
   if (proofFile instanceof File && proofFile.size > 0) {
