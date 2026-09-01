@@ -9,7 +9,7 @@ This block is written and re-added by `next dev` — verify at `node_modules/nex
 For Next.js specifically:
 
 * Use the simplest correct Next.js solution. Do not overengineer.
-* Follow the existing project patterns(If sable) and current Next.js best practices. Reuse components utilities hooks and server logic when possible.
+* Follow the existing project patterns(If stable) and current Next.js best practices. Reuse components utilities hooks and server logic when possible.
 * Analyze the blast radius. Before changing code check related pages components APIs Server Actions database queries auth middleware caching and user flows.
 * Handle Next.js behavior carefully. Check caching revalidation redirects dynamic routes loading states errors params searchParams and server/client boundaries.
 * Prediction Scan. Before finishing scan for real production issues including auth leaks invalid inputs duplicate requests race conditions database performance N+1 queries pagination cache issues stale data hydration errors broken links SEO metadata and mobile user flows.
