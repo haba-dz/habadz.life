@@ -102,7 +102,10 @@ export async function getPublicCollectionPoints() {
   try {
     const supabase = await createClient();
     const { data, error } = await supabase.rpc("get_public_collection_points");
-    if (!error && data && data.length > 0) return data;
+    if (!error && data && data.length > 0) {
+      const filtered = (data as unknown as { status: string }[]).filter((r) => r.status !== "closed");
+      return filtered as typeof data;
+    }
 
     const { data: tableData } = await supabase
       .from("collection_points")
@@ -118,7 +121,10 @@ export async function getPublicReliefHubs() {
   try {
     const supabase = await createClient();
     const { data, error } = await supabase.rpc("get_public_relief_hubs");
-    if (!error && data && data.length > 0) return data;
+    if (!error && data && data.length > 0) {
+      const filtered = (data as unknown as { status: string }[]).filter((r) => r.status !== "closed");
+      return filtered as typeof data;
+    }
 
     const { data: tableData } = await supabase
       .from("relief_hubs")
