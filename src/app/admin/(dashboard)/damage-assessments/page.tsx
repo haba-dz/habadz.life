@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import { createClient } from "@/lib/supabase/server";
 import { findWilayaByName, haversineDistanceKm } from "@/lib/wilayas";
-import { getSignedDamagePhotoUrl } from "@/actions/damage-assessments";
+import { getBatchSignedDamagePhotoUrls } from "@/actions/damage-assessments";
 import { type ArtisanCandidate } from "./assign-artisan-select";
 import { ExportDamageAssessmentsCsvButton } from "./export-csv-button";
 import { DamageAssessmentsList } from "./damage-assessments-list";
@@ -26,14 +26,14 @@ export default async function AdminDamageAssessmentsPage() {
 
   // لكل تقييم: نرشّح الحرفيين المطابقين للتخصص المطلوب، مرتّبين حسب نفس الولاية ثم المسافة —
   // نفس منطق suggestDeliveryPoint في services/matching.ts، بدون إسناد تلقائي (اقتراح فقط).
-  const photoUrlEntries = await Promise.all(
-    rows.map(async (r) => {
-      if (r.photo_paths.length === 0) return [r.id, [] as string[]] as const;
-      const urls = await Promise.all(r.photo_paths.map((p) => getSignedDamagePhotoUrl(p)));
-      return [r.id, urls.filter((u): u is string => Boolean(u))] as const;
-    }),
+  const allPhotoPaths = rows.flatMap((r) => r.photo_paths);
+  const signedUrlMap = await getBatchSignedDamagePhotoUrls(allPhotoPaths);
+  const photoUrlsByAssessment = new Map<string, string[]>(
+    rows.map((r) => [
+      r.id,
+      r.photo_paths.map((p) => signedUrlMap.get(p)).filter((u): u is string => Boolean(u)),
+    ]),
   );
-  const photoUrlsByAssessment = new Map(photoUrlEntries);
 
   const enriched = rows.map((r) => {
     const origin = findWilayaByName(r.wilaya);

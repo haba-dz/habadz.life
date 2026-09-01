@@ -1,4 +1,5 @@
 import "server-only";
+import { unstable_cache } from "next/cache";
 import { createClient } from "@/lib/supabase/server";
 import { activeCampaignSlug } from "@/config/site";
 import type { Database } from "@/types/database";
@@ -6,29 +7,37 @@ import type { Database } from "@/types/database";
 type AffectedAreaRow = Database["public"]["Tables"]["affected_areas"]["Row"];
 type CategoryRow = Database["public"]["Tables"]["categories"]["Row"];
 
-export async function getActiveCampaign() {
-  try {
-    const supabase = await createClient();
-    const { data } = await supabase
-      .from("campaigns")
-      .select("*")
-      .eq("slug", activeCampaignSlug)
-      .maybeSingle();
-    return data;
-  } catch {
-    return null;
-  }
-}
+export const getActiveCampaign = unstable_cache(
+  async () => {
+    try {
+      const supabase = await createClient();
+      const { data } = await supabase
+        .from("campaigns")
+        .select("*")
+        .eq("slug", activeCampaignSlug)
+        .maybeSingle();
+      return data;
+    } catch {
+      return null;
+    }
+  },
+  ["master-data", "active-campaign"],
+  { revalidate: 300, tags: ["master-data"] },
+);
 
-export async function getCategories(): Promise<CategoryRow[]> {
-  try {
-    const supabase = await createClient();
-    const { data } = await supabase.from("categories").select("*").order("sort_order");
-    return data ?? [];
-  } catch {
-    return [];
-  }
-}
+export const getCategories = unstable_cache(
+  async (): Promise<CategoryRow[]> => {
+    try {
+      const supabase = await createClient();
+      const { data } = await supabase.from("categories").select("*").order("sort_order");
+      return data ?? [];
+    } catch {
+      return [];
+    }
+  },
+  ["master-data", "categories"],
+  { revalidate: 300, tags: ["master-data"] },
+);
 
 function activeNeedsQuery(supabase: Awaited<ReturnType<typeof createClient>>) {
   return supabase

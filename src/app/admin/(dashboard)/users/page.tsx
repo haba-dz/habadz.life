@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import { ShieldCheck, Info } from "lucide-react";
-import { createClient } from "@/lib/supabase/server";
+import { createClient, getCurrentUser } from "@/lib/supabase/server";
 import { AddStaffDialog } from "./add-staff-dialog";
 import { ExportUsersCsvButton } from "./export-csv-button";
 import { UsersList } from "./users-list";
@@ -9,9 +9,7 @@ export const metadata: Metadata = { title: "المستخدمون", robots: { ind
 
 export default async function AdminUsersPage() {
   const supabase = await createClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
+  const user = await getCurrentUser();
 
   const [{ data: profiles }, { data: me }] = await Promise.all([
     supabase.from("profiles").select("*").order("created_at", { ascending: false }),

@@ -83,32 +83,50 @@ export async function submitDamageAssessment(
   if (photos.length > MAX_PHOTOS) {
     return { success: false, error: `عدد الصور كبير جداً (الحد ${MAX_PHOTOS} صور).` };
   }
-  for (const file of photos) {
-    if (file.size > MAX_PHOTO_SIZE) {
-      return { success: false, error: "إحدى الصور كبيرة جداً (الحد 5MB للصورة)." };
-    }
-    if (file.type && !ALLOWED_MIME.has(file.type)) {
-      return { success: false, error: "نوع الصورة غير مدعوم (المسموح: JPG PNG WEBP HEIC)." };
-    }
-    const ext = sanitizeExt(file.name);
-    if (!ext) {
-      return { success: false, error: "امتداد الصورة غير مدعوم." };
-    }
-    const path = `${crypto.randomUUID()}.${ext}`;
-    const { error: uploadError } = await supabase.storage
-      .from("damage-photos")
-      .upload(path, file, { contentType: file.type || `image/${ext}`, upsert: false });
-    if (!uploadError) {
-      photoPaths.push(path);
-    } else {
-      // P1-06 + P2-05: fail and cleanup already uploaded instead of silent swallow
-      if (photoPaths.length > 0) {
-        await supabase.storage.from("damage-photos").remove(photoPaths);
+  const uploadResults = await Promise.allSettled(
+    photos.map(async (file) => {
+      if (file.size > MAX_PHOTO_SIZE) {
+        throw new Error("photo_too_large");
       }
-      console.error("Damage photo upload error:", uploadError);
+      if (file.type && !ALLOWED_MIME.has(file.type)) {
+        throw new Error("unsupported_type");
+      }
+      const ext = sanitizeExt(file.name);
+      if (!ext) {
+        throw new Error("unsupported_ext");
+      }
+      const path = `${crypto.randomUUID()}.${ext}`;
+      const { error: uploadError } = await supabase.storage
+        .from("damage-photos")
+        .upload(path, file, { contentType: file.type || `image/${ext}`, upsert: false });
+      if (uploadError) throw uploadError;
+      return path;
+    }),
+  );
+
+  const succeededPaths: string[] = [];
+  for (const result of uploadResults) {
+    if (result.status === "fulfilled") {
+      succeededPaths.push(result.value);
+    } else {
+      if (succeededPaths.length > 0) {
+        await supabase.storage.from("damage-photos").remove(succeededPaths);
+      }
+      const msg = result.reason?.message ?? "";
+      if (msg === "photo_too_large") {
+        return { success: false, error: "إحدى الصور كبيرة جداً (الحد 5MB للصورة)." };
+      }
+      if (msg === "unsupported_type") {
+        return { success: false, error: "نوع الصورة غير مدعوم (المسموح: JPG PNG WEBP HEIC)." };
+      }
+      if (msg === "unsupported_ext") {
+        return { success: false, error: "امتداد الصورة غير مدعوم." };
+      }
+      console.error("Damage photo upload error:", result.reason);
       return { success: false, error: "فشل رفع الصور، حاول مرة أخرى بصور أصغر." };
     }
   }
+  photoPaths.push(...succeededPaths);
 
   const estimate = estimateDamageMaterials({
     needsPaint: data.needs_paint,
@@ -273,4 +291,21 @@ export async function getSignedDamagePhotoUrl(path: string) {
   const { data, error } = await supabase.storage.from("damage-photos").createSignedUrl(path, 60 * 10);
   if (error || !data) return null;
   return data.signedUrl;
+}
+
+export async function getBatchSignedDamagePhotoUrls(
+  paths: string[],
+): Promise<Map<string, string>> {
+  if (paths.length === 0) return new Map();
+  const supabase = await createClient();
+  const { data, error } = await supabase.storage
+    .from("damage-photos")
+    .createSignedUrls(paths, 60 * 10);
+  if (error || !data) return new Map();
+  const map = new Map<string, string>();
+  for (const entry of data) {
+    if (!entry.path || entry.error || !entry.signedUrl) continue;
+    map.set(entry.path, entry.signedUrl);
+  }
+  return map;
 }
