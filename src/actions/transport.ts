@@ -1,9 +1,12 @@
 "use server";
 
 import { createClient } from "@/lib/supabase/server";
+import { createAdminClient } from "@/lib/supabase/admin";
 import { transportOfferSchema, type TransportOfferInput } from "@/schemas/transport-offer";
 import { activeCampaignSlug } from "@/config/site";
 import { getPublicTransportCandidates, type TransportMatch } from "@/services/matching";
+import { logActivity } from "@/services/activity-log";
+import type { Json } from "@/types/database";
 
 export interface SubmitTransportResult {
   success: boolean;
@@ -54,6 +57,15 @@ export async function submitTransportOffer(input: TransportOfferInput): Promise<
   if (error) {
     return { success: false, error: "حدث خطأ أثناء تسجيل عرض النقل. حاول مرة أخرى." };
   }
+
+  try {
+    const admin = createAdminClient();
+    await logActivity(admin, {
+      action: "transport_offer_created",
+      entityType: "transport_offer",
+      after: { origin_wilaya: data.origin_wilaya, destination_wilaya: data.destination_wilaya } as unknown as Json,
+    });
+  } catch {}
 
   const candidates = await getPublicTransportCandidates(supabase, data.origin_wilaya);
 

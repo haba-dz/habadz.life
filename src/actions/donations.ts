@@ -1,7 +1,7 @@
 "use server";
 
-import { randomUUID } from "crypto";
 import { createClient } from "@/lib/supabase/server";
+import { createAdminClient } from "@/lib/supabase/admin";
 import { donationSchema, type DonationInput } from "@/schemas/donation";
 import { activeCampaignSlug } from "@/config/site";
 import {
@@ -9,7 +9,8 @@ import {
   suggestDeliveryPoint,
   type DeliveryPointSuggestion,
 } from "@/services/matching";
-import type { Database } from "@/types/database";
+import { logActivity } from "@/services/activity-log";
+import type { Database, Json } from "@/types/database";
 
 type Need = Database["public"]["Tables"]["needs"]["Row"];
 
@@ -52,6 +53,7 @@ export async function submitDonation(input: DonationInput): Promise<SubmitDonati
       quantity: it.quantity,
       unit: it.unit,
     })),
+    campaign.id,
   );
 
   const matchedCategorySlugs = new Set(
@@ -72,25 +74,28 @@ export async function submitDonation(input: DonationInput): Promise<SubmitDonati
   const suggestedPointId =
     suggestedPoints.find((p) => p.kind === "collection_point")?.id ?? null;
 
-  const donationId = randomUUID();
+  const { data: inserted, error: donationError } = await supabase
+    .from("donations")
+    .insert({
+      campaign_id: campaign.id,
+      donor_name: data.donor_name,
+      donor_phone: data.donor_phone,
+      current_wilaya: data.current_wilaya,
+      current_commune: data.current_commune || null,
+      needs_transport: data.needs_transport,
+      can_deliver_self: data.can_deliver_self,
+      ready_at: data.ready_at || null,
+      notes: data.notes || null,
+      suggested_collection_point_id: suggestedPointId,
+    })
+    .select("id")
+    .single();
 
-  const { error: donationError } = await supabase.from("donations").insert({
-    id: donationId,
-    campaign_id: campaign.id,
-    donor_name: data.donor_name,
-    donor_phone: data.donor_phone,
-    current_wilaya: data.current_wilaya,
-    current_commune: data.current_commune || null,
-    needs_transport: data.needs_transport,
-    can_deliver_self: data.can_deliver_self,
-    ready_at: data.ready_at || null,
-    notes: data.notes || null,
-    suggested_collection_point_id: suggestedPointId,
-  });
-
-  if (donationError) {
+  if (donationError || !inserted) {
     return { success: false, error: "حدث خطأ أثناء تسجيل المساعدة. حاول مرة أخرى." };
   }
+
+  const donationId = inserted.id;
 
   const { error: itemsError } = await supabase.from("donation_items").insert(
     data.items.map((it) => ({
@@ -103,8 +108,26 @@ export async function submitDonation(input: DonationInput): Promise<SubmitDonati
   );
 
   if (itemsError) {
+    try {
+      const admin = createAdminClient();
+      await admin.from("donations").delete().eq("id", donationId);
+    } catch {}
     return { success: false, error: "حدث خطأ أثناء تسجيل مواد المساعدة. حاول مرة أخرى." };
   }
+
+  try {
+    const admin = createAdminClient();
+    await logActivity(admin, {
+      action: "donation_created",
+      entityType: "donation",
+      entityId: donationId,
+      after: {
+        wilaya: data.current_wilaya,
+        itemsCount: data.items.length,
+        needs_transport: data.needs_transport,
+      } as unknown as Json,
+    });
+  } catch {}
 
   return {
     success: true,

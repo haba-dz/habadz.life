@@ -37,18 +37,19 @@ export function findWilayaByName(name: string): Wilaya | undefined {
   };
 }
 
-// صيغة Haversine لتقدير المسافة التقريبية بالكيلومتر بين نقطتين
 export function haversineDistanceKm(
   a: { lat: number; lng: number },
   b: { lat: number; lng: number },
-): number {
+): number | null {
+  if (!isFinite(a.lat) || !isFinite(a.lng) || !isFinite(b.lat) || !isFinite(b.lng)) return null;
   const R = 6371;
   const dLat = ((b.lat - a.lat) * Math.PI) / 180;
   const dLng = ((b.lng - a.lng) * Math.PI) / 180;
   const lat1 = (a.lat * Math.PI) / 180;
   const lat2 = (b.lat * Math.PI) / 180;
-
   const h =
     Math.sin(dLat / 2) ** 2 + Math.sin(dLng / 2) ** 2 * Math.cos(lat1) * Math.cos(lat2);
-  return Math.round(R * 2 * Math.atan2(Math.sqrt(h), Math.sqrt(1 - h)));
+  const clamped = Math.min(1, Math.max(0, h));
+  const result = Math.round(R * 2 * Math.atan2(Math.sqrt(clamped), Math.sqrt(1 - clamped)));
+  return isFinite(result) ? result : null;
 }

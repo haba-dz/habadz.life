@@ -40,16 +40,16 @@ export interface NeedMatch {
 export async function findMatchingNeedsForDonation(
   supabase: SupabaseClient<Database>,
   items: DonationItemInput[],
+  campaignId?: string,
 ): Promise<NeedMatch[]> {
   const categoryIds = [...new Set(items.map((i) => i.category_id))];
   if (categoryIds.length === 0) return [];
 
-  const { data } = await supabase
-    .from("needs")
-    .select("*")
-    .in("category_id", categoryIds)
-    .eq("status", "active");
+  let query = supabase.from("needs").select("*").in("category_id", categoryIds).eq("status", "active");
 
+  if (campaignId) query = query.eq("campaign_id", campaignId);
+
+  const { data } = await query.limit(50);
   const rows = data ?? [];
 
   return rows
@@ -57,8 +57,9 @@ export async function findMatchingNeedsForDonation(
       need,
       deficit: Number(need.quantity_needed) - Number(need.quantity_available),
     }))
+    .filter((m) => m.deficit > 0)
     .sort((a, b) => {
-      const byPriority = priorityRank[a.need.priority] - priorityRank[b.need.priority];
+      const byPriority = (priorityRank[a.need.priority] ?? 99) - (priorityRank[b.need.priority] ?? 99);
       if (byPriority !== 0) return byPriority;
       return b.deficit - a.deficit;
     });
@@ -160,7 +161,7 @@ export async function suggestDeliveryPoint(
     if (a.distanceKm !== null && b.distanceKm !== null && a.distanceKm !== b.distanceKm) {
       return a.distanceKm - b.distanceKm;
     }
-    return verificationRank[a.verificationLevel] - verificationRank[b.verificationLevel];
+    return (verificationRank[a.verificationLevel] ?? 99) - (verificationRank[b.verificationLevel] ?? 99);
   });
 }
 
@@ -210,7 +211,8 @@ export async function findMatchingDonationsForTransport(
     .from("donations")
     .select("id, current_wilaya, donation_items(quantity, unit, categories(name_ar))")
     .eq("needs_transport", true)
-    .in("status", ["registered", "matched"]);
+    .in("status", ["registered", "matched"])
+    .limit(100);
 
   const origin = findWilayaByName(params.originWilaya);
   const rows = data ?? [];
