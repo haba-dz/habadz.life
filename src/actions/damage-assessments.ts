@@ -124,9 +124,34 @@ export async function submitDamageAssessment(
       }
       console.error("Damage photo upload error:", result.reason);
       return { success: false, error: "فشل رفع الصور، حاول مرة أخرى بصور أصغر." };
+  const fulfilledPaths = uploadResults
+    .filter((r): r is PromiseFulfilledResult<string> => r.status === "fulfilled")
+    .map((r) => r.value);
+
+  const rejected = uploadResults.find(
+    (r): r is PromiseRejectedResult => r.status === "rejected",
+  );
+
+  if (rejected) {
+    if (fulfilledPaths.length > 0) {
+      await supabase.storage.from("damage-photos").remove(fulfilledPaths);
     }
+    const msg = rejected.reason?.message ?? "";
+    if (msg === "photo_too_large") {
+      return { success: false, error: "إحدى الصور كبيرة جداً (الحد 5MB للصورة)." };
+    }
+    if (msg === "unsupported_type") {
+      return { success: false, error: "نوع الصورة غير مدعوم (المسموح: JPG PNG WEBP HEIC)." };
+    }
+    if (msg === "unsupported_ext") {
+      return { success: false, error: "امتداد الصورة غير مدعوم." };
+    }
+    console.error("Damage photo upload error:", rejected.reason);
+    return { success: false, error: "فشل رفع الصور، حاول مرة أخرى بصور أصغر." };
   }
   photoPaths.push(...succeededPaths);
+
+  photoPaths.push(...fulfilledPaths);
 
   const estimate = estimateDamageMaterials({
     needsPaint: data.needs_paint,

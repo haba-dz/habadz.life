@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { ShieldCheck, Info } from "lucide-react";
 import { createClient, getCurrentUser } from "@/lib/supabase/server";
+import { createClient, getCurrentProfile, getCurrentUser } from "@/lib/supabase/server";
 import { AddStaffDialog } from "./add-staff-dialog";
 import { ExportUsersCsvButton } from "./export-csv-button";
 import { UsersList } from "./users-list";
@@ -12,6 +13,9 @@ export default async function AdminUsersPage() {
   const user = await getCurrentUser();
 
   const [{ data: profiles }, { data: me }] = await Promise.all([
+  const [user, me, { data: profiles }] = await Promise.all([
+    getCurrentUser(),
+    getCurrentProfile(),
     supabase.from("profiles").select("*").order("created_at", { ascending: false }),
     user
       ? supabase.from("profiles").select("role").eq("id", user.id).maybeSingle()
