@@ -11,18 +11,19 @@ import { getLocale } from "@/i18n/server";
 export async function NewsTicker({ showFallback = false }: { showFallback?: boolean } = {}) {
   const locale = await getLocale();
   const isFr = locale === "fr";
-  const supabase = await createClient();
-  const { data } = await supabase
-    .from("announcements")
-    .select("id, message")
-    .eq("is_active", true)
-    .order("sort_order")
-    .order("created_at", { ascending: false });
+  try {
+    const supabase = await createClient();
+    const { data } = await supabase
+      .from("announcements")
+      .select("id, message")
+      .eq("is_active", true)
+      .order("sort_order")
+      .order("created_at", { ascending: false });
 
-  const messages = data ?? [];
+    const messages = data ?? [];
 
-  if (messages.length === 0) {
-    if (!showFallback) return null;
+    if (messages.length === 0) {
+      if (!showFallback) return null;
 
     return (
       <div className="bg-priority-critical text-white">
@@ -77,4 +78,7 @@ export async function NewsTicker({ showFallback = false }: { showFallback?: bool
       </div>
     </div>
   );
+  } catch {
+    return null;
+  }
 }
