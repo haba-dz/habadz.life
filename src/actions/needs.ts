@@ -1,6 +1,6 @@
 "use server";
 
-import { revalidatePath } from "next/cache";
+import { revalidatePath, updateTag } from "next/cache";
 import { z } from "zod";
 import { createClient } from "@/lib/supabase/server";
 import { logActivity } from "@/services/activity-log";
@@ -74,6 +74,8 @@ export async function createNeed(input: CreateNeedInput) {
   revalidatePath("/admin/needs");
   revalidatePath("/needs");
   revalidatePath("/");
+  updateTag("public-reads");
+  updateTag("admin-stats");
   return { success: true };
 }
 
@@ -96,6 +98,8 @@ export async function updateNeedStatus(id: string, status: "active" | "resolved"
   revalidatePath("/admin/needs");
   revalidatePath("/needs");
   revalidatePath("/");
+  updateTag("public-reads");
+  updateTag("admin-stats");
   return { success: true };
 }
 
@@ -121,5 +125,7 @@ export async function updateNeedPriority(
   revalidatePath("/admin/needs");
   revalidatePath("/needs");
   revalidatePath("/");
+  updateTag("public-reads");
+  updateTag("admin-stats");
   return { success: true };
 }

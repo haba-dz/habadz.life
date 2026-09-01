@@ -1954,6 +1954,13 @@ export type Database = {
           total_families: number
         }[]
       }
+      count_needs_by_priority: {
+        Args: never
+        Returns: {
+          priority: string
+          count: number
+        }[]
+      }
       is_admin: { Args: never; Returns: boolean }
       is_manager: { Args: never; Returns: boolean }
       is_staff: { Args: never; Returns: boolean }

@@ -1,6 +1,6 @@
 "use server";
 
-import { revalidatePath } from "next/cache";
+import { revalidatePath, updateTag } from "next/cache";
 import { z } from "zod";
 import { createClient } from "@/lib/supabase/server";
 import { logActivity } from "@/services/activity-log";
@@ -51,22 +51,18 @@ export async function createDistributionAction(formData: FormData) {
   const role = (profile as { role?: string } | null)?.role;
   if (role !== "admin" && role !== "coordinator") return { success: false, error: "غير مصرح" };
 
-  const { data: campaign } = await supabase
-    .from("campaigns")
-    .select("id")
-    .eq("slug", activeCampaignSlug)
-    .maybeSingle();
+  const [{ data: campaign }, { data: hubExists }, { data: beforeStock }] = await Promise.all([
+    supabase.from("campaigns").select("id").eq("slug", activeCampaignSlug).maybeSingle(),
+    supabase.from("relief_hubs").select("id").eq("id", data.hub_id).maybeSingle(),
+    supabase
+      .from("inventory_items")
+      .select("quantity")
+      .eq("hub_id", data.hub_id)
+      .eq("category_id", data.category_id)
+      .maybeSingle(),
+  ]);
   if (!campaign) return { success: false, error: "تعذر تحديد الحملة النشطة." };
-
-  const { data: hubExists } = await supabase.from("relief_hubs").select("id").eq("id", data.hub_id).maybeSingle();
   if (!hubExists) return { success: false, error: "المركز غير موجود." };
-
-  const { data: beforeStock } = await supabase
-    .from("inventory_items")
-    .select("quantity")
-    .eq("hub_id", data.hub_id)
-    .eq("category_id", data.category_id)
-    .maybeSingle();
 
   if (beforeStock && Number(beforeStock.quantity) < data.quantity) {
     return { success: false, error: "الكمية تتجاوز المخزون المتاح." };
@@ -121,5 +117,7 @@ export async function createDistributionAction(formData: FormData) {
   revalidatePath("/admin/distributions");
   revalidatePath("/admin/inventory");
   revalidatePath("/transparency");
+  updateTag("admin-stats");
+  updateTag("public-reads");
   return { success: true };
 }

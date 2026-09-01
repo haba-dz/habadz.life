@@ -1,6 +1,6 @@
 "use server";
 
-import { revalidatePath } from "next/cache";
+import { revalidatePath, updateTag } from "next/cache";
 import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { damageAssessmentSchema } from "@/schemas/damage-assessment";
@@ -124,34 +124,9 @@ export async function submitDamageAssessment(
       }
       console.error("Damage photo upload error:", result.reason);
       return { success: false, error: "فشل رفع الصور، حاول مرة أخرى بصور أصغر." };
-  const fulfilledPaths = uploadResults
-    .filter((r): r is PromiseFulfilledResult<string> => r.status === "fulfilled")
-    .map((r) => r.value);
-
-  const rejected = uploadResults.find(
-    (r): r is PromiseRejectedResult => r.status === "rejected",
-  );
-
-  if (rejected) {
-    if (fulfilledPaths.length > 0) {
-      await supabase.storage.from("damage-photos").remove(fulfilledPaths);
     }
-    const msg = rejected.reason?.message ?? "";
-    if (msg === "photo_too_large") {
-      return { success: false, error: "إحدى الصور كبيرة جداً (الحد 5MB للصورة)." };
-    }
-    if (msg === "unsupported_type") {
-      return { success: false, error: "نوع الصورة غير مدعوم (المسموح: JPG PNG WEBP HEIC)." };
-    }
-    if (msg === "unsupported_ext") {
-      return { success: false, error: "امتداد الصورة غير مدعوم." };
-    }
-    console.error("Damage photo upload error:", rejected.reason);
-    return { success: false, error: "فشل رفع الصور، حاول مرة أخرى بصور أصغر." };
   }
   photoPaths.push(...succeededPaths);
-
-  photoPaths.push(...fulfilledPaths);
 
   const estimate = estimateDamageMaterials({
     needsPaint: data.needs_paint,
@@ -170,17 +145,10 @@ export async function submitDamageAssessment(
   // P0-03+P1-02: use service-role for needs insert (anon RLS would block is_manager)
   let linkedNeedId: string | null = null;
   if (hasAnyMaterialNeed) {
-    const { data: campaign } = await supabase
-      .from("campaigns")
-      .select("id")
-      .eq("slug", activeCampaignSlug)
-      .maybeSingle();
-
-    const { data: category } = await supabase
-      .from("categories")
-      .select("id")
-      .eq("slug", "construction_materials")
-      .maybeSingle();
+    const [{ data: campaign }, { data: category }] = await Promise.all([
+      supabase.from("campaigns").select("id").eq("slug", activeCampaignSlug).maybeSingle(),
+      supabase.from("categories").select("id").eq("slug", "construction_materials").maybeSingle(),
+    ]);
 
     if (campaign && category) {
       // P2-01: derive priority from severity instead of hardcoded medium
@@ -265,6 +233,8 @@ export async function submitDamageAssessment(
   revalidatePath("/admin/damage-assessments");
   revalidatePath("/admin/needs");
   revalidatePath("/needs");
+  updateTag("admin-stats");
+  updateTag("public-reads");
   return { success: true };
 }
 
@@ -285,6 +255,7 @@ export async function updateDamageAssessmentStatus(id: string, status: DamageAss
   });
 
   revalidatePath("/admin/damage-assessments");
+  updateTag("admin-stats");
   return { success: true };
 }
 
@@ -308,6 +279,7 @@ export async function assignArtisanToAssessment(assessmentId: string, artisanId:
   });
 
   revalidatePath("/admin/damage-assessments");
+  updateTag("admin-stats");
   return { success: true };
 }
 
