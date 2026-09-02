@@ -2,7 +2,7 @@
 <p align="center">
   <img src="https://i.imgur.com/Ndc3wjE.png" alt="HabaDZ">
 </p>
-<h1 align="center">🇩🇿 HabaDZ (هبة الجزائر)</h1>
+<h1 align="center">Haba DZ - هبة الجزائر</h1>
 
 <p align="center">
   <a href="https://habadz.life">
