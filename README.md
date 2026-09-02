@@ -42,15 +42,15 @@
 
 إدراكاً للحجم الهائل لحركة التضامن الوطنية، تطور المشروع إلى جهد تعاوني، مع فريق متخصص من المتطوعين والمشرفين. اليوم، يدير هذا الفريق المنصة، يتحقق من نداءات الطوارئ، يُحَدِّث نداءات وسائل التواصل الاجتماعي، ويشرف على توجيه المساعدات جنباً إلى جنب مع بيانات الحماية المدنية والمصادر الرسمية.
 
-| الاسم | GitHub | LinkedIn |
-| :--- | :--- | :--- |
-| **Oussama Benkortbi** | [oussamabenkortbi](https://github.com/oussamabenkortbi) | [Oussama Benkortbi](https://www.linkedin.com/in/oussamabenkortbi/) |
-| **Iyad Nouasra** | [enafrosty](https://github.com/enafrosty) | [Iyad Nouasra](https://www.linkedin.com/in/iyadnouasra/)|
-| **Mira Seghilani** | [Miraseg07](https://github.com/Miraseg07) | [Mira Seghilani](https://www.linkedin.com/in/mira-seghilani-1a82a2295/_) |
-| **Souha Oulha** | - | - |
-| **Isslam Hamdi** | [isslamhamdi](https://github.com/isslamhamdi) | [Isslam Hamdi](https://www.linkedin.com/in/isslamhamdi/) |
-| **Meftah Wassim Abdallah** | [abdallah-mft](https://github.com/abdallah-mft) | [Abdallah M.](https://www.linkedin.com/in/abdallah-m-095494291/) |
-| **Mohamed Nour** | [monourar](https://github.com/monourar) | - |
+| الاسم | الدور | GitHub | LinkedIn | 
+| :--- | :--- | :--- | :--- |
+| **Souha Oulha** | Manager | - | - |
+| **Oussama Benkortbi** | Developer | [oussamabenkortbi](https://github.com/oussamabenkortbi) | [Oussama Benkortbi](https://www.linkedin.com/in/oussamabenkortbi/) |
+| **Iyad Nouasra** | Developer | [enafrosty](https://github.com/enafrosty) | [Iyad Nouasra](https://www.linkedin.com/in/iyadnouasra/)|
+| **Mira Seghilani** | Developer |[Miraseg07](https://github.com/Miraseg07) | [Mira Seghilani](https://www.linkedin.com/in/mira-seghilani-1a82a2295/_) |
+| **Isslam Hamdi** | Developer | [isslamhamdi](https://github.com/isslamhamdi) | [Isslam Hamdi](https://www.linkedin.com/in/isslamhamdi/) |
+| **Meftah Wassim Abdallah** | Developer | [abdallah-mft](https://github.com/abdallah-mft) | [Abdallah M.](https://www.linkedin.com/in/abdallah-m-095494291/) |
+| **Mohamed Nour** | Developer | [monourar](https://github.com/monourar) | - |
 
 ## المساهمة
 المساهمات هي ما يجعل مجتمع المصادر المفتوحة مكاناً رائعاً للتعلم والإلهام والإبداع. إذا كنت مطوراً وتتطلع إلى تحسين قدرات الاستجابة للطوارئ، فإن مساعدتك **محل تقدير كبير**.
