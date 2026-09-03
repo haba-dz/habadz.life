@@ -257,15 +257,15 @@ export function HelpRequestForm({
           <div>
             <Label className="mb-1.5">{isFr ? "Le logement est-il habitable actuellement ?" : "هل السكن صالح للإقامة حالياً أم تضرر؟"}</Label>
             <div className="grid grid-cols-3 gap-2 pt-1">
-              {[
+              {([
                 { val: "yes", label: isFr ? "Oui, habitable" : "نعم، صالح للإقامة" },
                 { val: "no", label: isFr ? "Non, sinistré / évacué" : "لا، متضرر أو تم إخلاؤه" },
                 { val: "unknown", label: isFr ? "Partiellement" : "أضرار جزئية" },
-              ].map((opt) => (
+              ] as const).map((opt) => (
                 <button
                   key={opt.val}
                   type="button"
-                  onClick={() => setValue("is_housing_habitable", opt.val as any, { shouldValidate: true })}
+                  onClick={() => setValue("is_housing_habitable", opt.val, { shouldValidate: true })}
                   className={cn(
                     "rounded-xl border p-2.5 text-xs font-bold transition-all cursor-pointer text-center",
                     housingHabitable === opt.val
