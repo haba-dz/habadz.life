@@ -4,34 +4,18 @@ import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import {
-  Loader2,
-  PackageCheck,
-  Truck,
   HeartHandshake,
-  Trash2,
-  Utensils,
-  Compass,
-  Activity,
-  Sparkles,
-  Car,
-  Bike,
-  Footprints,
-  Clock,
-  Calendar,
-  AlertTriangle,
   Phone,
-  ShieldCheck,
   MapPin,
   ExternalLink,
   Zap,
 } from "lucide-react";
-import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { Checkbox } from "@/components/ui/checkbox";
-import { Card, CardContent } from "@/components/ui/card";
-import { Alert, AlertDescription } from "@/components/ui/alert";
+import { type IconName } from "@/components/icons";
+import { Action, ChoiceCard, FormStep, WarningBlock } from "@/components/site";
 import {
   fieldVolunteerSchema,
   type FieldVolunteerInput,
@@ -68,23 +52,24 @@ interface FieldVolunteerFormProps {
   }>;
 }
 
-const skillIcons: Record<string, typeof PackageCheck> = {
-  sorting_packaging: PackageCheck,
-  loading_unloading: Truck,
-  distribution: HeartHandshake,
-  debris_clearing: Trash2,
-  cooking_prep: Utensils,
-  local_scouting: Compass,
-  first_aid: Activity,
-  general: Sparkles,
+/** design.md §5.8 */
+const skillIcons: Record<string, IconName> = {
+  sorting_packaging: "package-process",
+  loading_unloading: "truck",
+  distribution: "shipping-truck-01",
+  debris_clearing: "delete-02",
+  cooking_prep: "kitchen-utensils",
+  local_scouting: "compass",
+  first_aid: "pulse-02",
+  general: "user-multiple",
 };
 
-const mobilityIcons: Record<string, typeof Car> = {
-  has_4x4: Truck,
-  has_car: Car,
-  has_motorcycle: Bike,
-  needs_transport: Footprints,
-  none: Footprints,
+const mobilityIcons: Record<string, IconName> = {
+  has_4x4: "car-04",
+  has_car: "car-03",
+  has_motorcycle: "motorbike-02",
+  needs_transport: "walking",
+  none: "walking",
 };
 
 export function FieldVolunteerForm({
@@ -179,8 +164,8 @@ export function FieldVolunteerForm({
     return (
       <div className="space-y-6">
         {/* Success Banner */}
-        <div className="flex flex-col items-center gap-3.5 rounded-3xl border border-algeria-green/30 bg-algeria-green/10 p-6 sm:p-10 text-center shadow-xs">
-          <span className="flex size-16 items-center justify-center rounded-2xl bg-algeria-green text-white shadow-md">
+        <div className="flex flex-col items-center gap-3.5 border border-algeria-green/30 bg-algeria-green/10 p-6 sm:p-10 text-center">
+          <span className="flex size-16 items-center justify-center bg-algeria-green text-white">
             <HeartHandshake className="size-9" />
           </span>
           <h2 className="text-2xl sm:text-3xl font-black text-foreground">
@@ -206,31 +191,19 @@ export function FieldVolunteerForm({
         </div>
 
         {/* Safety First Notice Card */}
-        <Card className="border-amber-500/30 bg-amber-500/5">
-          <CardContent className="space-y-3 p-5 sm:p-6">
-            <div className="flex items-center gap-2 text-amber-700 dark:text-amber-300 font-extrabold text-sm sm:text-base">
-              <AlertTriangle className="size-5 shrink-0" />
-              <h3>{isFr ? "Consignes de sécurité prioritaires" : "تعليمات وإرشادات السلامة الميدانية الهامة"}</h3>
-            </div>
-            <ul className="space-y-2 text-xs sm:text-sm text-muted-foreground list-disc list-inside leading-relaxed">
-              <li>
-                {isFr
-                  ? "Ne pénétrez jamais dans les zones de feu actif ou routes fermées sans autorisation expresse de la Protection Civile."
-                  : "لا تدخل إطلاقاً إلى مناطق الحرائق المشتعلة أو المسالك المغلقة إلا بمرافقة وتصريح مصالح الحماية المدنية."}
-              </li>
-              <li>
-                {isFr
-                  ? "Munissez-vous toujours d'eau potable en quantité suffisante, de masques anti-poussière et de chaussures de marche adaptées."
-                  : "تزوّد دائماً بكميات كافية من مياه الشرب، كمامات واقية من الدخان والغبار، وأحذية أمان مناسبة للتضاريس الجبلية."}
-              </li>
-              <li>
-                {isFr
-                  ? "Rapprochez-vous obligatoirement des responsables de centres pour coordonner les actions et éviter les doublons."
-                  : "تنسيق توزيع المساعدات يتم حصراً مع مسؤولي النقاط والمراكز المعتمدة لتفادي العشوائية وضمان وصول العون لمستحقيه."}
-              </li>
-            </ul>
-          </CardContent>
-        </Card>
+        <WarningBlock
+          title={
+            isFr
+              ? "Consignes de sécurité prioritaires"
+              : "تعليمات وإرشادات السلامة الميدانية الهامة"
+          }
+        >
+          <ul className="list-inside list-disc space-y-2">
+            <li>{isFr ? "Ne pénétrez jamais dans les zones de feu actif ou routes fermées sans autorisation expresse de la Protection Civile." : "لا تدخل إطلاقاً إلى مناطق الحرائق المشتعلة أو المسالك المغلقة إلا بمرافقة وتصريح مصالح الحماية المدنية."}</li>
+            <li>{isFr ? "Munissez-vous toujours d'eau potable en quantité suffisante, de masques anti-poussière et de chaussures de marche adaptées." : "تزوّد دائماً بكميات كافية من مياه الشرب، كمامات واقية من الدخان والغبار، وأحذية أمان مناسبة للتضاريس الجبلية."}</li>
+            <li>{isFr ? "Rapprochez-vous obligatoirement des responsables de centres pour coordonner les actions et éviter les doublons." : "تنسيق توزيع المساعدات يتم حصراً مع مسؤولي النقاط والمراكز المعتمدة لتفادي العشوائية وضمان وصول العون لمستحقيه."}</li>
+          </ul>
+        </WarningBlock>
 
         {/* Active Coordination Points */}
         {activePoints.length > 0 && (
@@ -243,7 +216,7 @@ export function FieldVolunteerForm({
               {activePoints.slice(0, 4).map((point) => (
                 <div
                   key={point.id}
-                  className="flex flex-col justify-between rounded-2xl border border-border bg-card p-4 shadow-xs hover:border-algeria-green/40 transition-all"
+                  className="flex flex-col justify-between border border-border bg-card p-4 hover:border-algeria-green/40 transition-all"
                 >
                   <div>
                     <p className="font-bold text-sm sm:text-base text-foreground">{point.name}</p>
@@ -265,7 +238,7 @@ export function FieldVolunteerForm({
                       <a
                         href={`tel:${point.phone.replace(/\s/g, "")}`}
                         dir="ltr"
-                        className="inline-flex items-center gap-1 rounded-lg bg-algeria-green/10 px-2.5 py-1 text-xs font-bold text-algeria-green hover:bg-algeria-green/20"
+                        className="inline-flex items-center gap-1 bg-algeria-green/10 px-2.5 py-1 text-xs font-bold text-algeria-green hover:bg-algeria-green/20"
                       >
                         <Phone className="size-3" />
                         <span>{point.phone}</span>
@@ -295,14 +268,11 @@ export function FieldVolunteerForm({
   return (
     <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
       {/* 1. Identity and Location */}
-      <Card>
-        <CardContent className="space-y-4 px-5 pt-6">
-          <div className="flex items-center gap-2 text-foreground font-bold">
-            <span className="flex size-7 items-center justify-center rounded-lg bg-algeria-green/10 text-algeria-green text-sm font-extrabold">
-              1
-            </span>
-            <h2>{isFr ? "Informations personnelles & Localisation" : "بيانات المتطوع والموقع"}</h2>
-          </div>
+      <FormStep
+        step={1}
+        title={isFr ? "Informations personnelles & localisation" : "بيانات المتطوع والموقع"}
+      >
+        <div className="space-y-4">
 
           <div>
             <Label className="mb-1.5">{isFr ? "Nom et prénom *" : "الاسم واللقب *"}</Label>
@@ -350,9 +320,9 @@ export function FieldVolunteerForm({
                       setValue("commune_id", "", { shouldValidate: true });
                     }}
                     className={cn(
-                      "inline-flex items-center gap-1 rounded-lg px-2.5 py-1 text-xs font-bold transition-all active:scale-95",
+                      "inline-flex items-center gap-1 px-2.5 py-1 text-xs font-bold transition-all active:scale-95",
                       isSelected
-                        ? "bg-priority-critical text-white shadow-xs"
+                        ? "bg-priority-critical text-white"
                         : "bg-priority-critical/10 text-priority-critical hover:bg-priority-critical/20"
                     )}
                   >
@@ -389,29 +359,23 @@ export function FieldVolunteerForm({
               <p className="mt-1 text-xs text-destructive">{errors.commune_id.message}</p>
             )}
           </div>
-        </CardContent>
-      </Card>
+        </div>
+      </FormStep>
 
       {/* 2. Skills & Capabilities */}
-      <Card>
-        <CardContent className="space-y-4 px-5 pt-6">
-          <div className="flex items-center gap-2 text-foreground font-bold">
-            <span className="flex size-7 items-center justify-center rounded-lg bg-algeria-green/10 text-algeria-green text-sm font-extrabold">
-              2
-            </span>
-            <div>
-              <h2>{isFr ? "Domaines d'aide sur le terrain *" : "مجالات المساعدة الميدانية *"}</h2>
-              <p className="text-xs text-muted-foreground font-normal">
-                {isFr
-                  ? "Sélectionnez un ou plusieurs domaines où vous pouvez prêter main-forte."
-                  : "اختر مجالاً واحداً أو أكثر حسب قدرتك واستعدادك للمساعدة."}
-              </p>
-            </div>
-          </div>
+      <FormStep
+        step={2}
+        title={isFr ? "Domaines d'aide sur le terrain" : "مجالات المساعدة الميدانية"}
+        caption={
+          isFr
+            ? "Sélectionnez un ou plusieurs domaines où vous pouvez prêter main-forte"
+            : "اختر مجالاً واحداً أو أكثر حسب قدرتك واستعدادك للمساعدة"
+        }
+      >
+        <div className="space-y-4">
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
             {fieldVolunteerSkills.map((skill) => {
-              const Icon = skillIcons[skill] || Sparkles;
               const isSelected = selectedSkills.includes(skill);
               const label =
                 fieldVolunteerSkillLabels[skill]?.[locale] ||
@@ -419,47 +383,27 @@ export function FieldVolunteerForm({
                 skill;
 
               return (
-                <button
-                  type="button"
+                <ChoiceCard
                   key={skill}
-                  onClick={() => toggleSkill(skill)}
-                  className={cn(
-                    "flex items-center gap-3 p-3 rounded-2xl border text-start transition-all active:scale-[0.98]",
-                    isSelected
-                      ? "border-algeria-green bg-algeria-green/10 text-foreground font-bold shadow-xs"
-                      : "border-border bg-card/60 hover:bg-secondary/40 text-muted-foreground"
-                  )}
-                >
-                  <span
-                    className={cn(
-                      "flex size-9 shrink-0 items-center justify-center rounded-xl transition-colors",
-                      isSelected
-                        ? "bg-algeria-green text-white"
-                        : "bg-muted text-muted-foreground"
-                    )}
-                  >
-                    <Icon className="size-4" />
-                  </span>
-                  <span className="text-xs sm:text-sm leading-snug">{label}</span>
-                </button>
+                  type="checkbox"
+                  name={`skill-${skill}`}
+                  icon={skillIcons[skill] ?? "user-multiple"}
+                  title={label}
+                  checked={isSelected}
+                  onChange={() => toggleSkill(skill)}
+                />
               );
             })}
           </div>
           {errors.skills && (
             <p className="text-xs text-destructive">{errors.skills.message}</p>
           )}
-        </CardContent>
-      </Card>
+        </div>
+      </FormStep>
 
       {/* 3. Mobility and Availability */}
-      <Card>
-        <CardContent className="space-y-4 px-5 pt-6">
-          <div className="flex items-center gap-2 text-foreground font-bold">
-            <span className="flex size-7 items-center justify-center rounded-lg bg-algeria-green/10 text-algeria-green text-sm font-extrabold">
-              3
-            </span>
-            <h2>{isFr ? "Mobilité & Disponibilité" : "وسيلة التنقل والجاهزية"}</h2>
-          </div>
+      <FormStep step={3} title={isFr ? "Mobilité & disponibilité" : "وسيلة التنقل والجاهزية"}>
+        <div className="space-y-4">
 
           {/* Mobility Mode */}
           <div className="space-y-2">
@@ -468,7 +412,6 @@ export function FieldVolunteerForm({
             </Label>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
               {fieldVolunteerMobilityOptions.map((mob) => {
-                const Icon = mobilityIcons[mob] || Car;
                 const isSelected = selectedMobility === mob;
                 const label =
                   fieldVolunteerMobilityLabels[mob]?.[locale] ||
@@ -476,20 +419,15 @@ export function FieldVolunteerForm({
                   mob;
 
                 return (
-                  <button
-                    type="button"
+                  <ChoiceCard
                     key={mob}
-                    onClick={() => setValue("mobility", mob)}
-                    className={cn(
-                      "flex items-center gap-2.5 p-2.5 rounded-xl border text-start transition-all",
-                      isSelected
-                        ? "border-algeria-green bg-algeria-green/10 font-bold text-foreground"
-                        : "border-border bg-card/60 text-muted-foreground hover:bg-secondary/40"
-                    )}
-                  >
-                    <Icon className="size-4 text-algeria-green" />
-                    <span className="text-xs">{label}</span>
-                  </button>
+                    name="mobility"
+                    value={mob}
+                    icon={mobilityIcons[mob] ?? "car-03"}
+                    title={label}
+                    checked={isSelected}
+                    onChange={() => setValue("mobility", mob)}
+                  />
                 );
               })}
             </div>
@@ -509,20 +447,15 @@ export function FieldVolunteerForm({
                   avail;
 
                 return (
-                  <button
-                    type="button"
+                  <ChoiceCard
                     key={avail}
-                    onClick={() => setValue("availability", avail)}
-                    className={cn(
-                      "flex flex-col items-center justify-center p-2.5 rounded-xl border text-center transition-all",
-                      isSelected
-                        ? "border-algeria-green bg-algeria-green/10 font-bold text-foreground"
-                        : "border-border bg-card/60 text-muted-foreground hover:bg-secondary/40"
-                    )}
-                  >
-                    <Clock className="size-4 mb-1 text-algeria-green" />
-                    <span className="text-xs leading-tight">{label}</span>
-                  </button>
+                    name="availability"
+                    value={avail}
+                    icon="clock-01"
+                    title={label}
+                    checked={isSelected}
+                    onChange={() => setValue("availability", avail)}
+                  />
                 );
               })}
             </div>
@@ -545,7 +478,7 @@ export function FieldVolunteerForm({
                   <label
                     key={eq}
                     className={cn(
-                      "flex items-center gap-2 p-2.5 rounded-xl border cursor-pointer transition-all",
+                      "flex items-center gap-2 p-2.5 border cursor-pointer transition-all",
                       isSelected
                         ? "border-algeria-green/60 bg-algeria-green/5 font-semibold text-foreground"
                         : "border-border text-muted-foreground"
@@ -589,28 +522,33 @@ export function FieldVolunteerForm({
                 : "أوافق على إتاحة رقم هاتفي لمنسقي الفرق الميدانية للتواصل المباشر والسريع"}
             </span>
           </label>
-        </CardContent>
-      </Card>
+        </div>
+      </FormStep>
 
       {submitError && (
-        <Alert variant="destructive">
-          <AlertDescription>{submitError}</AlertDescription>
-        </Alert>
+        <p
+          role="alert"
+          className="border border-haba-red bg-haba-red-50 p-4 text-sm font-semibold text-haba-red"
+        >
+          {submitError}
+        </p>
       )}
 
-      <Button
+      <Action
         type="submit"
-        size="lg"
-        className="w-full bg-algeria-green hover:bg-algeria-green/90 text-white font-extrabold text-base shadow-md h-12 rounded-2xl"
+        variant="primary"
+        size="submit"
+        icon={submitting ? undefined : "user-check-01"}
         disabled={submitting}
       >
-        {submitting ? (
-          <Loader2 className="size-5 animate-spin" />
-        ) : (
-          <HeartHandshake className="size-5 ms-1" />
-        )}
-        <span>{isFr ? "Confirmer mon inscription bénévole" : "تأكيد تسجيل التطوع الميداني"}</span>
-      </Button>
+        {submitting
+          ? isFr
+            ? "Envoi en cours…"
+            : "جارٍ الإرسال…"
+          : isFr
+            ? "Confirmer mon inscription"
+            : "تأكيد تسجيل التطوع الميداني"}
+      </Action>
     </form>
   );
 }

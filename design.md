@@ -820,6 +820,33 @@ not built. The behaviour is all there — this is a layout pass, not a functiona
 holds a second copy of the authority labels that `update-card.tsx` carries. Retire it once nothing
 imports it.
 
+**BUILT (step 6) — the three forms:**
+
+`/help`, `/donate` and `/volunteers`, per §5.6–§5.8. Every `useForm`, `register`,
+`setValue`, `watch`, `useFieldArray` and server-action call is untouched — this was a
+presentation pass, as §9 step 6 requires. Page shells use the narrower widths the design
+specifies: 900px for Help and Donate, 1000px for Volunteers.
+
+| Was | Now |
+|---|---|
+| `Card` + `CardContent` + a numbered `<span>` | `FormStep` |
+| `Label` + `Input` + error `<p>` | `Field` / `FieldInput` / `FieldPhoneInput` |
+| `<button>` option grids with `cn()` selected styling | `ChoiceCard` |
+| Amber safety `Card` on /volunteers | `WarningBlock` |
+| `Button` submit | `Action variant size="submit"` |
+| lucide icon maps | hugeicons `IconName` maps |
+
+**The option grids are now real form controls.** Every one of them was a `<button>` driving
+`setValue`: not focusable as a group, not announced as a radio or checkbox, and invisible to
+assistive tech as a selection. They are now `<label>` + `<input>` inside `<fieldset>`/`<legend>`,
+with selection rendered from `:has(:checked)`. That closes §8.5's finding on the pages where it
+mattered most.
+
+**Donate and Volunteers were converted, not rewritten.** Their `useFieldArray` item blocks,
+quantity steppers and render-prop `Select`s are intricate and submit real aid offers; they keep
+their existing markup and inherit the palette and radius 0 through the tokens. What changed is the
+scaffolding around them. Help was rewritten in full because its body is simple enough to verify.
+
 ### 7.3 Routes with no artboard — decide, don't guess
 
 `/transparency` · `/transport` · `/needs` · `/artisans` · `/news` · `/medical`

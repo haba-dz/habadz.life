@@ -6,16 +6,11 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import {
   Plus,
   Trash2,
-  Loader2,
   MapPin,
   Clock,
   CircleCheck,
   Gift,
-  Truck,
-  Car,
-  HeartHandshake,
   Minus,
-  Zap,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -30,6 +25,8 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Card, CardContent } from "@/components/ui/card";
+import { Action, Chip, ChoiceCard, FormStep } from "@/components/site";
+import { Icon } from "@/components/icons";
 import { Alert, AlertTitle, AlertDescription } from "@/components/ui/alert";
 import { PriorityBadge } from "@/components/shared/priority-badge";
 import { PointStatusBadge } from "@/components/shared/status-badge";
@@ -152,7 +149,7 @@ export function DonationForm({
             </h2>
             <div className="grid gap-3 sm:grid-cols-2">
               {result.matches.map((m) => (
-                <Card key={m.need.id} className="border-border shadow-xs">
+                <Card key={m.need.id} className="border-border">
                   <CardContent className="flex items-start justify-between gap-3 p-4">
                     <div className="space-y-1">
                       <p className="flex items-center gap-1.5 font-bold text-sm text-foreground">
@@ -187,7 +184,7 @@ export function DonationForm({
             </h2>
             <div className="grid gap-3 sm:grid-cols-2">
               {result.suggestedPoints.map((p) => (
-                <Card key={p.id} className="border-border shadow-xs">
+                <Card key={p.id} className="border-border">
                   <CardContent className="space-y-2 p-4">
                     <div className="flex items-start justify-between gap-2">
                       <p className="font-bold text-sm sm:text-base text-foreground">{p.name}</p>
@@ -239,19 +236,12 @@ export function DonationForm({
   return (
     <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
       {/* 1. Donation Items */}
-      <Card>
-        <CardContent className="space-y-4 px-5 pt-6">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-2 text-foreground font-bold">
-              <span className="flex size-7 items-center justify-center rounded-lg bg-algeria-green/10 text-algeria-green text-sm font-extrabold">
-                1
-              </span>
-              <h2>{isFr ? "Articles & Dons disponibles *" : "المواد والمساعدات المتوفرة لديك *"}</h2>
-            </div>
-            <span className="text-xs font-semibold text-muted-foreground">
-              {fields.length} {isFr ? "article(s)" : "مادة"}
-            </span>
-          </div>
+      <FormStep
+        step={1}
+        title={isFr ? "Articles & dons disponibles" : "المواد والمساعدات المتوفرة لديك"}
+        caption={`${fields.length} ${isFr ? "article(s) enregistré(s)" : "مادة مسجَّلة حتى الآن"}`}
+      >
+        <div className="space-y-3.5">
 
           {fields.map((field, index) => {
             const categoryId = watch(`items.${index}.category_id`);
@@ -260,7 +250,7 @@ export function DonationForm({
             return (
               <div
                 key={field.id}
-                className="space-y-3 rounded-2xl border border-border/80 bg-background/50 p-3.5 sm:p-4 transition-all"
+                className="space-y-3 border border-border/80 bg-background/50 p-3.5 sm:p-4 transition-all"
               >
                 <div className="flex items-center justify-between">
                   <span className="inline-flex items-center gap-1.5 text-xs font-extrabold text-foreground">
@@ -295,7 +285,7 @@ export function DonationForm({
                       if (cat) setValue(`items.${index}.unit`, cat.default_unit);
                     }}
                   >
-                    <SelectTrigger className="w-full h-11 rounded-xl">
+                    <SelectTrigger className="w-full h-11">
                       <SelectValue placeholder={isFr ? "Choisir une catégorie" : "اختر نوع المساعدة"}>
                         {(value: string) => {
                           const c = categories.find((cat) => cat.id === value);
@@ -334,7 +324,7 @@ export function DonationForm({
                         type="button"
                         variant="outline"
                         size="icon"
-                        className="size-10 shrink-0 rounded-xl"
+                        className="size-10 shrink-0"
                         onClick={() => {
                           const q = Math.max(1, (quantity || 1) - 1);
                           setValue(`items.${index}.quantity`, q);
@@ -345,14 +335,14 @@ export function DonationForm({
                       <Input
                         type="number"
                         min={1}
-                        className="text-center font-black text-base h-10 rounded-xl"
+                        className="text-center font-black text-base h-10"
                         {...register(`items.${index}.quantity`, { valueAsNumber: true })}
                       />
                       <Button
                         type="button"
                         variant="outline"
                         size="icon"
-                        className="size-10 shrink-0 rounded-xl"
+                        className="size-10 shrink-0"
                         onClick={() => {
                           const q = (quantity || 1) + 1;
                           setValue(`items.${index}.quantity`, q);
@@ -373,7 +363,7 @@ export function DonationForm({
                         v && setValue(`items.${index}.unit`, v as DonationInput["items"][number]["unit"])
                       }
                     >
-                      <SelectTrigger className="w-full h-10 rounded-xl">
+                      <SelectTrigger className="w-full h-10">
                         <SelectValue>
                           {(value: string) => getUnitLabel(value, locale)}
                         </SelectValue>
@@ -400,7 +390,7 @@ export function DonationForm({
                         ? "Ex : Bouteilles d'eau 1.5L, couvertures neuves, etc."
                         : "مثال: مياه معدنية 1.5 لتر، أغطية جديدة، حفاظات مقاس 4..."
                     }
-                    className="rounded-xl"
+                    className=""
                     {...register(`items.${index}.description`)}
                   />
                 </div>
@@ -412,10 +402,9 @@ export function DonationForm({
             <p className="text-xs text-destructive">{errors.items.message as string}</p>
           )}
 
-          <Button
+          <button
             type="button"
-            variant="outline"
-            className="w-full border-dashed rounded-xl h-11 font-bold"
+            className="flex w-full items-center justify-center gap-2 border border-dashed border-haba-border-dashed bg-haba-surface p-3.5 text-sm font-semibold text-haba-green hover:bg-haba-green-tint focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-haba-green"
             onClick={() =>
               append({
                 category_id: categories[0]?.id ?? "",
@@ -426,21 +415,15 @@ export function DonationForm({
               })
             }
           >
-            <Plus className="size-4 text-algeria-green" />
+            <Icon name="plus-sign" size={18} />
             <span>{isFr ? "Ajouter un autre type de don" : "إضافة مادة إضافية أخرى"}</span>
-          </Button>
-        </CardContent>
-      </Card>
+          </button>
+        </div>
+      </FormStep>
 
       {/* 2. Location and Delivery Method */}
-      <Card>
-        <CardContent className="space-y-4 px-5 pt-6">
-          <div className="flex items-center gap-2 text-foreground font-bold">
-            <span className="flex size-7 items-center justify-center rounded-lg bg-algeria-green/10 text-algeria-green text-sm font-extrabold">
-              2
-            </span>
-            <h2>{isFr ? "Localisation & Acheminement" : "الموقع وطريقة التسليم"}</h2>
-          </div>
+      <FormStep step={2} title={isFr ? "Localisation & acheminement" : "الموقع وطريقة التسليم"}>
+        <div className="space-y-4">
 
           {/* Wilaya Selection */}
           <div>
@@ -458,15 +441,11 @@ export function DonationForm({
                       setValue("current_wilaya", pw.name_ar, { shouldValidate: true });
                       setValue("current_commune", "", { shouldValidate: true });
                     }}
-                    className={cn(
-                      "inline-flex items-center gap-1 rounded-lg px-2.5 py-1 text-xs font-bold transition-all active:scale-95",
-                      isSelected
-                        ? "bg-priority-critical text-white shadow-xs"
-                        : "bg-priority-critical/10 text-priority-critical hover:bg-priority-critical/20"
-                    )}
                   >
-                    <Zap className="size-3 text-amber-500 shrink-0 fill-amber-500" />
-                    <span>{isFr ? `${pw.codeStr} - ${pw.name_fr}` : `${pw.codeStr} - ${pw.name_ar}`}</span>
+                    <Chip tone="red" fill={isSelected ? "solid" : "tint"} size="md">
+                      <Icon name="flash" size={14} />
+                      {isFr ? `${pw.codeStr} - ${pw.name_fr}` : `${pw.codeStr} - ${pw.name_ar}`}
+                    </Chip>
                   </button>
                 );
               })}
@@ -500,90 +479,47 @@ export function DonationForm({
             <Label className="text-xs font-semibold text-muted-foreground">
               {isFr ? "Comment souhaitez-vous acheminer ces dons ?" : "كيف سيتم إيصال هذه المساعدات ؟"}
             </Label>
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
-              <button
-                type="button"
-                onClick={() => {
+            <div className="grid gap-3 desktop:grid-cols-2">
+              <ChoiceCard
+                type="checkbox"
+                name="deliver-self"
+                icon="truck-delivery"
+                title={isFr ? "Je peux déposer moi-même" : "أستطيع نقلها بنفسي لنقطة تجميع"}
+                description={
+                  isFr
+                    ? "Dépôt direct dans un centre de collecte agréé"
+                    : "تسليم المواد لأقرب مركز استقبال أو جمعية معتمدة"
+                }
+                checked={canDeliverSelf && !needsTransport}
+                onChange={() => {
                   setValue("can_deliver_self", true);
                   setValue("needs_transport", false);
                 }}
-                className={cn(
-                  "flex items-start gap-3 p-3.5 rounded-2xl border text-start transition-all cursor-pointer",
-                  canDeliverSelf && !needsTransport
-                    ? "border-algeria-green bg-algeria-green/10 text-foreground font-bold shadow-xs"
-                    : "border-border bg-card/60 text-muted-foreground hover:bg-secondary/40"
-                )}
-              >
-                <span
-                  className={cn(
-                    "flex size-9 shrink-0 items-center justify-center rounded-xl",
-                    canDeliverSelf && !needsTransport
-                      ? "bg-algeria-green text-white"
-                      : "bg-muted text-muted-foreground"
-                  )}
-                >
-                  <Car className="size-4" />
-                </span>
-                <div className="space-y-0.5">
-                  <p className="text-xs sm:text-sm font-bold leading-snug">
-                    {isFr ? "Je peux déposer moi-même" : "أستطيع نقلها بنفسي لنقطة تجميع"}
-                  </p>
-                  <p className="text-[11px] text-muted-foreground font-normal leading-relaxed">
-                    {isFr
-                      ? "Dépôt direct dans un centre de collecte agréé"
-                      : "تسليم المواد لأقرب مركز استقبال أو جمعية معتمدة"}
-                  </p>
-                </div>
-              </button>
-
-              <button
-                type="button"
-                onClick={() => {
+              />
+              <ChoiceCard
+                type="checkbox"
+                name="needs-transport"
+                icon="delivery-truck-02"
+                title={isFr ? "J'ai besoin d'un transporteur" : "أحتاج إلى وسيلة شحن / نقل"}
+                description={
+                  isFr
+                    ? "Un chauffeur bénévole viendra récupérer les dons"
+                    : "نربطك بسائقين متطوعين لاستلام المواد ونقلها"
+                }
+                checked={needsTransport}
+                onChange={() => {
                   setValue("needs_transport", true);
                   setValue("can_deliver_self", false);
                 }}
-                className={cn(
-                  "flex items-start gap-3 p-3.5 rounded-2xl border text-start transition-all cursor-pointer",
-                  needsTransport
-                    ? "border-blue-500 bg-blue-500/10 text-foreground font-bold shadow-xs"
-                    : "border-border bg-card/60 text-muted-foreground hover:bg-secondary/40"
-                )}
-              >
-                <span
-                  className={cn(
-                    "flex size-9 shrink-0 items-center justify-center rounded-xl",
-                    needsTransport
-                      ? "bg-blue-600 text-white"
-                      : "bg-muted text-muted-foreground"
-                  )}
-                >
-                  <Truck className="size-4" />
-                </span>
-                <div className="space-y-0.5">
-                  <p className="text-xs sm:text-sm font-bold leading-snug">
-                    {isFr ? "J'ai besoin d'un transporteur" : "أحتاج إلى وسيلة شحن / نقل"}
-                  </p>
-                  <p className="text-[11px] text-muted-foreground font-normal leading-relaxed">
-                    {isFr
-                      ? "Un chauffeur bénévole viendra récupérer les dons"
-                      : "ربطك بسائقين متطوعين لاستلام المواد ونقلها"}
-                  </p>
-                </div>
-              </button>
+              />
             </div>
           </div>
-        </CardContent>
-      </Card>
+        </div>
+      </FormStep>
 
       {/* 3. Donor Contact Info */}
-      <Card>
-        <CardContent className="space-y-4 px-5 pt-6">
-          <div className="flex items-center gap-2 text-foreground font-bold">
-            <span className="flex size-7 items-center justify-center rounded-lg bg-algeria-green/10 text-algeria-green text-sm font-extrabold">
-              3
-            </span>
-            <h2>{isFr ? "Coordonnées du donateur" : "بيانات المتبرع أو الجهة المانحة"}</h2>
-          </div>
+      <FormStep step={3} title={isFr ? "Coordonnées du donateur" : "بيانات المتبرع أو الجهة المانحة"}>
+        <div className="space-y-4">
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
             <div>
@@ -617,8 +553,8 @@ export function DonationForm({
               {...register("notes")}
             />
           </div>
-        </CardContent>
-      </Card>
+        </div>
+      </FormStep>
 
       {submitError && (
         <Alert variant="destructive">
@@ -626,19 +562,21 @@ export function DonationForm({
         </Alert>
       )}
 
-      <Button
+      <Action
         type="submit"
-        size="lg"
-        className="w-full bg-algeria-green hover:bg-algeria-green/90 text-white font-extrabold text-base shadow-md h-12 rounded-2xl"
+        variant="primary"
+        size="submit"
+        icon={submitting ? undefined : "shield-user"}
         disabled={submitting}
       >
-        {submitting ? (
-          <Loader2 className="size-5 animate-spin" />
-        ) : (
-          <HeartHandshake className="size-5 ms-1" />
-        )}
-        <span>{isFr ? "Valider et enregistrer les dons" : "تأكيد وتسجيل المساعدات"}</span>
-      </Button>
+        {submitting
+          ? isFr
+            ? "Envoi en cours…"
+            : "جارٍ الإرسال…"
+          : isFr
+            ? "Valider et enregistrer les dons"
+            : "تأكيد وتسجيل المساعدات"}
+      </Action>
     </form>
   );
 }
