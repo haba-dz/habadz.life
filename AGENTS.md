@@ -6,6 +6,14 @@ This version has breaking changes — APIs, conventions, and file structure may 
 
 This block is written and re-added by `next dev` — verify at `node_modules/next/dist/server/lib/generate-agent-files.js`. Removing it from a diff only re-creates the uncommitted change; committing it with your work keeps the tree clean.
 
+<!-- END:nextjs-agent-rules -->
+
+<!--
+  Keep project rules BELOW the END marker. `next dev` regenerates everything
+  between BEGIN and END, and previously deleted these bullets because they had
+  been written inside that block.
+-->
+
 For Next.js specifically:
 
 * Use the simplest correct Next.js solution. Do not overengineer.
@@ -17,7 +25,3 @@ For Next.js specifically:
 * Check for unnecessary code. Remove outdated logic dead code unused imports duplicated logic and workarounds that are no longer needed.
 * Investigate errors. Use Sentry MCP if available when existing production errors are relevant.
 * If something is unclear risky or uncertain say so. Never pretend something works without verifying it.
-
-
-
-<!-- END:nextjs-agent-rules -->
