@@ -8,10 +8,10 @@ export default function Loading() {
       <Skeleton className="mx-auto mt-3 h-4 w-80" />
       <div className="mx-auto mt-6 grid max-w-md grid-cols-3 gap-2">
         {[0, 1, 2].map((i) => (
-          <Skeleton key={i} className="h-16 rounded-xl" />
+          <Skeleton key={i} className="h-16 " />
         ))}
       </div>
-      <Skeleton className="mt-4 h-[420px] w-full rounded-xl sm:h-[520px]" />
+      <Skeleton className="mt-4 h-[420px] w-full sm:h-[520px]" />
       <div className="mt-10">
         <CardGridSkeleton />
       </div>

@@ -176,7 +176,7 @@ export function PointCard({
       </Card>
 
       <Dialog open={open} onOpenChange={setOpen}>
-        <DialogContent className="max-h-[85vh] overflow-y-auto sm:max-w-md">
+        <DialogContent className="max-h-[85vh] overflow-y-auto rounded-none sm:max-w-md">
           <DialogHeader>
             <p className="flex items-center gap-1.5 text-xs font-medium text-muted-foreground">
               <span className={`size-2 ${kindDot[point.kind]}`} aria-hidden />

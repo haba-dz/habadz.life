@@ -179,7 +179,7 @@ export function DonationForm({
         {result.suggestedPoints && result.suggestedPoints.length > 0 && (
           <div className="space-y-3">
             <h2 className="text-base sm:text-lg font-bold text-foreground flex items-center gap-2">
-              <MapPin className="size-5 text-blue-600 dark:text-blue-400" />
+              <MapPin className="size-5 text-haba-green" />
               <span>{isFr ? "Points de dépôt recommandés" : "نقاط التسليم المعتمدة المقترحة"}</span>
             </h2>
             <div className="grid gap-3 sm:grid-cols-2">

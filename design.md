@@ -847,7 +847,7 @@ quantity steppers and render-prop `Select`s are intricate and submit real aid of
 their existing markup and inherit the palette and radius 0 through the tokens. What changed is the
 scaffolding around them. Help was rewritten in full because its body is simple enough to verify.
 
-### 7.3 Routes with no artboard — decide, don't guess
+### 7.3 RESOLVED (option a) — routes with no artboard
 
 `/transparency` · `/transport` · `/needs` · `/artisans` · `/news` · `/medical`
 
@@ -857,14 +857,57 @@ The redesign folds several of these into other pages:
   than separate pages.
 - `المستجدات والبيانات` → `/official-information` carries the news feed, overlapping `/news`.
 - The footer links `تقارير التوزيع` and the home CTA `صفحة الشفافية` → `/transparency`, which has
-  **no artboard** — it needs a design of its own or it ships un-redesigned.
+  **no artboard**.
 
-**Do not delete or redirect these routes as part of the visual work.** Either (a) restyle them
-with the new primitives and keep them reachable, or (b) treat the consolidation as a separate,
-explicitly-approved IA change. Silently breaking `/transport` or `/medical` would break links
-already shared in the field.
+**Taken: option (a) — restyled with the new primitives, every route still reachable.** Option (b),
+consolidating them into `/volunteers` and `/official-information`, is an IA change that needs an
+explicit decision; links to `/transport` and `/medical` have already been shared in the field, so
+nothing was deleted or redirected. **The consolidation question is still open.**
 
----
+Restyled in this step, nine routes in total — the six above plus three that had also been left
+behind and are reachable from redesigned pages, so leaving them would have shown a visible seam:
+
+| Route | What it became |
+| --- | --- |
+| `/transparency` | Designed from the system, since no artboard exists: hero, a hairline stat pair, and two hairline tables. Totals stay grouped by unit and are never summed across units. |
+| `/needs` | Hero + a green veterinary call-out, square filter chips, restyled `NeedCard`s. |
+| `/news`, `/news/[slug]` | Hero + a hairline list; the detail page is a 760px reading column. |
+| `/transport`, `/artisans`, `/medical` | `PageHero` + `FormStep`s; option grids became `ChoiceCard`s. |
+| `/medical` list | `SectionHeader` + `HairlineGrid` + `Chip`s. |
+| `/help/damage-assessment` | `PageHero` + `FormStep`s; damage picker became real checkboxes. |
+| `/official-information/[id]` | Hairline article, `Chip` authority badge, shared `EmergencySection`. |
+
+Each of these carried an off-palette accent of its own — `/transport` blue, `/artisans` and
+`/help/damage-assessment` orange, `/medical` emerald — all now the site green and red.
+
+**Bugs found while restyling, all pre-existing:**
+- **The damage-category picker on `/help/damage-assessment` did not work at all.** It was a
+  `<label onClick={toggle}>` wrapping a checkbox with a no-op `onChange`. One user click fired
+  `toggleDamage` twice — once directly, once when the browser forwarded the click to the input and
+  it bubbled back — so the two toggles cancelled. Verified in the browser: clicking any option
+  changed nothing, and the form was stuck on its `needs_roofing` default, meaning **every damage
+  report ever filed through this page claimed roof damage and nothing else**. Now real checkboxes
+  with `onChange` on the input; select and deselect both verified.
+- `/news/[slug]` formatted dates with a hardcoded `ar-DZ` locale and an Arabic back-link, so French
+  readers got Arabic. Same for `generateMetadata` on `/official-information/[id]`.
+- The medical visibility options had **Arabic text in their French branches** — `isFr ? "نشر في
+  الدليل العام" : …`. Real French now.
+- The medical directory search icon was positioned with `right-3`, which put it over the text in
+  LTR French. Logical `end-3.5` now.
+- `/official-information/[id]` hardcoded its own four emergency numbers, a second copy of the
+  verified contact list. It renders the shared `EmergencySection` instead.
+- `components/shared/official-update-card.tsx` was dead — only its type was still imported. The
+  type moved to `components/site/update-card.tsx` and the file is deleted.
+
+**Not restyled, deliberately:** `category-icon`, `empty-state`, `priority-badge`, `severity-badge`,
+`stat-card`, `status-badge` and `verification-badge` in `components/shared/` are imported by
+`/admin`. Restyling them would change admin, which is out of scope, so the site renders its own
+`Chip` at the call sites instead and those files are untouched. `ui/dialog.tsx` is the same story:
+its `rounded-xl` is overridden per call site with `rounded-none`.
+
+**Known seam:** `NeedsFilters` still renders lucide glyphs from the shared `categoryIcon` and
+`priorityIcon` maps, while the rest of the site uses hugeicons. Those maps are admin-shared, so the
+shapes were restyled and the glyph source left alone.
 
 ## 8. Gaps and risks
 
@@ -1066,7 +1109,8 @@ or expect conflicts in exactly the files §7.2 rewrites.
 5. **Read-only pages** — Official info, Affected areas, Centres map (map component last).
 6. **Forms** — Help, Donate, Volunteers. Wire to the existing Server Actions; do not
    re-architect submission as part of a visual pass.
-7. **Orphan routes** (§7.3) — restyle or consolidate, per whatever was decided.
+7. **Orphan routes** (§7.3) — restyle or consolidate, per whatever was decided. **DONE** — option
+   (a), restyled and kept reachable, nine routes. Consolidation is still an open decision.
 8. **Passes** — French copy, a11y (§8.5), 861–1199px band, keyboard-open mobile forms. **DONE** —
    see §8.4 and §8.5, both now marked RESOLVED. Step 7 (orphan routes) is still open and still needs
    the IA decision in §7.3; the untranslated French on those routes belongs with it.

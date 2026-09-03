@@ -17,8 +17,8 @@ export function SuccessPanel({
 }) {
   return (
     <div className="space-y-6">
-      <div className="flex flex-col items-center gap-3 rounded-2xl border border-algeria-green/30 bg-algeria-green/5 px-6 py-10 text-center">
-        <span className="animate-pop flex size-16 items-center justify-center rounded-full bg-algeria-green text-algeria-green-foreground">
+      <div className="flex flex-col items-center gap-3 border border-algeria-green/30 bg-algeria-green/5 px-6 py-10 text-center">
+        <span className="animate-pop flex size-16 items-center justify-center bg-algeria-green text-algeria-green-foreground">
           <Check className="size-8" strokeWidth={3} />
         </span>
         <h2 className="text-xl font-bold text-algeria-green">{title}</h2>

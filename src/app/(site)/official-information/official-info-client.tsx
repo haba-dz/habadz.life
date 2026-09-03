@@ -3,7 +3,7 @@
 import { useState, useMemo, useRef, useEffect } from "react";
 import { Icon } from "@/components/icons";
 import { Chip, HairlineGrid, StatTile, UpdateCard } from "@/components/site";
-import type { OfficialUpdateItem } from "@/components/shared/official-update-card";
+import type { UpdateItem as OfficialUpdateItem } from "@/components/site";
 import { formatRelativeTime } from "@/lib/constants";
 import { cn } from "@/lib/utils";
 

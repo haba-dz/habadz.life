@@ -5,22 +5,7 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import {
   Loader2,
-  Stethoscope,
-  Phone,
-  HeartHandshake,
-  Activity,
-  Briefcase,
-  ShieldCheck,
-  CheckCircle2,
-  Zap,
-} from "lucide-react";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Textarea } from "@/components/ui/textarea";
-import { Label } from "@/components/ui/label";
-import { Checkbox } from "@/components/ui/checkbox";
-import { Card, CardContent } from "@/components/ui/card";
-import { Alert, AlertDescription } from "@/components/ui/alert";
+  } from "lucide-react";
 import { WilayaSelect } from "@/components/ui/wilaya-select";
 import { CommuneSelect } from "@/components/ui/commune-select";
 import { priorityWilayas } from "@/lib/algeria-cities";
@@ -30,6 +15,17 @@ import {
   type MedicalVolunteerInput,
 } from "@/schemas/medical-volunteer";
 import { SuccessPanel } from "@/components/shared/success-panel";
+import { Icon } from "@/components/icons";
+import {
+  Action,
+  ChoiceCard,
+  FieldInput,
+  FieldLabel,
+  FieldPhoneInput,
+  FieldTextarea,
+  FormStep,
+  FOCUS_RING,
+} from "@/components/site";
 import { submitMedicalVolunteer } from "@/actions/medical";
 import type { AvailableLocale } from "@/i18n/locales";
 
@@ -130,39 +126,41 @@ export function MedicalVolunteerForm({
   return (
     <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
       {/* 1. Identity & Specialty */}
-      <Card>
-        <CardContent className="space-y-4 px-5 pt-6">
-          <div className="flex items-center gap-2 text-foreground font-bold">
-            <span className="flex size-7 items-center justify-center rounded-lg bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 text-sm font-extrabold">
-              1
-            </span>
-            <h2>{isFr ? "Informations professionnelles & Personnelles" : "البيانات المهنية والشخصية"}</h2>
-          </div>
+      <FormStep
+        step={1}
+        title={isFr ? "Informations professionnelles & Personnelles" : "البيانات المهنية والشخصية"}
+      >
+        <div className="flex flex-col gap-4">
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
             <div>
-              <Label className="mb-1.5">{isFr ? "Nom et prénom *" : "الاسم واللقب *"}</Label>
-              <Input
+              <FieldLabel htmlFor="md-name">{isFr ? "Nom et prénom *" : "الاسم واللقب *"}</FieldLabel>
+              <FieldInput
+                id="md-name"
                 placeholder={isFr ? "Dr. Mohamed Belhadj" : "د. محمد بلحاج"}
                 {...register("full_name")}
               />
               {errors.full_name && (
-                <p className="mt-1 text-xs text-destructive">{errors.full_name.message}</p>
+                <p className="mt-1 text-xs text-haba-red">{errors.full_name.message}</p>
               )}
             </div>
 
             <div>
-              <Label className="mb-1.5">{isFr ? "Numéro de téléphone *" : "رقم الهاتف للتواصل *"}</Label>
-              <Input dir="ltr" placeholder="0555xxxxxx" {...register("phone")} />
+              <FieldLabel htmlFor="md-phone">
+                {isFr ? "Numéro de téléphone *" : "رقم الهاتف للتواصل *"}
+              </FieldLabel>
+              <FieldPhoneInput id="md-phone" placeholder="0555xxxxxx" {...register("phone")} />
               {errors.phone && (
-                <p className="mt-1 text-xs text-destructive">{errors.phone.message}</p>
+                <p className="mt-1 text-xs text-haba-red">{errors.phone.message}</p>
               )}
             </div>
           </div>
 
           {/* Specialty Quick Selection Pills */}
           <div>
-            <Label className="mb-1.5">{isFr ? "Spécialité médicale ou vétérinaire *" : "التخصص الطبي أو البيطري *"}</Label>
+            <FieldLabel htmlFor="md-specialty">
+              {isFr ? "Spécialité médicale ou vétérinaire *" : "التخصص الطبي أو البيطري *"}
+            </FieldLabel>
             <div className="mb-2 flex flex-wrap gap-1.5">
               {popularSpecialties.map((s) => {
                 const isSelected = selectedSpecialty === (isFr ? s.fr : s.ar);
@@ -172,10 +170,11 @@ export function MedicalVolunteerForm({
                     type="button"
                     onClick={() => setValue("specialty", isFr ? s.fr : s.ar, { shouldValidate: true })}
                     className={cn(
-                      "rounded-lg px-2.5 py-1 text-xs font-semibold transition-all cursor-pointer",
+                      "border px-2.5 py-1 text-xs font-semibold transition-colors",
                       isSelected
-                        ? "bg-emerald-600 text-white shadow-xs font-bold"
-                        : "bg-emerald-500/10 text-emerald-700 dark:text-emerald-300 hover:bg-emerald-500/20"
+                        ? "border-haba-green bg-haba-green font-bold text-white"
+                        : "border-haba-green bg-haba-green-tint text-haba-green hover:bg-haba-green-50",
+                      FOCUS_RING,
                     )}
                   >
                     {isFr ? s.fr : s.ar}
@@ -183,7 +182,8 @@ export function MedicalVolunteerForm({
                 );
               })}
             </div>
-            <Input
+            <FieldInput
+              id="md-specialty"
               placeholder={
                 isFr
                   ? "Ou précisez votre spécialité..."
@@ -192,13 +192,15 @@ export function MedicalVolunteerForm({
               {...register("specialty")}
             />
             {errors.specialty && (
-              <p className="mt-1 text-xs text-destructive">{errors.specialty.message}</p>
+              <p className="mt-1 text-xs text-haba-red">{errors.specialty.message}</p>
             )}
           </div>
 
           {/* Wilaya selection */}
           <div>
-            <Label className="mb-1.5">{isFr ? "Wilaya d'exercice ou de résidence *" : "الولاية (مقر الإقامة أو الممارسة) *"}</Label>
+            <FieldLabel htmlFor="md-wilaya">
+              {isFr ? "Wilaya d'exercice ou de résidence *" : "الولاية (مقر الإقامة أو الممارسة) *"}
+            </FieldLabel>
             {/* Quick Priority Wilaya Buttons */}
             <div className="flex flex-wrap gap-1.5 mb-2">
               {priorityWilayas.map((pw) => {
@@ -213,13 +215,14 @@ export function MedicalVolunteerForm({
                       setValue("commune_id", "");
                     }}
                     className={cn(
-                      "rounded-lg px-2.5 py-1 text-xs font-bold transition-all cursor-pointer",
+                      "inline-flex items-center gap-1 border px-2.5 py-1 text-xs font-bold transition-colors",
                       active
-                        ? "bg-priority-critical text-white shadow-xs"
-                        : "bg-priority-critical/10 text-priority-critical hover:bg-priority-critical/20"
+                        ? "border-haba-red bg-haba-red text-white"
+                        : "border-haba-red-200 bg-haba-red-50 text-haba-red hover:border-haba-red",
+                      FOCUS_RING,
                     )}
                   >
-                    <Zap className="size-3 text-amber-500 shrink-0 fill-amber-500" />
+                    <Icon name="fire" size={12} className="shrink-0" />
                     <span>{isFr ? `${pw.codeStr} - ${pw.name_fr}` : `${pw.codeStr} - ${pw.name_ar}`}</span>
                   </button>
                 );
@@ -227,6 +230,7 @@ export function MedicalVolunteerForm({
             </div>
 
             <WilayaSelect
+              id="md-wilaya"
               locale={locale}
               value={selectedWilaya}
               onChange={(e) => {
@@ -235,112 +239,102 @@ export function MedicalVolunteerForm({
               }}
             />
             {errors.wilaya_code && (
-              <p className="mt-1 text-xs text-destructive">{errors.wilaya_code.message}</p>
+              <p className="mt-1 text-xs text-haba-red">{errors.wilaya_code.message}</p>
             )}
           </div>
 
           {/* Commune selection (Optional) */}
           <div>
-            <Label className="mb-1.5">{isFr ? "Commune (facultatif)" : "البلدية / الدائرة (اختياري)"}</Label>
+            <FieldLabel htmlFor="md-commune">
+              {isFr ? "Commune (facultatif)" : "البلدية / الدائرة (اختياري)"}
+            </FieldLabel>
             <CommuneSelect
+              id="md-commune"
               wilaya={selectedWilaya}
               locale={locale}
               value={watch("commune_id")}
               onChange={(e) => setValue("commune_id", e.target.value, { shouldValidate: true })}
             />
             {errors.commune_id && (
-              <p className="mt-1 text-xs text-destructive">{errors.commune_id.message}</p>
+              <p className="mt-1 text-xs text-haba-red">{errors.commune_id.message}</p>
             )}
           </div>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
             <div>
-              <Label className="mb-1.5">{isFr ? "Lieu d'exercice actuel (facultatif)" : "مقر العمل أو الممارسة (اختياري)"}</Label>
-              <Input
+              <FieldLabel htmlFor="md-workplace">
+                {isFr ? "Lieu d'exercice actuel (facultatif)" : "مقر العمل أو الممارسة (اختياري)"}
+              </FieldLabel>
+              <FieldInput
+                id="md-workplace"
                 placeholder={isFr ? "Hôpital, cabinet privé, clinique..." : "مستشفى، عيادة خاصة، حر..."}
                 {...register("current_workplace")}
               />
             </div>
             <div>
-              <Label className="mb-1.5">{isFr ? "N° d'agrément / carte pro (facultatif)" : "رقم الاعتماد أو بطاقة المهنة (اختياري)"}</Label>
-              <Input
+              <FieldLabel htmlFor="md-licence">
+                {isFr ? "N° d'agrément / carte pro (facultatif)" : "رقم الاعتماد أو بطاقة المهنة (اختياري)"}
+              </FieldLabel>
+              <FieldInput
+                id="md-licence"
                 placeholder={isFr ? "Optionnel" : "اختياري"}
                 {...register("license_number")}
               />
             </div>
           </div>
-        </CardContent>
-      </Card>
+        </div>
+      </FormStep>
 
       {/* 2. Availability & Intervention Modes */}
-      <Card>
-        <CardContent className="space-y-4 px-5 pt-6">
-          <div className="flex items-center gap-2 text-foreground font-bold">
-            <span className="flex size-7 items-center justify-center rounded-lg bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 text-sm font-extrabold">
-              2
-            </span>
-            <h2>{isFr ? "Modalités d'intervention" : "طرق ومجالات الاستعداد"}</h2>
-          </div>
+      <FormStep step={2} title={isFr ? "Modalités d'intervention" : "طرق ومجالات الاستعداد"}>
+        <div className="flex flex-col gap-4">
+          <div className="flex flex-col gap-2.5">
+            <ChoiceCard
+              type="checkbox"
+              showControl
+              title={isFr ? "Intervention directe sur le terrain" : "الاستعداد للتنقل والتدخل الميداني"}
+              description={
+                isFr
+                  ? "Consultations dans les centres d'hébergement ou auprès des cheptels"
+                  : "فحص العائلات في مراكز الإيواء أو تفقد الماشية والحيوانات المتضررة"
+              }
+              checked={canFieldIntervene}
+              onChange={(e) => setValue("can_field_intervene", e.target.checked)}
+            />
 
-          <div className="space-y-2.5">
-            <label className="flex items-start gap-3 p-3 rounded-2xl border border-border bg-card/60 cursor-pointer hover:bg-secondary/40 transition-colors">
-              <Checkbox
-                checked={canFieldIntervene}
-                onCheckedChange={(v) => setValue("can_field_intervene", Boolean(v))}
-                className="mt-0.5"
-              />
-              <div className="space-y-0.5 text-start">
-                <p className="text-xs sm:text-sm font-bold text-foreground">
-                  {isFr ? "Intervention directe sur le terrain" : "الاستعداد للتنقل والتدخل الميداني"}
-                </p>
-                <p className="text-[11px] text-muted-foreground">
-                  {isFr
-                    ? "Consultations dans les centres d'hébergement ou auprès des cheptels"
-                    : "فحص العائلات في مراكز الإيواء أو تفقد الماشية والحيوانات المتضررة"}
-                </p>
-              </div>
-            </label>
+            <ChoiceCard
+              type="checkbox"
+              showControl
+              title={isFr ? "Téléconsultation et orientation par téléphone" : "تقديم استشارات هاتفية وتوجيه أولي عن بُعد"}
+              description={
+                isFr
+                  ? "Répondre aux questions urgentes des familles et des secouristes"
+                  : "الإجابة على الاستفسارات الصحية والبيطرية العاجلة"
+              }
+              checked={canTeleconsult}
+              onChange={(e) => setValue("can_teleconsult", e.target.checked)}
+            />
 
-            <label className="flex items-start gap-3 p-3 rounded-2xl border border-border bg-card/60 cursor-pointer hover:bg-secondary/40 transition-colors">
-              <Checkbox
-                checked={canTeleconsult}
-                onCheckedChange={(v) => setValue("can_teleconsult", Boolean(v))}
-                className="mt-0.5"
-              />
-              <div className="space-y-0.5 text-start">
-                <p className="text-xs sm:text-sm font-bold text-foreground">
-                  {isFr ? "Téléconsultation et orientation par téléphone" : "تقديم استشارات هاتفية وتوجيه أولي عن بُعد"}
-                </p>
-                <p className="text-[11px] text-muted-foreground">
-                  {isFr
-                    ? "Répondre aux questions urgentes des familles et des secouristes"
-                    : "الإجابة على الاستفسارات الصحية والبيطرية العاجلة"}
-                </p>
-              </div>
-            </label>
-
-            <label className="flex items-start gap-3 p-3 rounded-2xl border border-border bg-card/60 cursor-pointer hover:bg-secondary/40 transition-colors">
-              <Checkbox
-                checked={hasEmergencyKit}
-                onCheckedChange={(v) => setValue("has_emergency_kit", Boolean(v))}
-                className="mt-0.5"
-              />
-              <div className="space-y-0.5 text-start">
-                <p className="text-xs sm:text-sm font-bold text-foreground">
-                  {isFr ? "Disponibilité d'une trousse d'urgence ou matériel mobile" : "حيازة حقيبة إسعافات أولية أو أدوية ومعدات متنقلة"}
-                </p>
-                <p className="text-[11px] text-muted-foreground">
-                  {isFr
-                    ? "Matériel de premiers secours prêt à l'emploi"
-                    : "مواد ضماد، مطهرات، أو أدوات فحص جاهزة للاستعمال"}
-                </p>
-              </div>
-            </label>
+            <ChoiceCard
+              type="checkbox"
+              showControl
+              title={isFr ? "Disponibilité d'une trousse d'urgence ou matériel mobile" : "حيازة حقيبة إسعافات أولية أو أدوية ومعدات متنقلة"}
+              description={
+                isFr
+                  ? "Matériel de premiers secours prêt à l'emploi"
+                  : "مواد ضماد، مطهرات، أو أدوات فحص جاهزة للاستعمال"
+              }
+              checked={hasEmergencyKit}
+              onChange={(e) => setValue("has_emergency_kit", e.target.checked)}
+            />
           </div>
 
           <div>
-            <Label className="mb-1.5">{isFr ? "Remarques (facultatif)" : "ملاحظات إضافية (اختياري)"}</Label>
-            <Textarea
+            <FieldLabel htmlFor="md-notes">
+              {isFr ? "Remarques (facultatif)" : "ملاحظات إضافية (اختياري)"}
+            </FieldLabel>
+            <FieldTextarea
+              id="md-notes"
               placeholder={
                 isFr
                   ? "Créneaux de disponibilité, expérience particulière..."
@@ -349,112 +343,79 @@ export function MedicalVolunteerForm({
               {...register("notes")}
             />
           </div>
-        </CardContent>
-      </Card>
+        </div>
+      </FormStep>
 
       {/* 3. Visibility & Privacy Decision */}
-      <Card className="border-border">
-        <CardContent className="space-y-4 px-5 pt-6">
-          <div className="flex items-center gap-2 text-foreground font-bold">
-            <span className="flex size-7 items-center justify-center rounded-lg bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 text-sm font-extrabold">
-              3
-            </span>
-            <h2>{isFr ? "Option de visibilité dans l'annuaire" : "خيارات الظهور في الدليل العام للمنصة"}</h2>
-          </div>
+      <FormStep
+        step={3}
+        title={isFr ? "Option de visibilité dans l'annuaire" : "خيارات الظهور في الدليل العام للمنصة"}
+      >
+        <div className="flex flex-col gap-4">
 
-          <p className="text-xs text-muted-foreground leading-relaxed">
+          <p className="text-[13px] leading-relaxed text-haba-ink-2">
             {isFr
               ? "Veuillez choisir si vous souhaitez être répertorié dans l'annuaire public du site ou uniquement pour la coordination interne :"
               : "يرجى تحديد رغبتك: هل ترغب بنشر بياناتك وتخصصك في الدليل المفتوح للمواطنين، أم للاستعمال الداخلي لفرق الإغاثة فقط؟"}
           </p>
 
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-1">
-            {/* Option 1: Public Directory */}
-            <button
-              type="button"
-              onClick={() => setValue("show_phone_publicly", true, { shouldValidate: true })}
-              className={cn(
-                "flex flex-col justify-between p-4 rounded-2xl border text-start transition-all cursor-pointer",
-                showPhonePublicly
-                  ? "border-emerald-600 bg-emerald-500/10 shadow-xs ring-2 ring-emerald-600/30"
-                  : "border-border bg-card/60 hover:bg-secondary/40"
-              )}
-            >
-              <div className="space-y-2">
-                <div className="flex items-center justify-between">
-                  <span className="flex items-center gap-1.5 font-bold text-xs sm:text-sm text-foreground">
-                    <Phone className="size-4 text-emerald-600 shrink-0" />
-                    <span>{isFr ? "نشر في الدليل العام" : "نعم، النشر في الدليل العام"}</span>
-                  </span>
-                  <span className={cn(
-                    "size-4.5 rounded-full border flex items-center justify-center shrink-0",
-                    showPhonePublicly ? "border-emerald-600 bg-emerald-600 text-white" : "border-muted-foreground/50"
-                  )}>
-                    {showPhonePublicly && <CheckCircle2 className="size-3.5" />}
-                  </span>
-                </div>
-                <p className="text-[11px] text-muted-foreground leading-relaxed">
-                  {isFr
-                    ? "Mon nom, spécialité et numéro seront visibles par les citoyens pour des téléconsultations directes."
-                    : "يظهر اسمي وتخصصي ورقم هاتفي في الدليل المفتوح ليتمكن المتضررون والمواطنون من الاتصال بي للاستشارة الطبية."}
-                </p>
-              </div>
-            </button>
+          <fieldset className="grid grid-cols-1 gap-3 pt-1 desktop:grid-cols-2">
+            <legend className="sr-only">
+              {isFr ? "Visibilité de vos coordonnées" : "مدى ظهور بياناتك"}
+            </legend>
 
-            {/* Option 2: Internal Coordination Only */}
-            <button
-              type="button"
-              onClick={() => setValue("show_phone_publicly", false, { shouldValidate: true })}
-              className={cn(
-                "flex flex-col justify-between p-4 rounded-2xl border text-start transition-all cursor-pointer",
-                !showPhonePublicly
-                  ? "border-blue-600 bg-blue-500/10 shadow-xs ring-2 ring-blue-600/30"
-                  : "border-border bg-card/60 hover:bg-secondary/40"
-              )}
-            >
-              <div className="space-y-2">
-                <div className="flex items-center justify-between">
-                  <span className="flex items-center gap-1.5 font-bold text-xs sm:text-sm text-foreground">
-                    <ShieldCheck className="size-4 text-blue-600 shrink-0" />
-                    <span>{isFr ? "للتنسيق الداخلي فقط" : "لا، للتنسيق الداخلي فقط (سري)"}</span>
-                  </span>
-                  <span className={cn(
-                    "size-4.5 rounded-full border flex items-center justify-center shrink-0",
-                    !showPhonePublicly ? "border-blue-600 bg-blue-600 text-white" : "border-muted-foreground/50"
-                  )}>
-                    {!showPhonePublicly && <CheckCircle2 className="size-3.5" />}
-                  </span>
-                </div>
-                <p className="text-[11px] text-muted-foreground leading-relaxed">
-                  {isFr
-                    ? "Mes coordonnées restent strictement confidentielles et ne seront utilisées que par les équipes de secours et la cellule de crise."
-                    : "تبقى بياناتي سرية تماماً لدى إدارة المنصة وتتواصل معي خلايا الإغاثة ولجان الطوارئ حصراً دون نشر رقمي."}
-                </p>
-              </div>
-            </button>
-          </div>
-        </CardContent>
-      </Card>
+            <ChoiceCard
+              name="show_phone_publicly"
+              icon="call-02"
+              title={isFr ? "Oui, publier dans l'annuaire" : "نعم، النشر في الدليل العام"}
+              description={
+                isFr
+                  ? "Mon nom, spécialité et numéro seront visibles par les citoyens pour des téléconsultations directes."
+                  : "يظهر اسمي وتخصصي ورقم هاتفي في الدليل المفتوح ليتمكن المتضررون والمواطنون من الاتصال بي للاستشارة الطبية."
+              }
+              className="items-start"
+              checked={showPhonePublicly}
+              onChange={() => setValue("show_phone_publicly", true, { shouldValidate: true })}
+            />
+
+            <ChoiceCard
+              name="show_phone_publicly"
+              icon="shield-01"
+              title={
+                isFr
+                  ? "Non, coordination interne uniquement"
+                  : "لا، للتنسيق الداخلي فقط (سري)"
+              }
+              description={
+                isFr
+                  ? "Mes coordonnées restent strictement confidentielles et ne seront utilisées que par les équipes de secours et la cellule de crise."
+                  : "تبقى بياناتي سرية تماماً لدى إدارة المنصة وتتواصل معي خلايا الإغاثة ولجان الطوارئ حصراً دون نشر رقمي."
+              }
+              className="items-start"
+              checked={!showPhonePublicly}
+              onChange={() => setValue("show_phone_publicly", false, { shouldValidate: true })}
+            />
+          </fieldset>
+        </div>
+      </FormStep>
 
       {submitError && (
-        <Alert variant="destructive">
-          <AlertDescription>{submitError}</AlertDescription>
-        </Alert>
+        <p
+          role="alert"
+          className="border border-haba-red bg-haba-red-50 p-4 text-sm font-semibold text-haba-red"
+        >
+          {submitError}
+        </p>
       )}
 
-      <Button
-        type="submit"
-        size="lg"
-        className="w-full bg-emerald-600 hover:bg-emerald-700 text-white font-extrabold text-base shadow-md h-12 rounded-2xl"
-        disabled={submitting}
-      >
+      <Action type="submit" variant="primary" size="submit" disabled={submitting}>
         {submitting ? (
           <Loader2 className="size-5 animate-spin" />
         ) : (
-          <Activity className="size-5 ms-1" />
+          <Icon name="stethoscope" size={20} />
         )}
         <span>{isFr ? "Confirmer mon inscription médicale bénévole" : "تأكيد تسجيل التطوع الطبي / البيطري"}</span>
-      </Button>
+      </Action>
     </form>
   );
 }

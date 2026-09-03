@@ -11,16 +11,19 @@ export type UpdateItem = {
   url?: string | null;
   update_type?: string;
   published_at: string;
+  wilaya?: string | null;
   authority?: string | null;
+  is_urgent?: boolean | null;
 };
 
 /**
- * Official-source labelling. Keyed on the same `source` values as
- * components/shared/official-update-card.tsx.
+ * Official-source labelling, keyed on `source`.
  *
- * NOTE: that file carries a second copy of these labels in its own visual
- * language. Retire it when /official-information moves onto this card
- * (design.md step 5) so there is one source of truth.
+ * This is now the only copy: components/shared/official-update-card.tsx held a
+ * second one in the pre-redesign visual language and was retired in step 7,
+ * once /official-information had moved onto this card. The one remaining
+ * parallel map is the free-text `inferAuthority` in
+ * app/(site)/official-information/[id]/page.tsx, which keys on different input.
  */
 const sources: Record<
   string,
