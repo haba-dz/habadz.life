@@ -39,6 +39,8 @@ export const viewport: Viewport = {
   themeColor: "#00843d",
   width: "device-width",
   initialScale: 1,
+  maximumScale: 5,
+  viewportFit: "cover",
 };
 
 export default async function RootLayout({ children }: { children: React.ReactNode }) {
@@ -46,7 +48,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
 
   return (
     <html lang={htmlLang} dir={dir} className={`${vazirmatn.variable} h-full antialiased`}>
-      <body className="min-h-full flex flex-col bg-background text-foreground">
+      <body className="min-h-full flex flex-col bg-background text-foreground overflow-x-clip w-full max-w-full">
         <TooltipProvider>
           <Analytics />
           {children}

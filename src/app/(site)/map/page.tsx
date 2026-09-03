@@ -84,30 +84,20 @@ export default async function MapPage() {
           <Button
             size="sm"
             variant="outline"
-            render={<Link href="/volunteers" />}
-            className="rounded-xl font-bold gap-1.5 border-amber-500/40 hover:bg-amber-500/10 text-amber-700 dark:text-amber-300"
-          >
-            <HeartHandshake className="size-4 text-amber-600" />
-            <span>{isFr ? "Bénévolat terrain" : "التطوع الميداني"}</span>
-          </Button>
-
-          <Button
-            size="sm"
-            variant="outline"
-            render={<Link href="/donate" />}
-            className="rounded-xl font-bold gap-1.5"
-          >
-            <HeartHandshake className="size-4 text-algeria-green" />
-            <span>{isFr ? "Enregistrer un don" : "تسجيل مساعدات"}</span>
-          </Button>
-
-          <Button
-            size="sm"
             render={<Link href="/help" />}
-            className="rounded-xl bg-algeria-green hover:bg-algeria-green/90 text-white font-bold gap-1.5 shadow-sm"
+            className="rounded-xl font-bold gap-1.5 border-priority-critical/40 hover:bg-priority-critical/10 text-priority-critical"
           >
-            <ShieldCheck className="size-4" />
-            <span>{isFr ? "Demander de l'aide" : "طلب إغاثة"}</span>
+            <HeartHandshake className="size-4 text-priority-critical" />
+            <span>{isFr ? "Besoin d'aide" : "أحتاج مساعدة"}</span>
+          </Button>
+
+          <Button
+            size="sm"
+            render={<Link href="/donate" />}
+            className="rounded-xl bg-algeria-green hover:bg-algeria-green/90 text-white font-bold gap-1.5 shadow-xs"
+          >
+            <HeartHandshake className="size-4" />
+            <span>{isFr ? "Enregistrer un don" : "تقديم مساعدات"}</span>
           </Button>
         </div>
       </div>

@@ -59,6 +59,16 @@ export default async function HomePage() {
 
   const quickActions = [
     {
+      href: "/help",
+      icon: TriangleAlert,
+      title: isFr ? "Besoin d'aide" : "أحتاج مساعدة",
+      desc: isFr ? "Enregistrement des besoins des sinistrés." : "تسجيل العائلات والمتضررين من الحرائق.",
+      badge: isFr ? "Urgence" : "طوارئ",
+      accent: "border-priority-critical/40 bg-priority-critical/5 hover:border-priority-critical hover:bg-priority-critical/10 shadow-sm",
+      iconBg: "bg-priority-critical/15 text-priority-critical",
+      badgeColor: "bg-priority-critical/15 text-priority-critical",
+    },
+    {
       href: "/donate",
       icon: Gift,
       title: t.home.actions.donate.title,
@@ -93,14 +103,6 @@ export default async function HomePage() {
       desc: t.home.actions.medical.desc,
       accent: "hover:border-emerald-500 hover:shadow-md",
       iconBg: "bg-emerald-500/10 text-emerald-600 dark:text-emerald-400",
-    },
-    {
-      href: "/help/damage-assessment",
-      icon: Hammer,
-      title: isFr ? "Dégâts & Artisans" : "أضرار وترميم السكن",
-      desc: isFr ? "Déclaration des dégâts et artisans." : "تصريح الأضرار وتطوع الحرفيين.",
-      accent: "hover:border-orange-500 hover:shadow-md",
-      iconBg: "bg-orange-500/10 text-orange-600 dark:text-orange-400",
     },
     {
       href: "/map",
@@ -517,9 +519,11 @@ export default async function HomePage() {
           </div>
         )}
 
-        <LinkButton href="/medical" variant="outline" className="mt-5 w-full sm:hidden">
-          {t.home.medical.registerBtnMobile}
-        </LinkButton>
+        {medicalVolunteers && medicalVolunteers.length > 0 && (
+          <LinkButton href="/medical" variant="outline" className="mt-5 w-full sm:hidden">
+            {t.home.medical.registerBtnMobile}
+          </LinkButton>
+        )}
       </section>
 
       {/* ————————————————————————————————— سواعد الإغاثة والتطوع الميداني */}
@@ -631,46 +635,6 @@ export default async function HomePage() {
                 </LinkButton>
               </div>
             </div>
-          </div>
-        </div>
-      </section>
-
-      {/* ————————————————————————————————— أرقام الطوارئ */}
-      <section className="border-y border-border bg-priority-critical/5">
-        <div className="mx-auto max-w-6xl px-4 py-10 sm:py-12">
-          <h2 className="mb-1 text-center text-xl sm:text-2xl font-bold">{t.home.emergency.title}</h2>
-          <p className="mb-6 text-center text-xs sm:text-sm text-muted-foreground">
-            {t.home.emergency.subtitle}
-          </p>
-          <div className="grid grid-cols-2 gap-2.5 sm:gap-3 sm:grid-cols-4">
-            {emergencyContacts.map((c) => (
-              <div
-                key={c.label}
-                className="flex flex-col items-center gap-1 rounded-xl border border-border bg-card p-3 sm:p-4 text-center transition-all hover:-translate-y-0.5 hover:border-priority-critical hover:shadow-md"
-              >
-                <span className="flex size-9 sm:size-10 items-center justify-center rounded-full bg-priority-critical/10 text-priority-critical">
-                  <c.icon className="size-4 sm:size-5" aria-hidden />
-                </span>
-                <a
-                  href={`tel:${c.number}`}
-                  className="text-xl sm:text-2xl font-extrabold tabular-nums text-priority-critical hover:underline"
-                >
-                  {c.number}
-                </a>
-                <span className="text-xs sm:text-sm font-semibold">{isFr && c.label_fr ? c.label_fr : c.label}</span>
-                {(isFr ? c.hint_fr || c.hint : c.hint) && (
-                  <span className="text-[10px] sm:text-xs text-muted-foreground">{isFr ? c.hint_fr || c.hint : c.hint}</span>
-                )}
-                {c.greenNumber && (
-                  <a
-                    href={`tel:${c.greenNumber}`}
-                    className="mt-1 rounded-full bg-algeria-green/10 px-2 py-0.5 text-[10px] sm:text-xs font-semibold text-algeria-green hover:underline"
-                  >
-                    {t.home.emergency.greenNumberPrefix} {c.greenNumber}
-                  </a>
-                )}
-              </div>
-            ))}
           </div>
         </div>
       </section>

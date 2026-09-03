@@ -19,7 +19,7 @@ export const medicalVolunteerSchema = z.object({
     .max(120, "التخصص طويل جداً"),
   license_number: z.string().trim().max(50, "رقم الترخيص طويل جداً").optional().or(z.literal("")),
   wilaya_code: z.string({ error: "يرجى اختيار الولاية" }).trim().min(1).max(10),
-  commune_id: z.string({ error: "يرجى اختيار البلدية" }).trim().min(1).max(120),
+  commune_id: z.string().trim().max(120, "اسم البلدية طويل جداً").optional().or(z.literal("")),
   current_workplace: z.string().trim().max(120, "مكان العمل طويل جداً").optional().or(z.literal("")),
   can_teleconsult: z.boolean(),
   can_field_intervene: z.boolean(),
