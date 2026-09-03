@@ -13,7 +13,10 @@ import type { Database } from "@/types/database";
 
 type Point = Database["public"]["Tables"]["collection_points"]["Row"];
 type Hub = Database["public"]["Tables"]["relief_hubs"]["Row"];
-type Request = Database["public"]["Tables"]["beneficiary_requests"]["Row"];
+type Request = Pick<
+  Database["public"]["Tables"]["beneficiary_requests"]["Row"],
+  "id" | "full_name" | "commune" | "wilaya" | "status" | "priority" | "verification_level"
+>;
 
 export function PointsVerificationList({ points }: { points: Point[] }) {
   const bulkActions: AdminBulkAction<Point>[] = [

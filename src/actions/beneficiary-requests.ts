@@ -40,7 +40,7 @@ export async function submitBeneficiaryRequest(
       .gte("created_at", tenMinAgo)
       .limit(1);
     if (recent && recent.length > 0) {
-      return { success: false, error: "تم تسجيل طلبك مؤخراً، يرجى الانتظار 10 دقائق قبل إعادة المحاولة." };
+      return { success: true };
     }
   } catch {
     // fail open if admin key not configured locally
@@ -87,7 +87,7 @@ export async function submitBeneficiaryRequest(
     const adminForLog = createAdminClient();
     await adminForLog.from("activity_logs").insert({
       actor_id: null,
-      action: `طلب مساعدة جديد من ${data.full_name} (${data.commune})`,
+      action: `طلب مساعدة جديد (${data.commune})`,
       entity_type: "beneficiary_request",
     });
   } catch {
