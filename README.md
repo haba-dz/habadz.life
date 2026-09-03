@@ -20,6 +20,10 @@
   <a href="https://play.google.com/store/apps/details?id=life.habadz.app">
     <img src="https://img.shields.io/badge/Google_Play-HabaDZ-green.svg?logo=google-play&logoColor=white" alt="Google Play">
   </a>
+  &nbsp;&nbsp;&nbsp;&nbsp;
+  <a href="https://apps.apple.com/us/app/%D9%87%D8%A8%D8%A9-%D8%A7%D9%84%D8%AC%D8%B2%D8%A7%D8%A6%D8%B1/id6806620715">
+    <img src="https://img.shields.io/badge/App_Store-HabaDZ-black.svg?logo=apple&logoColor=white" alt="App Store">
+  </a>
 </p>
 
 ## حول المشروع
@@ -68,3 +72,4 @@
 ##  الروابط
 * **المنصة:** [habadz.life](https://habadz.life)
 * **تطبيق أندرويد (Google Play):** [Haba DZ على Google Play](https://play.google.com/store/apps/details?id=life.habadz.app)
+* **تطبيق آيفون (App Store):** [Haba DZ على App Store](https://apps.apple.com/us/app/%D9%87%D8%A8%D8%A9-%D8%A7%D9%84%D8%AC%D8%B2%D8%A7%D8%A6%D8%B1/id6806620715)
