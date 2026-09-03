@@ -3,7 +3,7 @@
 import { useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { Home, MapPin, LifeBuoy, Gift, Menu } from "lucide-react";
+import { Home, MapPin, Gift, TriangleAlert, Menu } from "lucide-react";
 import { MobileNav } from "./mobile-nav";
 import type { AvailableLocale } from "@/i18n/locales";
 import { cn } from "@/lib/utils";
@@ -26,33 +26,34 @@ export function MobileBottomNav({ locale }: { locale: AvailableLocale }) {
       active: pathname === "/",
     },
     {
+      href: "/donate",
+      label: isFr ? "Faire un don" : "تقديم مساعدة",
+      icon: Gift,
+      active: pathname === "/donate",
+      tone: "text-algeria-green",
+    },
+    {
+      href: "/help",
+      label: isFr ? "Besoin d'aide" : "طلب إغاثة",
+      icon: TriangleAlert,
+      active: pathname === "/help",
+      isCta: true,
+    },
+    {
       href: "/map",
       label: isFr ? "Carte" : "الخريطة",
       icon: MapPin,
       active: pathname === "/map",
-    },
-    {
-      href: "/help",
-      label: isFr ? "Urgence" : "طلب إغاثة",
-      icon: LifeBuoy,
-      active: pathname === "/help" || pathname?.startsWith("/help/"),
-      isCta: true,
-    },
-    {
-      href: "/donate",
-      label: isFr ? "Dons" : "مساعدات",
-      icon: Gift,
-      active: pathname === "/donate",
     },
   ];
 
   return (
     <>
       <nav
-        aria-label={isFr ? "Navigation mobile" : "التنقل السفلي"}
-        className="fixed bottom-0 inset-x-0 z-40 block md:hidden border-t border-border bg-background/95 backdrop-blur supports-backdrop-filter:bg-background/85 safe-area-pb shadow-lg"
+        aria-label={isFr ? "Navigation mobile principale" : "شريط التنقل السفلي"}
+        className="fixed bottom-0 inset-x-0 z-40 block lg:hidden border-t border-border/80 bg-background/95 backdrop-blur-md supports-backdrop-filter:bg-background/90 shadow-lg safe-area-pb"
       >
-        <div className="flex h-16 items-center justify-around px-2">
+        <div className="flex h-16 items-center justify-around px-2 max-w-md mx-auto">
           {items.map((item) => {
             const Icon = item.icon;
             if (item.isCta) {
@@ -60,17 +61,23 @@ export function MobileBottomNav({ locale }: { locale: AvailableLocale }) {
                 <Link
                   key={item.href}
                   href={item.href}
-                  className="flex flex-col items-center justify-center -mt-4 relative group"
+                  className="flex flex-col items-center justify-center -mt-5 relative group"
+                  aria-label={item.label}
                 >
                   <div
                     className={cn(
-                      "flex size-12 items-center justify-center rounded-full bg-priority-critical text-white shadow-md transition-transform active:scale-95",
-                      item.active && "ring-4 ring-priority-critical/30 scale-105"
+                      "flex size-12 items-center justify-center rounded-full bg-priority-critical text-white shadow-lg shadow-priority-critical/30 transition-transform duration-200 active:scale-95 group-hover:scale-105",
+                      item.active && "scale-105 shadow-priority-critical/50 ring-2 ring-priority-critical/30"
                     )}
                   >
-                    <Icon className="size-6 animate-pulse" />
+                    <Icon className="size-6 shrink-0 animate-pulse" />
                   </div>
-                  <span className="mt-1 text-[10px] font-bold text-priority-critical truncate">
+                  <span
+                    className={cn(
+                      "mt-1 text-[10px] font-extrabold truncate leading-tight transition-colors",
+                      item.active ? "text-priority-critical font-black" : "text-priority-critical"
+                    )}
+                  >
                     {item.label}
                   </span>
                 </Link>
@@ -82,39 +89,39 @@ export function MobileBottomNav({ locale }: { locale: AvailableLocale }) {
                 key={item.href}
                 href={item.href}
                 className={cn(
-                  "flex flex-1 flex-col items-center justify-center py-1 text-center transition-colors min-h-[48px]",
+                  "flex flex-1 flex-col items-center justify-center py-1 text-center transition-colors min-h-[48px] rounded-xl active:bg-muted/40",
                   item.active
-                    ? "text-algeria-green font-bold"
+                    ? (item.tone || "text-algeria-green") + " font-bold"
                     : "text-muted-foreground hover:text-foreground"
                 )}
               >
-                <Icon className="size-5" />
+                <Icon className={cn("size-5 transition-transform", item.active && "scale-110")} />
                 <span className="mt-1 text-[10px] font-semibold leading-none truncate">
                   {item.label}
                 </span>
                 {item.active && (
-                  <span className="mt-0.5 size-1 rounded-full bg-algeria-green" />
+                  <span className={cn("mt-0.5 size-1 rounded-full", item.tone === "text-algeria-green" ? "bg-algeria-green" : "bg-primary")} />
                 )}
               </Link>
             );
           })}
 
-          {/* More Drawer Trigger */}
+          {/* More Drawer Trigger Button */}
           <button
             type="button"
             onClick={() => setDrawerOpen(true)}
-            className="flex flex-1 flex-col items-center justify-center py-1 text-center text-muted-foreground hover:text-foreground transition-colors min-h-[48px] cursor-pointer"
-            aria-label={isFr ? "Plus de services" : "المزيد من الخدمات"}
+            className="flex flex-1 flex-col items-center justify-center py-1 text-center text-muted-foreground hover:text-foreground transition-colors min-h-[48px] rounded-xl active:bg-muted/40 cursor-pointer"
+            aria-label={isFr ? "Toutes les rubriques" : "جميع الأقسام والخدمات"}
           >
             <Menu className="size-5" />
             <span className="mt-1 text-[10px] font-semibold leading-none truncate">
-              {isFr ? "Plus" : "المزيد"}
+              {isFr ? "Menu" : "القائمة"}
             </span>
           </button>
         </div>
       </nav>
 
-      {/* Hidden MobileNav Drawer instance controlled by the bottom nav button */}
+      {/* Categorized Drawer Instance */}
       <MobileNav
         locale={locale}
         isOpen={drawerOpen}
