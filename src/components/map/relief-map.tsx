@@ -72,7 +72,7 @@ export function ReliefMap({
 }) {
   const containerRef = useRef<HTMLDivElement>(null);
   const mapRef = useRef<maplibregl.Map | null>(null);
-  const markersRef = useRef<Map<string, { marker: maplibregl.Marker; popup: maplibregl.Popup; point: PointCardData }>>(new Map());
+  const markersRef = useRef<Map<string, { marker: maplibregl.Marker; popup: maplibregl.Popup; point: PointCardData; el: HTMLElement; handler: () => void }>>(new Map());
   const [userLocation, setUserLocation] = useState<[number, number] | null>(null);
   const [mapStyle, setMapStyle] = useState<"standard" | "humanitarian">("standard");
   const isFr = locale === "fr";
@@ -272,11 +272,10 @@ export function ReliefMap({
           .setPopup(popup)
           .addTo(map);
 
-        el.addEventListener("click", () => {
-          onSelectPoint?.(point);
-        });
+        const handler = () => onSelectPoint?.(point);
+        el.addEventListener("click", handler);
 
-        markersRef.current.set(point.id, { marker, popup, point });
+        markersRef.current.set(point.id, { marker, popup, point, el, handler });
       }
 
       if (any && !selectedPointId) {
@@ -289,7 +288,11 @@ export function ReliefMap({
 
     const currentMarkers = markersRef.current;
     return () => {
-      currentMarkers.forEach(({ marker }) => marker.remove());
+      map.off("load", addMarkers);
+      currentMarkers.forEach(({ marker, el, handler }) => {
+        el.removeEventListener("click", handler);
+        marker.remove();
+      });
       currentMarkers.clear();
     };
   }, [points, locale, isFr, selectedPointId, onSelectPoint]);

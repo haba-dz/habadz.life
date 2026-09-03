@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useRef, useEffect } from "react";
 import Link from "next/link";
 import {
   Flame,
@@ -163,6 +163,13 @@ export function OfficialUpdateCard({
 }) {
   const [copied, setCopied] = useState(false);
   const [isExpanded, setIsExpanded] = useState(false);
+  const copiedTimeoutRef = useRef<number | null>(null);
+
+  useEffect(() => {
+    return () => {
+      if (copiedTimeoutRef.current !== null) clearTimeout(copiedTimeoutRef.current);
+    };
+  }, []);
   const isFr = locale === "fr";
 
   const fullText = `${update.title} ${update.body || ""}`;
@@ -197,7 +204,8 @@ export function OfficialUpdateCard({
     try {
       await navigator.clipboard.writeText(textToShare);
       setCopied(true);
-      setTimeout(() => setCopied(false), 2500);
+      if (copiedTimeoutRef.current !== null) clearTimeout(copiedTimeoutRef.current);
+      copiedTimeoutRef.current = window.setTimeout(() => setCopied(false), 2500);
     } catch {
       // Ignored
     }

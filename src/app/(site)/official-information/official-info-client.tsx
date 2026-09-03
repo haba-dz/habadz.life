@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useMemo } from "react";
+import { useState, useMemo, useRef, useEffect } from "react";
 import {
   Search,
   Filter,
@@ -51,20 +51,27 @@ export function OfficialInfoClient({
   const [selectedAuthority, setSelectedAuthority] = useState("all");
   const [selectedCategory, setSelectedCategory] = useState("all");
   const [isSyncing, setIsSyncing] = useState(false);
+  const abortRef = useRef<AbortController | null>(null);
   const isFr = locale === "fr";
 
+  useEffect(() => {
+    return () => abortRef.current?.abort();
+  }, []);
+
   const handleSync = async () => {
+    abortRef.current?.abort();
+    abortRef.current = new AbortController();
     setIsSyncing(true);
     try {
-      const res = await fetch("/api/news/sync", { method: "POST" });
+      const res = await fetch("/api/news/sync", { method: "POST", signal: abortRef.current.signal });
       if (res.ok) {
         const json = await res.json();
         if (json.items && json.items.length > 0) {
           setUpdates(json.items);
         }
       }
-    } catch {
-      // Keep existing
+    } catch (e) {
+      if ((e as Error).name === "AbortError") return;
     } finally {
       setIsSyncing(false);
     }

@@ -18,6 +18,7 @@ export function AnimatedCounter({ value, className }: { value: number; className
     if (!el || value === 0) return;
     if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
 
+    let rafId = 0;
     const io = new IntersectionObserver(
       ([entry]) => {
         if (!entry.isIntersecting || played.current) return;
@@ -27,16 +28,19 @@ export function AnimatedCounter({ value, className }: { value: number; className
         const start = performance.now();
         const tick = (now: number) => {
           const p = Math.min(1, (now - start) / duration);
-          setDisplay(Math.round(value * (1 - Math.pow(1 - p, 3)))); // easeOutCubic
-          if (p < 1) requestAnimationFrame(tick);
+          setDisplay(Math.round(value * (1 - Math.pow(1 - p, 3))));
+          if (p < 1) rafId = requestAnimationFrame(tick);
         };
-        requestAnimationFrame(tick);
+        rafId = requestAnimationFrame(tick);
       },
       { threshold: 0.3 },
     );
 
     io.observe(el);
-    return () => io.disconnect();
+    return () => {
+      io.disconnect();
+      cancelAnimationFrame(rafId);
+    };
   }, [value]);
 
   return (

@@ -26,6 +26,13 @@ export function ResetPasswordForm() {
   const [error, setError] = useState<string | null>(null);
   const [done, setDone] = useState(false);
   const readyRef = useRef(false);
+  const navTimeoutRef = useRef<number | null>(null);
+
+  useEffect(() => {
+    return () => {
+      if (navTimeoutRef.current !== null) clearTimeout(navTimeoutRef.current);
+    };
+  }, []);
 
   useEffect(() => {
     const supabase = createClient();
@@ -78,7 +85,8 @@ export function ResetPasswordForm() {
       return;
     }
     setDone(true);
-    setTimeout(() => router.replace("/admin"), 1500);
+    if (navTimeoutRef.current !== null) clearTimeout(navTimeoutRef.current);
+    navTimeoutRef.current = window.setTimeout(() => router.replace("/admin"), 1500);
   }
 
   if (invalid && !ready) {
