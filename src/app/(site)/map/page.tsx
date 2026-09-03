@@ -1,12 +1,12 @@
 import type { Metadata } from "next";
+
+import { EmergencySection } from "@/components/shared/emergency-section";
 import type { PointCardData } from "@/components/shared/point-card";
+import { Action, PageHero, SECTION, SHELL } from "@/components/site";
 import { getPublicCollectionPoints, getPublicReliefHubs } from "@/lib/data/public";
-import { MapClient } from "./map-client";
 import { getDictionary } from "@/i18n/dictionaries";
 import { getLocale } from "@/i18n/server";
-import { MapPin, ShieldCheck, HeartHandshake } from "lucide-react";
-import Link from "next/link";
-import { Button } from "@/components/ui/button";
+import { MapClient } from "./map-client";
 
 export async function generateMetadata(): Promise<Metadata> {
   const locale = await getLocale();
@@ -17,6 +17,7 @@ export async function generateMetadata(): Promise<Metadata> {
   };
 }
 
+/** design.md §5.5 */
 export default async function MapPage() {
   const locale = await getLocale();
   const t = await getDictionary(locale);
@@ -27,7 +28,7 @@ export default async function MapPage() {
     getPublicReliefHubs(),
   ]);
 
-  const dbPoints: PointCardData[] = [
+  const points: PointCardData[] = [
     ...collectionPoints.map((p) => ({
       id: p.id,
       kind: "collection_point" as const,
@@ -63,48 +64,48 @@ export default async function MapPage() {
     })),
   ];
 
-  const points = dbPoints;
-
   return (
-    <div className="mx-auto max-w-7xl px-4 py-8 sm:py-12 space-y-8">
-      {/* Header Section */}
-      <div className="flex flex-col gap-4 md:flex-row md:items-end md:justify-between border-b border-border/60 pb-6">
-        <div>
-          <div className="inline-flex items-center gap-1.5 rounded-full bg-algeria-green/10 px-3 py-1 text-xs font-bold text-algeria-green mb-2.5">
-            <MapPin className="size-3.5" />
-            <span>{isFr ? "Centres et points de secours vérifiés" : "المراكز ونقاط الإغاثة الميدانية الموثقة"}</span>
+    <>
+      <PageHero
+        eyebrow={
+          isFr
+            ? "Centres et points de secours vérifiés"
+            : "المراكز ونقاط الإغاثة الميدانية الموثّقة"
+        }
+        eyebrowIcon="location-01"
+        title={t.map.pageTitle}
+        lede={t.map.pageSubtitle}
+      />
+
+      <div className={`${SHELL} ${SECTION}`}>
+        <MapClient points={points} locale={locale} />
+      </div>
+
+      {/* pre-visit advisory — §5.5 */}
+      <div className={`${SHELL} ${SECTION}`}>
+        <div className="flex flex-col gap-4 border border-haba-border bg-haba-surface-2 p-4 desktop:flex-row desktop:items-center desktop:justify-between desktop:px-5">
+          <div>
+            <p className="text-sm font-bold text-haba-ink">
+              {isFr ? "Avant de vous rendre dans un centre" : "قبل التوجّه إلى أي مركز"}
+            </p>
+            <p className="mt-1 max-w-[640px] text-[13px] leading-relaxed text-haba-ink-2">
+              {isFr
+                ? "Appelez le responsable pour confirmer les horaires et ce qui est réellement demandé — les besoins changent plusieurs fois par jour."
+                : "اتصل برقم المسؤول للتأكد من المواقيت والمواد المطلوبة حالياً — الاحتياجات تتغير عدة مرات في اليوم."}
+            </p>
           </div>
-          <h1 className="text-3xl font-black tracking-tight sm:text-4xl">{t.map.pageTitle}</h1>
-          <p className="mt-2 max-w-2xl text-sm sm:text-base text-muted-foreground leading-relaxed">
-            {t.map.pageSubtitle}
-          </p>
-        </div>
-
-        <div className="flex flex-wrap items-center gap-2.5">
-          <Button
-            size="sm"
-            variant="outline"
-            render={<Link href="/help" />}
-            className="rounded-xl font-bold gap-1.5 border-priority-critical/40 hover:bg-priority-critical/10 text-priority-critical"
-          >
-            <HeartHandshake className="size-4 text-priority-critical" />
-            <span>{isFr ? "Besoin d'aide" : "أحتاج مساعدة"}</span>
-          </Button>
-
-          <Button
-            size="sm"
-            render={<Link href="/donate" />}
-            className="rounded-xl bg-algeria-green hover:bg-algeria-green/90 text-white font-bold gap-1.5 shadow-xs"
-          >
-            <HeartHandshake className="size-4" />
-            <span>{isFr ? "Enregistrer un don" : "تقديم مساعدات"}</span>
-          </Button>
+          <div className="flex flex-wrap gap-2.5">
+            <Action href="/donate" variant="primary" size="sm" icon="gift">
+              {t.cta.haveAid}
+            </Action>
+            <Action href="/help" variant="outline" size="sm" icon="alert-02">
+              {t.cta.needHelp}
+            </Action>
+          </div>
         </div>
       </div>
 
-      {/* Main Interactive Map & Feed Client */}
-      <MapClient points={points} locale={locale} />
-    </div>
+      <EmergencySection />
+    </>
   );
 }
-

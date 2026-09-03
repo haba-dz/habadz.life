@@ -1,14 +1,22 @@
-﻿import type { Metadata } from "next";
-import { MapPin, TriangleAlert, Info, Gift, Truck } from "lucide-react";
-import { Card, CardContent } from "@/components/ui/card";
-import { EmptyState } from "@/components/shared/empty-state";
-import { SeverityBadge } from "@/components/shared/severity-badge";
-import { LinkButton } from "@/components/shared/link-button";
-import { getAffectedAreas } from "@/lib/data/public";
-import { AreasFilters } from "./areas-filters";
+import type { Metadata } from "next";
+
+import { EmergencySection } from "@/components/shared/emergency-section";
+import { Icon } from "@/components/icons";
+import {
+  Action,
+  Chip,
+  HairlineCell,
+  HairlineGrid,
+  PageHero,
+  SECTION,
+  SHELL,
+  severityTone,
+} from "@/components/site";
 import { getSeverityLabel, severityRank } from "@/lib/constants";
+import { getAffectedAreas } from "@/lib/data/public";
 import { getDictionary } from "@/i18n/dictionaries";
 import { getLocale } from "@/i18n/server";
+import { AreasFilters } from "./areas-filters";
 
 export async function generateMetadata(): Promise<Metadata> {
   const locale = await getLocale();
@@ -19,171 +27,184 @@ export async function generateMetadata(): Promise<Metadata> {
   };
 }
 
+/** design.md §5.4 */
 export default async function AffectedAreasPage({
   searchParams,
 }: {
-  searchParams: Promise<{ wilaya?: string; severity?: string }>;
+  searchParams: Promise<{ wilaya?: string; severity?: string; q?: string }>;
 }) {
   const locale = await getLocale();
   const t = await getDictionary(locale);
   const isFr = locale === "fr";
   const [params, areas] = await Promise.all([searchParams, getAffectedAreas()]);
 
+  const wilayaName = (a: (typeof areas)[number]) => (isFr && a.wilaya_fr ? a.wilaya_fr : a.wilaya);
+  const communeName = (a: (typeof areas)[number]) =>
+    isFr && a.commune_fr ? a.commune_fr : a.commune;
+
   const wilayas = [...new Set(areas.map((a) => a.wilaya))];
   const severities = [...new Set(areas.map((a) => a.severity))].sort(
     (a, b) => severityRank[a] - severityRank[b],
   );
 
+  const q = (params.q ?? "").trim().toLowerCase();
   const filtered = areas.filter((a) => {
     if (params.wilaya && a.wilaya !== params.wilaya) return false;
     if (params.severity && a.severity !== params.severity) return false;
+    if (q && !`${a.commune} ${a.commune_fr ?? ""} ${a.daira} ${a.spot ?? ""}`.toLowerCase().includes(q))
+      return false;
     return true;
   });
 
-  // Group by wilaya then daira
-  const byWilaya = new Map<string, Map<string, typeof filtered>>();
-  for (const a of [...filtered].sort(
-    (x, y) => severityRank[x.severity] - severityRank[y.severity],
-  )) {
-    const dairas = byWilaya.get(a.wilaya) ?? new Map();
-    dairas.set(a.daira, [...(dairas.get(a.daira) ?? []), a]);
-    byWilaya.set(a.wilaya, dairas);
-  }
+  /**
+   * The artboard's table is one row per commune with a hotspot count; the table
+   * stores one row per recorded spot. Aggregate to match, taking the worst
+   * severity and the field note that goes with it.
+   */
+  const rows = [...filtered
+    .reduce((m, a) => {
+      const key = `${a.wilaya}/${a.commune}`;
+      const cur = m.get(key);
+      if (!cur) {
+        m.set(key, { commune: communeName(a), wilaya: wilayaName(a), severity: a.severity, count: 1, note: a.notes ?? a.spot ?? "" });
+      } else {
+        cur.count += 1;
+        if (severityRank[a.severity] < severityRank[cur.severity]) {
+          cur.severity = a.severity;
+          cur.note = a.notes ?? a.spot ?? cur.note;
+        }
+      }
+      return m;
+    }, new Map<string, { commune: string; wilaya: string; severity: (typeof areas)[number]["severity"]; count: number; note: string }>())
+    .values()]
+    .sort((x, y) => severityRank[x.severity] - severityRank[y.severity] || y.count - x.count);
 
-  const counts = severities.map((s) => ({
-    severity: s,
-    count: areas.filter((a) => a.severity === s).length,
-  }));
-  const unconfirmed = areas.filter((a) => a.severity === "unconfirmed").length;
+  const summary = [...areas
+    .reduce((m, a) => {
+      const key = wilayaName(a);
+      const cur = m.get(key) ?? { count: 0, severe: 0 };
+      cur.count += 1;
+      if (severityTone[a.severity] === "red") cur.severe += 1;
+      return m.set(key, cur);
+    }, new Map<string, { count: number; severe: number }>())
+    .entries()]
+    .map(([name, v]) => ({ name, ...v }))
+    .sort((a, b) => b.count - a.count);
+
+  const totalCommunes = new Set(areas.map((a) => `${a.wilaya}/${a.commune}`)).size;
 
   return (
-    <div className="mx-auto max-w-6xl px-4 py-10">
-      <div className="mb-6 text-center sm:text-start">
-        <h1 className="flex items-center justify-center gap-2 text-3xl font-extrabold sm:justify-start">
-          <TriangleAlert className="size-7 text-priority-critical" />
-          {t.affectedAreas.pageTitle}
-        </h1>
-        <p className="mt-2 text-muted-foreground">
-          {isFr
-            ? `${areas.length} zones enregistrées dans ${wilayas.length} wilayas — ${wilayas.join(", ")}.`
-            : `${areas.length} منطقة مسجَّلة عبر ${wilayas.length} ولايات — ${wilayas.join("، ")}.`}
-        </p>
-      </div>
-
-      <div className="mb-6 grid grid-cols-2 gap-2 sm:grid-cols-5">
-        {counts.map((c) => (
-          <Card key={c.severity} className="py-3">
-            <CardContent className="px-3 text-center">
-              <p className="text-xl font-bold tabular-nums">{c.count}</p>
-              <p className="text-xs font-medium text-muted-foreground">
-                {getSeverityLabel(c.severity, locale)}
-              </p>
-            </CardContent>
-          </Card>
-        ))}
-      </div>
-
-      {unconfirmed > 0 && (
-        <div className="mb-6 flex items-start gap-2 rounded-xl border border-border bg-muted/50 p-4">
-          <Info className="mt-0.5 size-4 shrink-0 text-muted-foreground" />
-          <p className="text-sm text-muted-foreground">
-            {isFr ? (
-              <>
-                <strong className="text-foreground">{unconfirmed} signalements</strong> sur cette liste proviennent des réseaux sociaux et n&apos;ont pas encore été confirmés sur le terrain.
-              </>
-            ) : (
-              <>
-                <strong className="text-foreground">{unconfirmed} بلاغات</strong> من هذه القائمة مصدرها مواقع التواصل الاجتماعي ولم تُؤكَّد ميدانيًا بعد، وهي مُعلَّمة بوضوح.
-              </>
-            )}
-          </p>
-        </div>
-      )}
-
-      <AreasFilters
-        wilayas={wilayas}
-        severities={severities}
-        locale={locale}
-        labels={{
-          wilaya: t.affectedAreas.filterWilaya,
-          severity: t.affectedAreas.filterSeverity,
-          clearFilters: t.affectedAreas.clearFilters,
-        }}
+    <>
+      <PageHero
+        tone="red"
+        eyebrow={isFr ? "Géographie de la campagne — données vérifiées" : "جغرافيا الحملة — بيانات موثّقة"}
+        eyebrowIcon="alert-02"
+        title={t.affectedAreas.pageTitle}
+        lede={
+          isFr
+            ? `${totalCommunes} communes enregistrées sur ${wilayas.length} wilayas. Chaque zone est classée par niveau de dégâts et nombre de foyers ; les données sont mises à jour à chaque communiqué officiel.`
+            : `${totalCommunes} بلدية مسجَّلة عبر ${wilayas.length} ولايات. تُصنَّف كل منطقة حسب مستوى الضرر وعدد البؤر المسجَّلة، وتُحدَّث البيانات مع كل بيان رسمي جديد.`
+        }
       />
 
-      <p className="mt-6 text-sm text-muted-foreground">
-        {t.affectedAreas.showingPrefix} <strong className="text-foreground">{filtered.length}</strong> {t.affectedAreas.outOf} {areas.length}{" "}
-        {t.affectedAreas.areasCount}
-      </p>
-
-      {filtered.length === 0 ? (
-        <EmptyState
-          title={t.affectedAreas.emptyTitle}
-          description={t.affectedAreas.emptyDesc}
-          className="mt-4"
-        />
-      ) : (
-        <div className="mt-6 space-y-8">
-          {[...byWilaya.entries()].map(([wilaya, dairas]) => (
-            <section key={wilaya}>
-              <h2 className="mb-3 flex items-center gap-2 text-xl font-bold">
-                <MapPin className="size-5 text-algeria-green" />
-                {isFr ? `Wilaya de ${wilaya}` : `ولاية ${wilaya}`}
-                <span className="rounded-full bg-muted px-2 py-0.5 text-xs font-medium text-muted-foreground">
-                  {[...dairas.values()].flat().length}
+      {summary.length > 0 && (
+        <section className={`${SHELL} ${SECTION}`}>
+          <HairlineGrid min={215}>
+            {summary.map((w) => (
+              <HairlineCell key={w.name} className="flex items-start justify-between gap-3 p-4 desktop:p-[22px]">
+                <div className="min-w-0">
+                  <p className="flex items-center gap-2 text-[15.5px] font-bold text-haba-ink desktop:text-[18px]">
+                    <Icon name="location-05" size={18} className="text-haba-green" />
+                    {t.home.affectedAreas.wilayaPrefix} {w.name}
+                  </p>
+                  <p className="mt-1 text-[13px] text-haba-muted">
+                    {w.severe} {t.home.affectedAreas.severeCount}
+                  </p>
+                </div>
+                <span className="text-[26px] font-bold leading-none text-haba-red desktop:text-[clamp(23px,3.4vw,36px)]">
+                  {w.count}
                 </span>
-              </h2>
-              <div className="space-y-4">
-                {[...dairas.entries()].map(([daira, items]) => (
-                  <div key={daira}>
-                    <p className="mb-2 text-sm font-semibold text-muted-foreground">
-                      {isFr ? `Daïra de ${daira}` : `دائرة ${daira}`}
-                    </p>
-                    <div className="grid gap-2 sm:grid-cols-2 lg:grid-cols-3">
-                      {items.map((a) => (
-                        <Card key={a.id} className="py-4">
-                          <CardContent className="space-y-1.5 px-4">
-                            <div className="flex items-start justify-between gap-2">
-                              <p className="font-bold leading-tight">{isFr && a.spot_fr ? a.spot_fr : a.spot}</p>
-                              <SeverityBadge severity={a.severity} locale={locale} />
-                            </div>
-                            <p className="text-sm text-muted-foreground">
-                              {isFr ? `Commune de ${a.commune_fr || a.commune}` : `بلدية ${a.commune}`}
-                            </p>
-                          </CardContent>
-                        </Card>
-                      ))}
-                    </div>
-                  </div>
-                ))}
+              </HairlineCell>
+            ))}
+          </HairlineGrid>
+        </section>
+      )}
+
+      <section className={`${SHELL} ${SECTION}`}>
+        <AreasFilters
+          wilayas={wilayas}
+          severities={severities}
+          locale={locale}
+          shown={rows.length}
+          total={totalCommunes}
+        />
+
+        <div className="mt-4 border border-haba-border bg-haba-surface">
+          <div className="hidden grid-cols-[1.4fr_1fr_.9fr_.8fr_1.8fr] gap-3 bg-haba-bg px-5 py-3 text-[12.5px] font-semibold text-haba-muted desktop:grid">
+            <span>{isFr ? "Commune / zone" : "البلدية / المنطقة"}</span>
+            <span>{isFr ? "Wilaya" : "الولاية"}</span>
+            <span>{isFr ? "Niveau" : "مستوى الضرر"}</span>
+            <span>{isFr ? "Foyers" : "البؤر"}</span>
+            <span>{isFr ? "Situation" : "الوضع الميداني"}</span>
+          </div>
+
+          {rows.length === 0 ? (
+            <p className="p-8 text-center text-sm text-haba-muted">
+              {isFr
+                ? "Aucune zone ne correspond à ces filtres."
+                : "لا توجد مناطق مطابقة لهذه الفلاتر."}
+            </p>
+          ) : (
+            rows.map((r) => (
+              <div
+                key={`${r.wilaya}/${r.commune}`}
+                className="grid gap-1.5 border-t border-haba-border p-4 text-[14.5px] first:border-t-0 desktop:grid-cols-[1.4fr_1fr_.9fr_.8fr_1.8fr] desktop:items-center desktop:gap-3 desktop:px-[22px] desktop:py-[15px] desktop:first:border-t"
+              >
+                <span className="flex items-center gap-2 font-semibold text-haba-ink">
+                  <Icon name="location-05" size={18} className="text-haba-green" />
+                  {r.commune}
+                </span>
+                <span className="text-haba-ink-2">{r.wilaya}</span>
+                <span>
+                  <Chip tone={severityTone[r.severity]} fill="tint" size="sm">
+                    {getSeverityLabel(r.severity, locale)}
+                  </Chip>
+                </span>
+                <span className="font-bold text-haba-red">{r.count}</span>
+                <span className="text-[13.5px] text-haba-ink-2">{r.note || "—"}</span>
               </div>
-            </section>
-          ))}
+            ))
+          )}
         </div>
-      )}
+      </section>
 
-      <div className="mt-10 flex flex-col items-center gap-3 rounded-2xl border border-border bg-secondary/30 p-8 text-center">
-        <h2 className="text-xl font-bold">
-          {isFr ? "Voulez-vous contribuer aux secours dans ces zones ?" : "هل ترغب في المساهمة في إغاثة هذه المناطق؟"}
-        </h2>
-        <p className="max-w-lg text-sm text-muted-foreground leading-relaxed">
-          {isFr
-            ? "Enregistrez vos dons matériels disponibles ou proposez votre véhicule pour acheminer les secours directement vers les points de collecte."
-            : "سجّل ما يتوفر لديك من قوافل ومواد إغاثية أو تطوع بمركبتك لنقل المساعدات مباشرة إلى مراكز التجميع."}
-        </p>
-        <div className="flex flex-wrap justify-center gap-2">
-          <LinkButton href="/donate">
-            <Gift className="size-4" /> {t.cta.haveAid}
-          </LinkButton>
-          <LinkButton href="/transport" variant="outline">
-            <Truck className="size-4" /> {t.cta.canTransport}
-          </LinkButton>
+      {/* CTA panel — §5.4 */}
+      <section className={`${SHELL} ${SECTION}`}>
+        <div className="flex flex-col gap-5 border border-haba-border bg-haba-forest p-5 text-white desktop:flex-row desktop:items-center desktop:justify-between desktop:gap-[clamp(20px,2.6vw,32px)] desktop:px-[clamp(18px,2.4vw,32px)] desktop:py-[clamp(22px,2.8vw,34px)]">
+          <div>
+            <h2 className="font-haba-display text-[22px] font-bold leading-tight desktop:text-[clamp(22px,3vw,30px)]">
+              {isFr
+                ? "Vous souhaitez contribuer au secours de ces zones ?"
+                : "هل ترغب في المساهمة في إغاثة هذه المناطق؟"}
+            </h2>
+            <p className="mt-2 max-w-[620px] text-[15px] leading-relaxed text-haba-green-100">
+              {isFr
+                ? "Enregistrez le matériel dont vous disposez, ou proposez votre véhicule pour acheminer l'aide vers les centres de collecte les plus proches."
+                : "سجّل ما يتوفر لديك من مواد إغاثية، أو تطوّع بمركبتك لنقل المساعدات مباشرة إلى مراكز التجميع الأقرب للمناطق المتضررة."}
+            </p>
+          </div>
+          <div className="flex flex-wrap gap-2.5">
+            <Action href="/donate" variant="onDark" size="md" icon="gift">
+              {t.cta.haveAid}
+            </Action>
+            <Action href="/transport" variant="onDarkOutline" size="md" icon="truck-delivery">
+              {t.cta.canTransport}
+            </Action>
+          </div>
         </div>
-      </div>
+      </section>
 
-      {areas[0]?.source && (
-        <p className="mt-6 text-center text-xs text-muted-foreground">{areas[0].source}</p>
-      )}
-    </div>
+      <EmergencySection />
+    </>
   );
 }

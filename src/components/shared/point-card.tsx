@@ -88,9 +88,9 @@ export function PointCard({
       <Card
         onClick={() => setOpen(true)}
         className={cn(
-          "group h-full cursor-pointer transition-all hover:-translate-y-0.5 hover:shadow-md",
+          "group h-full cursor-pointer transition-all hover:-translate-y-0.5 hover:",
           isSelected
-            ? "border-2 border-algeria-green bg-algeria-green/5 shadow-md ring-2 ring-algeria-green/20"
+            ? "border-2 border-algeria-green bg-algeria-green/5 ring-2 ring-algeria-green/20"
             : "hover:border-algeria-green/50",
           className,
         )}
@@ -100,7 +100,7 @@ export function PointCard({
             <div className="flex items-start justify-between gap-2">
               <div className="min-w-0">
                 <p className="flex items-center gap-1.5 text-xs font-semibold text-muted-foreground">
-                  <span className={`size-2.5 rounded-full ${kindDot[point.kind]}`} aria-hidden />
+                  <span className={`size-2.5 ${kindDot[point.kind]}`} aria-hidden />
                   {kindLabel}
                 </p>
                 <p className="mt-1 font-bold leading-tight text-foreground group-hover:text-algeria-green transition-colors">
@@ -143,7 +143,7 @@ export function PointCard({
                     e.stopPropagation();
                     onShowOnMap(point);
                   }}
-                  className="inline-flex items-center gap-1 rounded-md bg-muted/80 px-2.5 py-1 text-xs font-semibold text-foreground hover:bg-algeria-green hover:text-white transition-colors"
+                  className="inline-flex items-center gap-1 bg-muted/80 px-2.5 py-1 text-xs font-semibold text-foreground hover:bg-algeria-green hover:text-white transition-colors"
                   title={isFr ? "Voir sur la carte" : "عرض على الخريطة"}
                 >
                   <Navigation className="size-3" />
@@ -171,7 +171,7 @@ export function PointCard({
         <DialogContent className="max-h-[85vh] overflow-y-auto sm:max-w-md">
           <DialogHeader>
             <p className="flex items-center gap-1.5 text-xs font-medium text-muted-foreground">
-              <span className={`size-2 rounded-full ${kindDot[point.kind]}`} aria-hidden />
+              <span className={`size-2 ${kindDot[point.kind]}`} aria-hidden />
               {kindLabel}
             </p>
             <DialogTitle className="flex items-center gap-2">
@@ -196,7 +196,7 @@ export function PointCard({
           )}
 
           {point.capacityNote && (
-            <div className="flex items-start gap-2 rounded-lg bg-muted/60 p-3">
+            <div className="flex items-start gap-2 bg-muted/60 p-3">
               <Package className="mt-0.5 size-4 shrink-0 text-muted-foreground" />
               <p className="text-sm leading-relaxed">{point.capacityNote}</p>
             </div>
@@ -211,7 +211,7 @@ export function PointCard({
                 {point.acceptedCategories.map((slug) => (
                   <span
                     key={slug}
-                    className="inline-flex items-center gap-1 rounded-full bg-muted px-2.5 py-1 text-xs"
+                    className="inline-flex items-center gap-1 bg-muted px-2.5 py-1 text-xs"
                   >
                     <CategoryIcon slug={slug} className="size-3.5" /> {getCategoryName(slug, slug, locale)}
                   </span>

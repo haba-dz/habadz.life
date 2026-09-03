@@ -42,7 +42,7 @@ const ReliefMap = dynamic(
   {
     ssr: false,
     loading: () => (
-      <div className="flex h-full w-full items-center justify-center rounded-2xl bg-muted/40 border border-border min-h-[420px]">
+      <div className="flex h-full w-full items-center justify-center bg-muted/40 border border-border min-h-[420px]">
         <div className="flex flex-col items-center gap-3">
           <div className="size-8 animate-spin rounded-full border-4 border-algeria-green border-t-transparent" />
           <p className="text-sm font-medium text-muted-foreground">جاري تحميل الخريطة التفاعلية...</p>
@@ -184,7 +184,7 @@ export function MapClient({
   return (
     <div className="space-y-4">
       {/* 1. Location, Search & Kind Filter Panel */}
-      <div className="rounded-2xl border border-border bg-card p-3.5 sm:p-4 shadow-xs space-y-3">
+      <div className=" border border-border bg-card p-3.5 sm:p-4 space-y-3">
         {/* Search & Wilaya Dropdown */}
         <div className="flex flex-col sm:flex-row gap-2.5 sm:items-center">
           {/* Search Input */}
@@ -199,13 +199,13 @@ export function MapClient({
                   ? "Rechercher par nom, commune, quartier ou matériel..."
                   : "ابحث بالاسم، البلدية، الحي، أو نوع المساعدات..."
               }
-              className="h-11 rounded-xl bg-background/80 px-10 text-sm shadow-inner"
+              className="h-11 bg-background/80 px-10 text-sm shadow-inner"
             />
             {search && (
               <button
                 type="button"
                 onClick={() => setSearch("")}
-                className="absolute left-3.5 top-1/2 -translate-y-1/2 rounded-full p-1 text-muted-foreground hover:text-foreground rtl:left-3.5 rtl:right-auto ltr:right-3.5 ltr:left-auto cursor-pointer"
+                className="absolute left-3.5 top-1/2 -translate-y-1/2 p-1 text-muted-foreground hover:text-foreground rtl:left-3.5 rtl:right-auto ltr:right-3.5 ltr:left-auto cursor-pointer"
               >
                 <X className="size-4" />
               </button>
@@ -219,7 +219,7 @@ export function MapClient({
               includeAllOption={true}
               value={selectedWilaya}
               onChange={(e) => handleWilayaChange(e.target.value)}
-              className="w-full sm:w-auto min-w-[160px] h-11 rounded-xl cursor-pointer font-bold"
+              className="w-full sm:w-auto min-w-[160px] h-11 cursor-pointer font-bold"
             />
 
             {selectedWilaya !== "all" && (
@@ -229,7 +229,7 @@ export function MapClient({
                 includeAllOption={true}
                 value={selectedCommune}
                 onChange={(e) => setSelectedCommune(e.target.value)}
-                className="w-full sm:w-auto min-w-[160px] h-11 rounded-xl cursor-pointer animate-in fade-in"
+                className="w-full sm:w-auto min-w-[160px] h-11 cursor-pointer animate-in fade-in"
               />
             )}
 
@@ -239,7 +239,7 @@ export function MapClient({
                 variant="ghost"
                 size="sm"
                 onClick={handleResetFilters}
-                className="h-11 rounded-xl text-xs font-bold text-muted-foreground hover:bg-destructive/10 hover:text-destructive gap-1.5 cursor-pointer shrink-0"
+                className="h-11 text-xs font-bold text-muted-foreground hover:bg-destructive/10 hover:text-destructive gap-1.5 cursor-pointer shrink-0"
               >
                 <RotateCcw className="size-3.5" />
                 <span>{isFr ? "Effacer" : "مسح"}</span>
@@ -251,7 +251,7 @@ export function MapClient({
         {/* Priority Affected Wilayas Quick Chips Bar */}
         <div className="flex items-center gap-1.5 overflow-x-auto pb-0.5 no-scrollbar pt-0.5">
           <span className="text-xs font-bold text-priority-critical flex items-center gap-1 shrink-0">
-            <span className="inline-block size-2 rounded-full bg-priority-critical animate-pulse" />
+            <span className="inline-block size-2 bg-priority-critical animate-pulse" />
             {isFr ? "Priorité :" : "الولايات الأكثر تضرراً:"}
           </span>
           {priorityWilayas.map((pw) => {
@@ -262,9 +262,9 @@ export function MapClient({
                 type="button"
                 onClick={() => handleWilayaChange(active ? "all" : pw.name_ar)}
                 className={cn(
-                  "inline-flex shrink-0 items-center gap-1 rounded-xl px-2.5 py-1.5 text-xs font-bold transition-all cursor-pointer border min-h-[36px]",
+                  "inline-flex shrink-0 items-center gap-1 px-2.5 py-1.5 text-xs font-bold transition-all cursor-pointer border min-h-[36px]",
                   active
-                    ? "bg-priority-critical text-white border-priority-critical shadow-xs scale-102"
+                    ? "bg-priority-critical text-white border-priority-critical scale-102"
                     : "bg-priority-critical/10 text-priority-critical border-priority-critical/30 hover:bg-priority-critical/20 active:scale-95",
                 )}
               >
@@ -286,9 +286,9 @@ export function MapClient({
               type="button"
               onClick={() => setSelectedCommune("all")}
               className={cn(
-                "inline-flex shrink-0 items-center gap-1 rounded-xl px-2.5 py-1 text-xs font-bold transition-all cursor-pointer border min-h-[34px]",
+                "inline-flex shrink-0 items-center gap-1 px-2.5 py-1 text-xs font-bold transition-all cursor-pointer border min-h-[34px]",
                 selectedCommune === "all"
-                  ? "bg-algeria-green text-white border-algeria-green shadow-xs"
+                  ? "bg-algeria-green text-white border-algeria-green"
                   : "bg-muted/70 text-foreground border-border hover:bg-muted active:scale-95"
               )}
             >
@@ -302,9 +302,9 @@ export function MapClient({
                   type="button"
                   onClick={() => setSelectedCommune(active ? "all" : c.name_ar)}
                   className={cn(
-                    "inline-flex shrink-0 items-center gap-1 rounded-xl px-2.5 py-1 text-xs font-semibold transition-all cursor-pointer border min-h-[34px]",
+                    "inline-flex shrink-0 items-center gap-1 px-2.5 py-1 text-xs font-semibold transition-all cursor-pointer border min-h-[34px]",
                     active
-                      ? "bg-algeria-green text-white border-algeria-green shadow-xs font-bold scale-102"
+                      ? "bg-algeria-green text-white border-algeria-green font-bold scale-102"
                       : "bg-background text-foreground border-border hover:border-algeria-green/50 hover:bg-algeria-green/5 active:scale-95"
                   )}
                 >
@@ -335,14 +335,14 @@ export function MapClient({
               type="button"
               onClick={() => setSelectedKind("all")}
               className={cn(
-                "flex items-center justify-between rounded-xl border p-2.5 sm:p-3 text-start transition-all cursor-pointer min-h-[46px] active:scale-98",
+                "flex items-center justify-between border p-2.5 sm:p-3 text-start transition-all cursor-pointer min-h-[46px] active:scale-98",
                 selectedKind === "all"
-                  ? "border-foreground bg-foreground/10 shadow-xs ring-2 ring-foreground/20 font-bold"
+                  ? "border-foreground bg-foreground/10 ring-2 ring-foreground/20 font-bold"
                   : "border-border bg-background hover:bg-muted/60"
               )}
             >
               <div className="flex items-center gap-2">
-                <div className="flex size-7 items-center justify-center rounded-lg bg-foreground/10 text-foreground">
+                <div className="flex size-7 items-center justify-center bg-foreground/10 text-foreground">
                   <Layers className="size-4" />
                 </div>
                 <span className="text-xs font-bold">{isFr ? "Tous" : "الكل"}</span>
@@ -355,14 +355,14 @@ export function MapClient({
               type="button"
               onClick={() => setSelectedKind(selectedKind === "shelter" ? "all" : "shelter")}
               className={cn(
-                "flex items-center justify-between rounded-xl border p-2.5 sm:p-3 text-start transition-all cursor-pointer min-h-[46px] active:scale-98",
+                "flex items-center justify-between border p-2.5 sm:p-3 text-start transition-all cursor-pointer min-h-[46px] active:scale-98",
                 selectedKind === "shelter"
-                  ? "border-[#7c3aed] bg-[#7c3aed]/15 shadow-xs ring-2 ring-[#7c3aed]/30 font-bold"
+                  ? "border-[#7c3aed] bg-[#7c3aed]/15 ring-2 ring-[#7c3aed]/30 font-bold"
                   : "border-border bg-background hover:border-[#7c3aed]/40 hover:bg-[#7c3aed]/5"
               )}
             >
               <div className="flex items-center gap-2">
-                <div className="flex size-7 items-center justify-center rounded-lg bg-[#7c3aed]/15 text-[#7c3aed]">
+                <div className="flex size-7 items-center justify-center bg-[#7c3aed]/15 text-[#7c3aed]">
                   <Home className="size-4" />
                 </div>
                 <span className="text-xs font-bold text-[#7c3aed]">{isFr ? "Hébergement" : "مراكز إيواء"}</span>
@@ -375,14 +375,14 @@ export function MapClient({
               type="button"
               onClick={() => setSelectedKind(selectedKind === "relief_hub" ? "all" : "relief_hub")}
               className={cn(
-                "flex items-center justify-between rounded-xl border p-2.5 sm:p-3 text-start transition-all cursor-pointer min-h-[46px] active:scale-98",
+                "flex items-center justify-between border p-2.5 sm:p-3 text-start transition-all cursor-pointer min-h-[46px] active:scale-98",
                 selectedKind === "relief_hub"
-                  ? "border-[#1d4ed8] bg-[#1d4ed8]/15 shadow-xs ring-2 ring-[#1d4ed8]/30 font-bold"
+                  ? "border-[#1d4ed8] bg-[#1d4ed8]/15 ring-2 ring-[#1d4ed8]/30 font-bold"
                   : "border-border bg-background hover:border-[#1d4ed8]/40 hover:bg-[#1d4ed8]/5"
               )}
             >
               <div className="flex items-center gap-2">
-                <div className="flex size-7 items-center justify-center rounded-lg bg-[#1d4ed8]/15 text-[#1d4ed8]">
+                <div className="flex size-7 items-center justify-center bg-[#1d4ed8]/15 text-[#1d4ed8]">
                   <HeartHandshake className="size-4" />
                 </div>
                 <span className="text-xs font-bold text-[#1d4ed8]">{isFr ? "Accueil" : "مراكز استقبال"}</span>
@@ -395,14 +395,14 @@ export function MapClient({
               type="button"
               onClick={() => setSelectedKind(selectedKind === "collection_point" ? "all" : "collection_point")}
               className={cn(
-                "flex items-center justify-between rounded-xl border p-2.5 sm:p-3 text-start transition-all cursor-pointer min-h-[46px] active:scale-98",
+                "flex items-center justify-between border p-2.5 sm:p-3 text-start transition-all cursor-pointer min-h-[46px] active:scale-98",
                 selectedKind === "collection_point"
-                  ? "border-algeria-green bg-algeria-green/15 shadow-xs ring-2 ring-algeria-green/30 font-bold"
+                  ? "border-algeria-green bg-algeria-green/15 ring-2 ring-algeria-green/30 font-bold"
                   : "border-border bg-background hover:border-algeria-green/40 hover:bg-algeria-green/5"
               )}
             >
               <div className="flex items-center gap-2">
-                <div className="flex size-7 items-center justify-center rounded-lg bg-algeria-green/15 text-algeria-green">
+                <div className="flex size-7 items-center justify-center bg-algeria-green/15 text-algeria-green">
                   <Package className="size-4" />
                 </div>
                 <span className="text-xs font-bold text-algeria-green">{isFr ? "Collecte" : "نقاط تجميع"}</span>
@@ -423,14 +423,14 @@ export function MapClient({
         </div>
 
         {/* Mobile View Switcher */}
-        <div className="flex lg:hidden rounded-xl bg-muted p-1 border border-border/80">
+        <div className="flex lg:hidden bg-muted p-1 border border-border/80">
           <button
             type="button"
             onClick={() => setMobileTab("map")}
             className={cn(
-              "flex items-center gap-1.5 rounded-lg px-3.5 py-2 text-xs font-bold transition-all min-h-[36px] cursor-pointer",
+              "flex items-center gap-1.5 px-3.5 py-2 text-xs font-bold transition-all min-h-[36px] cursor-pointer",
               mobileTab === "map"
-                ? "bg-background text-foreground shadow-xs scale-102"
+                ? "bg-background text-foreground scale-102"
                 : "text-muted-foreground hover:text-foreground"
             )}
           >
@@ -441,29 +441,29 @@ export function MapClient({
             type="button"
             onClick={() => setMobileTab("list")}
             className={cn(
-              "flex items-center gap-1.5 rounded-lg px-3.5 py-2 text-xs font-bold transition-all min-h-[36px] cursor-pointer",
+              "flex items-center gap-1.5 px-3.5 py-2 text-xs font-bold transition-all min-h-[36px] cursor-pointer",
               mobileTab === "list"
-                ? "bg-background text-foreground shadow-xs scale-102"
+                ? "bg-background text-foreground scale-102"
                 : "text-muted-foreground hover:text-foreground"
             )}
           >
             <LayoutGrid className="size-3.5 text-algeria-green" />
             <span>{isFr ? "Liste" : "القائمة"}</span>
-            <span className="rounded-full bg-algeria-green/15 text-algeria-green px-1.5 py-0.2 text-[10px] font-black">
+            <span className=" bg-algeria-green/15 text-algeria-green px-1.5 py-0.2 text-[10px] font-black">
               {filteredPoints.length}
             </span>
           </button>
         </div>
 
         {/* Desktop View Switcher */}
-        <div className="hidden lg:flex items-center gap-1 rounded-lg bg-muted p-1">
+        <div className="hidden lg:flex items-center gap-1 bg-muted p-1">
           <button
             type="button"
             onClick={() => setViewMode("split")}
             className={cn(
-              "flex items-center gap-1.5 rounded-md px-3 py-1.5 text-xs font-bold transition-all cursor-pointer",
+              "flex items-center gap-1.5 px-3 py-1.5 text-xs font-bold transition-all cursor-pointer",
               viewMode === "split"
-                ? "bg-background text-foreground shadow-sm"
+                ? "bg-background text-foreground"
                 : "text-muted-foreground hover:text-foreground"
             )}
             title={isFr ? "Vue combinée (Carte & Liste)" : "عرض مدمج (خريطة + قائمة)"}
@@ -475,9 +475,9 @@ export function MapClient({
             type="button"
             onClick={() => setViewMode("map")}
             className={cn(
-              "flex items-center gap-1.5 rounded-md px-3 py-1.5 text-xs font-bold transition-all cursor-pointer",
+              "flex items-center gap-1.5 px-3 py-1.5 text-xs font-bold transition-all cursor-pointer",
               viewMode === "map"
-                ? "bg-background text-foreground shadow-sm"
+                ? "bg-background text-foreground"
                 : "text-muted-foreground hover:text-foreground"
             )}
             title={isFr ? "Carte seule" : "الخريطة فقط"}
@@ -489,9 +489,9 @@ export function MapClient({
             type="button"
             onClick={() => setViewMode("grid")}
             className={cn(
-              "flex items-center gap-1.5 rounded-md px-3 py-1.5 text-xs font-bold transition-all cursor-pointer",
+              "flex items-center gap-1.5 px-3 py-1.5 text-xs font-bold transition-all cursor-pointer",
               viewMode === "grid"
-                ? "bg-background text-foreground shadow-sm"
+                ? "bg-background text-foreground"
                 : "text-muted-foreground hover:text-foreground"
             )}
             title={isFr ? "Grille seule" : "البطاقات فقط"}
@@ -519,7 +519,7 @@ export function MapClient({
             {mobileTab === "map" ? (
               <div className="relative space-y-3">
                 {/* Full-Height Responsive Map Container */}
-                <div className="relative h-[calc(100dvh-270px)] min-h-[460px] w-full rounded-2xl overflow-hidden border border-border shadow-xs">
+                <div className="relative h-[calc(100dvh-270px)] min-h-[460px] w-full overflow-hidden border border-border">
                   <ReliefMap
                     points={filteredPoints}
                     selectedPointId={selectedPointId}
@@ -530,7 +530,7 @@ export function MapClient({
                   {/* Floating Action Hint */}
                   {!selectedPoint && (
                     <div className="absolute top-3 inset-x-3 pointer-events-none flex justify-center z-10">
-                      <div className="rounded-full bg-background/90 backdrop-blur px-3.5 py-1 text-[11px] font-bold text-muted-foreground shadow-md border border-border">
+                      <div className=" bg-background/90 backdrop-blur px-3.5 py-1 text-[11px] font-bold text-muted-foreground border border-border">
                         {isFr ? "Touchez un marqueur pour voir les détails" : "اضغط على أي علامة في الخريطة لعرض التفاصيل"}
                       </div>
                     </div>
@@ -539,7 +539,7 @@ export function MapClient({
                   {/* Interactive Floating Bottom Preview Sheet on Map */}
                   {selectedPoint && (
                     <div className="absolute bottom-3 inset-x-3 z-30 animate-in fade-in slide-in-from-bottom-4 duration-300">
-                      <div className="rounded-2xl border border-border/80 bg-background/98 backdrop-blur p-4 shadow-xl space-y-3">
+                      <div className=" border border-border/80 bg-background/98 backdrop-blur p-4 space-y-3">
                         <div className="flex items-start justify-between gap-2">
                           <div>
                             <div className="flex items-center gap-1.5 mb-1">
@@ -556,7 +556,7 @@ export function MapClient({
                           <button
                             type="button"
                             onClick={() => setSelectedPointId(null)}
-                            className="rounded-full p-1.5 text-muted-foreground hover:bg-muted hover:text-foreground transition-colors cursor-pointer"
+                            className=" p-1.5 text-muted-foreground hover:bg-muted hover:text-foreground transition-colors cursor-pointer"
                             aria-label="إغلاق"
                           >
                             <X className="size-4" />
@@ -568,13 +568,13 @@ export function MapClient({
                           {selectedPoint.phone ? (
                             <a
                               href={`tel:${selectedPoint.phone}`}
-                              className="flex items-center justify-center gap-2 rounded-xl bg-algeria-green text-white h-11 px-3 text-xs font-bold shadow-xs active:scale-95 transition-transform"
+                              className="flex items-center justify-center gap-2 bg-algeria-green text-white h-11 px-3 text-xs font-bold active:scale-95 transition-transform"
                             >
                               <Phone className="size-4" />
                               <span>{isFr ? "Appeler" : "اتصال مباشر"}</span>
                             </a>
                           ) : (
-                            <div className="flex items-center justify-center rounded-xl bg-muted text-muted-foreground h-11 px-3 text-[11px] font-semibold">
+                            <div className="flex items-center justify-center bg-muted text-muted-foreground h-11 px-3 text-[11px] font-semibold">
                               {isFr ? "Sans téléphone" : "لا يوجد هاتف"}
                             </div>
                           )}
@@ -589,7 +589,7 @@ export function MapClient({
                             }
                             target="_blank"
                             rel="noopener noreferrer"
-                            className="flex items-center justify-center gap-2 rounded-xl border border-border bg-card text-foreground hover:bg-muted h-11 px-3 text-xs font-bold shadow-xs active:scale-95 transition-transform"
+                            className="flex items-center justify-center gap-2 border border-border bg-card text-foreground hover:bg-muted h-11 px-3 text-xs font-bold active:scale-95 transition-transform"
                           >
                             <Navigation className="size-4 text-algeria-green" />
                             <span>{isFr ? "Itinéraire" : "الاتجاهات GPS"}</span>
