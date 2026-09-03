@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useTransition } from "react";
+import { useState, useTransition, useRef, useEffect } from "react";
 import Link from "next/link";
 import { toast } from "sonner";
 import {
@@ -126,6 +126,11 @@ export function NewsManager({
   const [syncing, setSyncing] = useState(false);
   const [syncResult, setSyncResult] = useState<string | null>(null);
   const [, startTransition] = useTransition();
+  const syncAbortRef = useRef<AbortController | null>(null);
+
+  useEffect(() => {
+    return () => syncAbortRef.current?.abort();
+  }, []);
 
   async function submitPost() {
     setSubmittingPost(true);
@@ -174,10 +179,12 @@ export function NewsManager({
   }
 
   async function triggerOfficialSync() {
+    syncAbortRef.current?.abort();
+    syncAbortRef.current = new AbortController();
     setSyncing(true);
     setSyncResult(null);
     try {
-      const res = await fetch("/api/news/sync", { method: "POST" });
+      const res = await fetch("/api/news/sync", { method: "POST", signal: syncAbortRef.current.signal });
       const data = await res.json();
       if (data.success) {
         toast.success(`تمت مزامنة ${data.syncedCount} بيان وبلاغ رسمي بنجاح`);
@@ -187,7 +194,8 @@ export function NewsManager({
       } else {
         toast.error(data.error ?? "فشلت المزامنة");
       }
-    } catch {
+    } catch (e) {
+      if ((e as Error).name === "AbortError") return;
       toast.error("تعذر الاتصال بخدمة المزامنة");
     } finally {
       setSyncing(false);

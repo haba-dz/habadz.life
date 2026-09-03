@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useRef, useEffect } from "react";
 import { toast } from "sonner";
 import { UserPlus, Loader2, Copy, Check, TriangleAlert } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -41,6 +41,13 @@ export function AddStaffDialog() {
   const [submitting, setSubmitting] = useState(false);
   const [created, setCreated] = useState<{ email: string; password: string } | null>(null);
   const [copied, setCopied] = useState(false);
+  const copiedTimeoutRef = useRef<number | null>(null);
+
+  useEffect(() => {
+    return () => {
+      if (copiedTimeoutRef.current !== null) clearTimeout(copiedTimeoutRef.current);
+    };
+  }, []);
 
   function reset() {
     setEmail(""); setFullName(""); setPhone(""); setRole("coordinator");
@@ -65,7 +72,8 @@ export function AddStaffDialog() {
       `البريد: ${created.email}\nكلمة المرور المؤقتة: ${created.password}`,
     );
     setCopied(true);
-    setTimeout(() => setCopied(false), 2000);
+    if (copiedTimeoutRef.current !== null) clearTimeout(copiedTimeoutRef.current);
+    copiedTimeoutRef.current = window.setTimeout(() => setCopied(false), 2000);
   }
 
   return (

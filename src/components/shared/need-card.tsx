@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useRef, useEffect } from "react";
 import { MapPin, Info, Share2, Check } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -33,6 +33,13 @@ export function NeedCard({
 }) {
   const [open, setOpen] = useState(false);
   const [copied, setCopied] = useState(false);
+  const copiedTimeoutRef = useRef<number | null>(null);
+
+  useEffect(() => {
+    return () => {
+      if (copiedTimeoutRef.current !== null) clearTimeout(copiedTimeoutRef.current);
+    };
+  }, []);
 
   const needed = Number(need.quantity_needed);
   const available = Number(need.quantity_available);
@@ -57,7 +64,8 @@ export function NeedCard({
       } else {
         await navigator.clipboard.writeText(`${text}\n${url}`);
         setCopied(true);
-        setTimeout(() => setCopied(false), 2000);
+        if (copiedTimeoutRef.current !== null) clearTimeout(copiedTimeoutRef.current);
+        copiedTimeoutRef.current = window.setTimeout(() => setCopied(false), 2000);
       }
     } catch {
       /* User cancelled */
