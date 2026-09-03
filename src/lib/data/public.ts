@@ -91,7 +91,7 @@ export const getStatOverview = unstable_cache(
   async () => {
     try {
       const supabase = await createClient();
-      const { data } = await supabase.rpc("get_stat_overview").single();
+      const { data } = await supabase.rpc("get_stat_overview").maybeSingle();
       return data ?? emptyStatOverview;
     } catch {
       return emptyStatOverview;

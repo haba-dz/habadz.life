@@ -75,9 +75,12 @@ export async function submitDonation(input: DonationInput): Promise<SubmitDonati
   const suggestedPointId =
     suggestedPoints.find((p) => p.kind === "collection_point")?.id ?? null;
 
-  const { data: inserted, error: donationError } = await supabase
+  const donationId = crypto.randomUUID();
+
+  const { error: donationError } = await supabase
     .from("donations")
     .insert({
+      id: donationId,
       campaign_id: campaign.id,
       donor_name: data.donor_name,
       donor_phone: data.donor_phone,
@@ -88,15 +91,11 @@ export async function submitDonation(input: DonationInput): Promise<SubmitDonati
       ready_at: data.ready_at || null,
       notes: data.notes || null,
       suggested_collection_point_id: suggestedPointId,
-    })
-    .select("id")
-    .single();
+    });
 
-  if (donationError || !inserted) {
+  if (donationError) {
     return { success: false, error: "حدث خطأ أثناء تسجيل المساعدة. حاول مرة أخرى." };
   }
-
-  const donationId = inserted.id;
 
   const { error: itemsError } = await supabase.from("donation_items").insert(
     data.items.map((it) => ({

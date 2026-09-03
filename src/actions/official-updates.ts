@@ -1,4 +1,4 @@
-﻿"use server";
+"use server";
 
 import { revalidatePath } from "next/cache";
 import { z } from "zod";
@@ -54,9 +54,9 @@ export async function createOfficialUpdate(input: CreateOfficialUpdateInput) {
       created_by: user?.id || null,
     })
     .select()
-    .single();
+    .maybeSingle();
 
-  if (error) {
+  if (error || !data) {
     console.error("[action] createOfficialUpdate:", error);
     return { success: false, error: "تعذر نشر البيان" };
   }
@@ -65,7 +65,7 @@ export async function createOfficialUpdate(input: CreateOfficialUpdateInput) {
     actorId: user?.id,
     action: `نشر بيانًا رسميًا موثقًا: ${parsed.data.title}`,
     entityType: "official_update",
-    entityId: data.id,
+    entityId: data?.id,
   });
 
   revalidatePath("/admin/news");
