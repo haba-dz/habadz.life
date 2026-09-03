@@ -8,27 +8,27 @@ import { getLocale } from "@/i18n/server";
 export async function SiteHeader() {
   const locale = await getLocale();
   const t = await getDictionary(locale);
-  const isFr = locale === "fr";
 
-  // design.md §3.4 — five items, in this order.
+  const n = t.chrome.nav.items;
+
+  // design.md §3.4 — five items, in this order. `labelCompact` is what renders
+  // below 1200px, where the French labels do not fit (design.md §8.4).
   const items: NavItem[] = [
-    { href: "/", label: t.nav.home, icon: "home-09" },
+    { href: "/", label: n.home, icon: "home-09" },
     {
       href: "/official-information",
-      label: isFr ? "Communiqués & données" : "المستجدات والبيانات",
+      label: n.officialInformation,
+      labelCompact: n.officialInformationCompact,
       icon: "news",
     },
-    { href: "/affected-areas", label: t.nav.affectedAreas, icon: "map-pinpoint-02" },
+    { href: "/affected-areas", label: n.affectedAreas, icon: "map-pinpoint-02" },
     {
       href: "/map",
-      label: isFr ? "Carte des centres" : "خريطة المراكز",
+      label: n.centresMap,
+      labelCompact: n.centresMapCompact,
       icon: "maps-location-02",
     },
-    {
-      href: "/volunteers",
-      label: isFr ? "Bénévoles" : "المتطوعون",
-      icon: "user-group",
-    },
+    { href: "/volunteers", label: n.volunteers, icon: "user-group" },
   ];
 
   const switcher = <LanguageSwitcher current={locale} label={t.language.change} variant="band" />;

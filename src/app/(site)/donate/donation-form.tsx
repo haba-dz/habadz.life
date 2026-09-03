@@ -273,7 +273,10 @@ export function DonationForm({
 
                 {/* Category Selector */}
                 <div>
-                  <Label className="mb-1.5 text-xs font-semibold text-muted-foreground">
+                  <Label
+                    id={`item-${index}-category-label`}
+                    className="mb-1.5 text-xs font-semibold text-muted-foreground"
+                  >
                     {isFr ? "Type d'aide / Catégorie *" : "نوع المادة أو المساعدة *"}
                   </Label>
                   <Select
@@ -285,7 +288,10 @@ export function DonationForm({
                       if (cat) setValue(`items.${index}.unit`, cat.default_unit);
                     }}
                   >
-                    <SelectTrigger className="w-full h-11">
+                    <SelectTrigger
+                      aria-labelledby={`item-${index}-category-label`}
+                      className="w-full h-11"
+                    >
                       <SelectValue placeholder={isFr ? "Choisir une catégorie" : "اختر نوع المساعدة"}>
                         {(value: string) => {
                           const c = categories.find((cat) => cat.id === value);
@@ -316,7 +322,10 @@ export function DonationForm({
                 {/* Quantity and Unit */}
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                   <div>
-                    <Label className="mb-1.5 text-xs font-semibold text-muted-foreground">
+                    <Label
+                      htmlFor={`item-${index}-quantity`}
+                      className="mb-1.5 text-xs font-semibold text-muted-foreground"
+                    >
                       {isFr ? "Quantité estimée *" : "الكمية التقديرية *"}
                     </Label>
                     <div className="flex items-center gap-2">
@@ -333,6 +342,7 @@ export function DonationForm({
                         <Minus className="size-3.5" />
                       </Button>
                       <Input
+                        id={`item-${index}-quantity`}
                         type="number"
                         min={1}
                         className="text-center font-black text-base h-10"
@@ -354,7 +364,10 @@ export function DonationForm({
                   </div>
 
                   <div>
-                    <Label className="mb-1.5 text-xs font-semibold text-muted-foreground">
+                    <Label
+                      id={`item-${index}-unit-label`}
+                      className="mb-1.5 text-xs font-semibold text-muted-foreground"
+                    >
                       {isFr ? "Unité *" : "الوحدة *"}
                     </Label>
                     <Select
@@ -363,7 +376,10 @@ export function DonationForm({
                         v && setValue(`items.${index}.unit`, v as DonationInput["items"][number]["unit"])
                       }
                     >
-                      <SelectTrigger className="w-full h-10">
+                      <SelectTrigger
+                        aria-labelledby={`item-${index}-unit-label`}
+                        className="w-full h-10"
+                      >
                         <SelectValue>
                           {(value: string) => getUnitLabel(value, locale)}
                         </SelectValue>
@@ -381,10 +397,14 @@ export function DonationForm({
 
                 {/* Short description */}
                 <div>
-                  <Label className="mb-1.5 text-xs font-semibold text-muted-foreground">
+                  <Label
+                    htmlFor={`item-${index}-description`}
+                    className="mb-1.5 text-xs font-semibold text-muted-foreground"
+                  >
                     {isFr ? "Précisions ou état du matériel (facultatif)" : "ملاحظات وتفاصيل عن المادة (اختياري)"}
                   </Label>
                   <Input
+                    id={`item-${index}-description`}
                     placeholder={
                       isFr
                         ? "Ex : Bouteilles d'eau 1.5L, couvertures neuves, etc."
@@ -427,7 +447,7 @@ export function DonationForm({
 
           {/* Wilaya Selection */}
           <div>
-            <Label className="mb-1.5">{isFr ? "Wilaya où se trouvent les dons *" : "الولاية التي تتوفر بها المساعدات *"}</Label>
+            <Label htmlFor="donate-wilaya" className="mb-1.5">{isFr ? "Wilaya où se trouvent les dons *" : "الولاية التي تتوفر بها المساعدات *"}</Label>
             {/* Quick Select for Priority Affected Wilayas */}
             <div className="mb-2 flex flex-wrap gap-1.5">
               {priorityWilayas.map((pw) => {
@@ -452,6 +472,7 @@ export function DonationForm({
             </div>
 
             <WilayaSelect
+              id="donate-wilaya"
               locale={locale}
               value={selectedWilaya}
               onChange={(e) => {
@@ -465,8 +486,9 @@ export function DonationForm({
           </div>
 
           <div>
-            <Label className="mb-1.5">{isFr ? "Commune / Quartier" : "البلدية / الحي"}</Label>
+            <Label htmlFor="donate-commune" className="mb-1.5">{isFr ? "Commune / Quartier" : "البلدية / الحي"}</Label>
             <CommuneSelect
+              id="donate-commune"
               wilaya={selectedWilaya}
               locale={locale}
               value={watch("current_commune")}
@@ -523,8 +545,9 @@ export function DonationForm({
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
             <div>
-              <Label className="mb-1.5">{isFr ? "Nom complet ou association *" : "الاسم الكامل أو اسم الجمعية *"}</Label>
+              <Label htmlFor="donate-name" className="mb-1.5">{isFr ? "Nom complet ou association *" : "الاسم الكامل أو اسم الجمعية *"}</Label>
               <Input
+                id="donate-name"
                 placeholder={isFr ? "Ex : Karim Benali" : "مثال: كريم بن علي"}
                 {...register("donor_name")}
               />
@@ -534,8 +557,8 @@ export function DonationForm({
             </div>
 
             <div>
-              <Label className="mb-1.5">{isFr ? "Numéro de téléphone *" : "رقم الهاتف للتواصل *"}</Label>
-              <Input dir="ltr" placeholder="0555xxxxxx" {...register("donor_phone")} />
+              <Label htmlFor="donate-phone" className="mb-1.5">{isFr ? "Numéro de téléphone *" : "رقم الهاتف للتواصل *"}</Label>
+              <Input id="donate-phone" dir="ltr" placeholder="0555xxxxxx" {...register("donor_phone")} />
               {errors.donor_phone && (
                 <p className="mt-1 text-xs text-destructive">{errors.donor_phone.message}</p>
               )}
@@ -543,8 +566,9 @@ export function DonationForm({
           </div>
 
           <div>
-            <Label className="mb-1.5">{isFr ? "Remarques ou instructions de livraison (facultatif)" : "ملاحظات إضافية أو تفاصيل الاستلام (اختياري)"}</Label>
+            <Label htmlFor="donate-notes" className="mb-1.5">{isFr ? "Remarques ou instructions de livraison (facultatif)" : "ملاحظات إضافية أو تفاصيل الاستلام (اختياري)"}</Label>
             <Textarea
+              id="donate-notes"
               placeholder={
                 isFr
                   ? "Créneaux pour récupérer les dons, détails d'accès, etc."

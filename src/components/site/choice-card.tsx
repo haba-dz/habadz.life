@@ -40,7 +40,7 @@ export function ChoiceCard({
   return (
     <label
       className={cn(
-        "group flex cursor-pointer items-center gap-3 border border-haba-border bg-haba-surface text-haba-ink",
+        "group relative flex cursor-pointer items-center gap-3 border border-haba-border bg-haba-surface text-haba-ink",
         "has-[:focus-visible]:outline-2 has-[:focus-visible]:outline-offset-2 has-[:focus-visible]:outline-haba-green",
         compact ? "px-3.5 py-3 text-sm" : "px-4 py-3.5 text-[14.5px]",
         "has-[:checked]:font-bold",
@@ -48,10 +48,21 @@ export function ChoiceCard({
         className,
       )}
     >
+      {/*
+        When the control is not drawn, the input still covers the whole card
+        rather than collapsing to an sr-only 1px box. That box is what the
+        browser scrolls into view on focus, so an sr-only input makes the
+        browser think a card is visible while the card itself sits under the
+        tab bar — and no scrolling happens at all. design.md §8.5
+      */}
       <input
         type={type}
         className={cn(
-          showControl ? "size-4 shrink-0 accent-haba-green" : "sr-only",
+          showControl
+            // scroll-mb clears the rest of the row: with a visible control the
+            // focus target is the 16px box, not the card. design.md §8.5
+            ? "size-4 shrink-0 scroll-mb-14 accent-haba-green"
+            : "absolute inset-0 m-0 size-full cursor-pointer appearance-none opacity-0",
         )}
         {...input}
       />

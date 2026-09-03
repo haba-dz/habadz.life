@@ -192,6 +192,9 @@ export function MapClient({
             <Search className="absolute right-3.5 top-1/2 size-4 -translate-y-1/2 text-muted-foreground rtl:right-3.5 rtl:left-auto ltr:left-3.5 ltr:right-auto" />
             <Input
               type="text"
+              aria-label={
+                isFr ? "Rechercher un centre" : "البحث عن مركز"
+              }
               value={search}
               onChange={(e) => setSearch(e.target.value)}
               placeholder={
@@ -205,6 +208,7 @@ export function MapClient({
               <button
                 type="button"
                 onClick={() => setSearch("")}
+                aria-label={isFr ? "Effacer la recherche" : "مسح البحث"}
                 className="absolute left-3.5 top-1/2 -translate-y-1/2 p-1 text-muted-foreground hover:text-foreground rtl:left-3.5 rtl:right-auto ltr:right-3.5 ltr:left-auto cursor-pointer"
               >
                 <X className="size-4" />
@@ -215,6 +219,7 @@ export function MapClient({
           {/* Wilaya & Commune Dropdowns */}
           <div className="flex flex-wrap items-center gap-2">
             <WilayaSelect
+              aria-label={isFr ? "Filtrer par wilaya" : "التصفية حسب الولاية"}
               locale={locale}
               includeAllOption={true}
               value={selectedWilaya}
@@ -224,6 +229,7 @@ export function MapClient({
 
             {selectedWilaya !== "all" && (
               <CommuneSelect
+                aria-label={isFr ? "Filtrer par commune" : "التصفية حسب البلدية"}
                 wilaya={selectedWilaya}
                 locale={locale}
                 includeAllOption={true}

@@ -162,7 +162,12 @@
   --color-haba-ink: oklch(0.2311 0.0184 165.14);           /* #15201B */
   --color-haba-ink-2: oklch(0.4056 0.0213 163.69);         /* #3F4D46 body */
   --color-haba-muted: oklch(0.5116 0.0239 160.82);         /* #5B6B62 */
-  --color-haba-border: oklch(0.8693 0.0102 155.07);        /* #CFD6D1 */
+  --color-haba-border: oklch(0.8693 0.0102 155.07);
+  /* Recessive display numerals (the "01–04" on the how-it-works cards). The
+     border colour they were drawn in measures 1.48:1 on white — below the 3:1
+     that large text needs. Same hue, dark enough to pass at 3.10:1, still far
+     lighter than any body text. design.md §8.5 */
+  --color-haba-numeral: oklch(0.6600 0.0102 155.07);        /* #CFD6D1 */
   --color-haba-border-subtle: oklch(0.9271 0.0059 153.77); /* #E4E8E5 */
   --color-haba-border-dashed: oklch(0.7683 0.0209 159.60); /* #A9B8AF */
   --color-haba-icon-faint: oklch(0.7182 0.0195 160.91);    /* #9AA8A0 */
@@ -376,6 +381,34 @@ body:has([data-site]) {
 @media (max-width: 860px) {
   body:has([data-site]) {
     padding-bottom: 74px;
+  }
+}
+
+/* Focus scrolling vs. the sticky chrome. design.md §8.5
+   ---------------------------------------------------------------------------
+   The browser scrolls a newly focused control only until it is inside the
+   viewport, and it knows nothing about the sticky header above or the fixed tab
+   bar below. On a phone with the soft keyboard open (~430px of viewport) a
+   tabbed-to field therefore lands *underneath* the tab bar: measured at
+   390x430, 8 of 26 controls on /help and 13 of 33 on /volunteers were covered.
+
+   scroll-padding, not scroll-margin, is the fix. scroll-margin only changes how
+   far to scroll once the browser has decided to scroll at all — a control that
+   is technically on screen but sitting under the tab bar counts as visible and
+   never moves. scroll-padding shrinks the scrollport's optimal viewing region,
+   so the chrome-covered strips stop counting as visible in the first place.
+
+   It goes on the scroll container, which is <html>. Scoped with :has() so
+   /admin, which has no tab bar, is unaffected. design.md §8.1 */
+html:has([data-site]) {
+  scroll-padding-top: 108px;   /* 94px header + breathing room */
+  scroll-padding-bottom: 88px; /* 74px tab bar + breathing room */
+}
+
+@media (min-width: 861px) {
+  html:has([data-site]) {
+    scroll-padding-top: 130px; /* 116px header + breathing room */
+    scroll-padding-bottom: 24px;
   }
 }
 

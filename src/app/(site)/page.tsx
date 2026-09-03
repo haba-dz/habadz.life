@@ -421,8 +421,10 @@ export default async function HomePage() {
         <HairlineGrid min={215}>
           {steps.map((step, i) => (
             <HairlineCell key={step.title} className="p-5 desktop:px-6 desktop:py-7">
-              {/* The numeral is deliberately the border colour — recessive. §5.1(10) */}
-              <span className="block text-[32px] font-bold leading-none text-haba-border desktop:text-[clamp(32px,4vw,44px)]">
+              {/* Deliberately recessive (§5.1(10)), but the border colour it was
+                  drawn in fails AA at 1.48:1 — haba-numeral is the same hue at
+                  3.10:1. design.md §8.5 */}
+              <span className="block text-[32px] font-bold leading-none text-haba-numeral desktop:text-[clamp(32px,4vw,44px)]">
                 {String(i + 1).padStart(2, "0")}
               </span>
               <span className="mt-2 block text-[17px] font-bold text-haba-ink">{step.title}</span>

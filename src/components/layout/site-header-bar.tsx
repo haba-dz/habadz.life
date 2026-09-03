@@ -8,7 +8,13 @@ import { Icon, type IconName } from "@/components/icons";
 import { Action, FlagStripe, FOCUS_RING } from "@/components/site";
 import { useMobileMenu } from "./mobile-menu-context";
 
-export type NavItem = { href: string; label: string; icon: IconName };
+export type NavItem = {
+  href: string;
+  label: string;
+  /** Shown below 1200px when the full label does not fit. design.md §8.4 */
+  labelCompact?: string;
+  icon: IconName;
+};
 
 /**
  * Header row + the inline mobile menu. design.md §3.4
@@ -47,16 +53,16 @@ export function SiteHeaderBar({
         <Link
           href="/"
           aria-label={homeLabel}
-          className={cn("flex shrink-0 items-center gap-2.5 desktop:gap-3.5", FOCUS_RING)}
+          className={cn("flex min-w-0 items-center gap-2.5 desktop:gap-3.5", FOCUS_RING)}
         >
           <span className="flex size-9.5 items-center justify-center bg-haba-green text-white desktop:size-11.5">
             <Icon name="heart-check" size={22} />
           </span>
-          <span>
+          <span className="min-w-0">
             <span className="block font-haba-display text-[21px] font-bold leading-none text-haba-forest desktop:text-[clamp(20px,2.4vw,26px)]">
               {brand}
             </span>
-            <span className="mt-1 hidden text-xs text-haba-muted wide:block">
+            <span className="mt-1 hidden truncate text-xs text-haba-muted wide:block">
               {brandSubtitle}
             </span>
           </span>
@@ -80,15 +86,28 @@ export function SiteHeaderBar({
                   FOCUS_RING,
                 )}
               >
-                {item.label}
+                {item.labelCompact ? (
+                  <>
+                    <span className="max-wide:hidden">{item.label}</span>
+                    <span className="wide:hidden">{item.labelCompact}</span>
+                  </>
+                ) : (
+                  item.label
+                )}
               </Link>
             );
           })}
         </nav>
 
         <div className="flex shrink-0 items-center gap-1.5 desktop:gap-2">
-          {/* Hidden on mobile: the tab bar already carries "تقديم مساعدة". */}
-          <Action href="/donate" variant="primary" size="sm" icon="gift" className="max-desktop:hidden">
+          {/*
+            Only ≥1200px. Below that the tab bar carries "تقديم مساعدة" (≤860px),
+            and in the 861–1199px band the header has no room for it: brand +
+            nav + both CTAs measure 1064px against 789px of usable width in
+            French. The red emergency CTA is the one that survives the squeeze.
+            design.md §8.4
+          */}
+          <Action href="/donate" variant="primary" size="sm" icon="gift" className="max-wide:hidden">
             {haveAidLabel}
           </Action>
           <Action href="/help" variant="danger" size="sm" icon="alert-02">

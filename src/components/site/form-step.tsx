@@ -18,7 +18,12 @@ export function FormStep({
   children: React.ReactNode;
 }) {
   return (
-    <section className={cn("border border-haba-border bg-haba-surface", className)}>
+    <section
+      // Named so the step is announced as a region rather than an anonymous
+      // one, and so AT users can jump between the three steps. design.md §8.5
+      aria-labelledby={`form-step-${step}-title`}
+      className={cn("border border-haba-border bg-haba-surface", className)}
+    >
       <div className="flex items-start gap-3 border-b border-haba-border bg-haba-surface-2 px-4 py-4 desktop:px-[22px]">
         <span
           aria-hidden
@@ -27,7 +32,14 @@ export function FormStep({
           {step}
         </span>
         <div>
-          <h3 className="text-[17px] font-bold leading-snug text-haba-forest">{title}</h3>
+          {/* h2, not h3: the page's h1 is the PageHero title and there is no
+              level in between, so h3 here would skip a level. design.md §8.5 */}
+          <h2
+            id={`form-step-${step}-title`}
+            className="text-[17px] font-bold leading-snug text-haba-forest"
+          >
+            {title}
+          </h2>
           {caption && (
             <p className="mt-0.5 text-[12.5px] text-haba-muted">{caption}</p>
           )}

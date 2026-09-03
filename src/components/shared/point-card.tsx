@@ -88,7 +88,7 @@ export function PointCard({
       <Card
         onClick={() => setOpen(true)}
         className={cn(
-          "group h-full cursor-pointer transition-all hover:-translate-y-0.5 hover:",
+          "group h-full cursor-pointer transition-all hover:-translate-y-0.5",
           isSelected
             ? "border-2 border-algeria-green bg-algeria-green/5 ring-2 ring-algeria-green/20"
             : "hover:border-algeria-green/50",
@@ -103,9 +103,17 @@ export function PointCard({
                   <span className={`size-2.5 ${kindDot[point.kind]}`} aria-hidden />
                   {kindLabel}
                 </p>
-                <p className="mt-1 font-bold leading-tight text-foreground group-hover:text-algeria-green transition-colors">
+                <button
+                  type="button"
+                  aria-haspopup="dialog"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    setOpen(true);
+                  }}
+                  className="mt-1 text-start font-bold leading-tight text-foreground transition-colors group-hover:text-algeria-green focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-algeria-green"
+                >
                   {point.name}
-                </p>
+                </button>
               </div>
               <PointStatusBadge status={point.status} locale={locale} />
             </div>

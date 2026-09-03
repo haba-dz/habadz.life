@@ -125,7 +125,11 @@ function FooterColumn({ title, children }: { title: string; children: React.Reac
   return (
     <div>
       <h2 className="mb-2.5 text-sm font-bold text-white">{title}</h2>
-      <nav className="flex flex-col gap-[9px]">{children}</nav>
+      {/* Three unlabelled <nav> landmarks in one footer are indistinguishable
+          in a screen reader's landmark list. Name each after its column. */}
+      <nav aria-label={title} className="flex flex-col gap-[9px]">
+        {children}
+      </nav>
     </div>
   );
 }

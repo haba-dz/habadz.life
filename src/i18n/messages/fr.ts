@@ -478,13 +478,27 @@ const fr: Dictionary = {
       emergency: "Urgences",
     },
     brand: {
-      subtitle: "Plateforme de coordination de la solidarité",
+      subtitle: "Coordination de la solidarité",
       home: "Accueil",
     },
     nav: {
       label: "Navigation principale",
       openMenu: "Ouvrir le menu",
       closeMenu: "Fermer le menu",
+      skipToContent: "Aller au contenu principal",
+      /**
+       * Libellés du menu. La version compacte s'affiche sous 1200px, où le
+       * français ne tient pas sur une seule ligne. Voir design.md §8.4.
+       */
+      items: {
+        home: "Accueil",
+        officialInformation: "Communiqués",
+        officialInformationCompact: "Communiqués",
+        affectedAreas: "Zones sinistrées",
+        centresMap: "Carte des centres",
+        centresMapCompact: "Carte",
+        volunteers: "Bénévoles",
+      },
     },
     tabbar: {
       label: "Navigation mobile",

@@ -152,7 +152,7 @@ export function HelpRequestForm({
           >
             <FieldInput
               id="help-name"
-              placeholder={isFr ? "Ex: Karim Benali" : "مثال: عبد القادر بوعلام"}
+              placeholder={isFr ? "Ex : Karim Benali" : "مثال: عبد القادر بوعلام"}
               {...register("full_name")}
             />
           </Field>

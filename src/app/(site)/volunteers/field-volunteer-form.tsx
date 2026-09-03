@@ -13,7 +13,6 @@ import {
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
-import { Checkbox } from "@/components/ui/checkbox";
 import { type IconName } from "@/components/icons";
 import { Action, ChoiceCard, FormStep, WarningBlock } from "@/components/site";
 import {
@@ -275,8 +274,9 @@ export function FieldVolunteerForm({
         <div className="space-y-4">
 
           <div>
-            <Label className="mb-1.5">{isFr ? "Nom et prénom *" : "الاسم واللقب *"}</Label>
+            <Label htmlFor="vol-name" className="mb-1.5">{isFr ? "Nom et prénom *" : "الاسم واللقب *"}</Label>
             <Input
+              id="vol-name"
               placeholder={isFr ? "Ex : Abdelkader Boualem" : "مثال: عبد القادر بوعلام"}
               {...register("full_name")}
             />
@@ -287,16 +287,17 @@ export function FieldVolunteerForm({
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
             <div>
-              <Label className="mb-1.5">{isFr ? "Numéro de téléphone *" : "رقم الهاتف للتواصل *"}</Label>
-              <Input dir="ltr" placeholder="0555xxxxxx" {...register("phone")} />
+              <Label htmlFor="vol-phone" className="mb-1.5">{isFr ? "Numéro de téléphone *" : "رقم الهاتف للتواصل *"}</Label>
+              <Input id="vol-phone" dir="ltr" placeholder="0555xxxxxx" {...register("phone")} />
               {errors.phone && (
                 <p className="mt-1 text-xs text-destructive">{errors.phone.message}</p>
               )}
             </div>
 
             <div>
-              <Label className="mb-1.5">{isFr ? "Contact d'urgence (facultatif)" : "رقم هاتف شخص قريب للطوارئ"}</Label>
+              <Label htmlFor="vol-emergency" className="mb-1.5">{isFr ? "Contact d'urgence (facultatif)" : "رقم هاتف شخص قريب للطوارئ"}</Label>
               <Input
+                id="vol-emergency"
                 placeholder={isFr ? "Ex : Frère 0612345678" : "مثال: أخي 0612345678"}
                 {...register("emergency_contact")}
               />
@@ -305,7 +306,7 @@ export function FieldVolunteerForm({
 
           {/* Wilaya Selection */}
           <div>
-            <Label className="mb-1.5">{isFr ? "Wilaya *" : "الولاية *"}</Label>
+            <Label htmlFor="vol-wilaya" className="mb-1.5">{isFr ? "Wilaya *" : "الولاية *"}</Label>
             {/* Quick Select for Priority Affected Wilayas */}
             <div className="mb-2 flex flex-wrap gap-1.5">
               {priorityWilayas.map((pw) => {
@@ -334,6 +335,7 @@ export function FieldVolunteerForm({
             </div>
 
             <WilayaSelect
+              id="vol-wilaya"
               locale={locale}
               value={selectedWilaya}
               onChange={(e) => {
@@ -348,8 +350,9 @@ export function FieldVolunteerForm({
 
           {/* Commune Selection powered by ihahachi/algeria-cities */}
           <div>
-            <Label className="mb-1.5">{isFr ? "Commune de présence / intervention *" : "البلدية (مكان التواجد / التدخل) *"}</Label>
+            <Label htmlFor="vol-commune" className="mb-1.5">{isFr ? "Commune de présence / intervention *" : "البلدية (مكان التواجد / التدخل) *"}</Label>
             <CommuneSelect
+              id="vol-commune"
               wilaya={selectedWilaya}
               locale={locale}
               value={selectedCommune}
@@ -475,21 +478,15 @@ export function FieldVolunteerForm({
                   eq;
 
                 return (
-                  <label
+                  <ChoiceCard
                     key={eq}
-                    className={cn(
-                      "flex items-center gap-2 p-2.5 border cursor-pointer transition-all",
-                      isSelected
-                        ? "border-algeria-green/60 bg-algeria-green/5 font-semibold text-foreground"
-                        : "border-border text-muted-foreground"
-                    )}
-                  >
-                    <Checkbox
-                      checked={isSelected}
-                      onCheckedChange={() => toggleEquipment(eq)}
-                    />
-                    <span className="text-xs">{label}</span>
-                  </label>
+                    type="checkbox"
+                    compact
+                    showControl
+                    title={label}
+                    checked={isSelected}
+                    onChange={() => toggleEquipment(eq)}
+                  />
                 );
               })}
             </div>
@@ -497,10 +494,11 @@ export function FieldVolunteerForm({
 
           {/* Additional Notes */}
           <div className="pt-2">
-            <Label className="mb-1.5">
+            <Label htmlFor="vol-notes" className="mb-1.5">
               {isFr ? "Remarques complémentaires (facultatif)" : "ملاحظات أو مهارات إضافية (اختياري)"}
             </Label>
             <Textarea
+              id="vol-notes"
               placeholder={
                 isFr
                   ? "Expérience préalable, créneaux précis, connaissances particulières..."
@@ -511,17 +509,19 @@ export function FieldVolunteerForm({
           </div>
 
           {/* Phone Privacy Toggle */}
-          <label className="flex items-center gap-2 text-xs text-muted-foreground pt-1 cursor-pointer">
-            <Checkbox
-              checked={showPhone}
-              onCheckedChange={(v) => setValue("show_phone_publicly", Boolean(v))}
-            />
-            <span>
-              {isFr
+          <ChoiceCard
+            type="checkbox"
+            compact
+            showControl
+            className="mt-1"
+            title={
+              isFr
                 ? "J'accepte que mon numéro soit transmis directement aux coordinateurs de terrain"
-                : "أوافق على إتاحة رقم هاتفي لمنسقي الفرق الميدانية للتواصل المباشر والسريع"}
-            </span>
-          </label>
+                : "أوافق على إتاحة رقم هاتفي لمنسقي الفرق الميدانية للتواصل المباشر والسريع"
+            }
+            checked={showPhone}
+            onChange={(e) => setValue("show_phone_publicly", e.target.checked)}
+          />
         </div>
       </FormStep>
 

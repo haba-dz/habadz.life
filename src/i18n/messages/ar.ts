@@ -494,6 +494,20 @@ const ar = {
       label: "التنقل الرئيسي",
       openMenu: "فتح القائمة",
       closeMenu: "إغلاق القائمة",
+      skipToContent: "تخطَّ إلى المحتوى الرئيسي",
+      /**
+       * تسميات شريط التنقل. النسخة المختصرة تُعرض دون 1200px،
+       * حيث لا يتسع الشريط للعنوان الكامل. راجع design.md §8.4.
+       */
+      items: {
+        home: "الرئيسية",
+        officialInformation: "المستجدات والبيانات",
+        officialInformationCompact: "المستجدات",
+        affectedAreas: "المناطق المتضررة",
+        centresMap: "خريطة المراكز",
+        centresMapCompact: "الخريطة",
+        volunteers: "المتطوعون",
+      },
     },
     tabbar: {
       label: "شريط التنقل السفلي",

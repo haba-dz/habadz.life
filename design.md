@@ -955,33 +955,97 @@ before building the UI that renders it; anything missing is a migration, not a C
 `CentersMap` ships a 300px `#EEF1EE` box with explanatory text. The repo has `src/components/map/`
 — the real component must be dropped in, and its own styling reconciled with radius-0.
 
-### 8.4 French locale has no design
+### 8.4 RESOLVED — French locale has no design
 The `FR` switch is present on every artboard; no French artboard exists. Arabic is dense and
-compact — French runs ~20–30% longer and will reflow the nav, action tiles, and table headers.
-Test the 861–1199px band in French specifically.
+compact — French runs ~20–30% longer.
 
-### 8.5 Accessibility debts in the artboards
-- Colour-only status: the open/closed dot and the severity badges rely on colour + Arabic text;
-  badges are fine, the bare dot is not — add a text label.
-- **`--amber-700` (`#9A7420`) fails WCAG AA.** Measured: **4.29:1** on `#fff` and **4.05:1** on its
-  own `#FDF8EC` tint — below the 4.5:1 needed for normal text. It is used at 11.5–14.5px bold
-  (severity badge `متوسط`, centre-type badge `نقاط تجميع`, the map legend, and the counter label
-  on `/map`), none of which qualify as "large text". Only the 26px+ counts pass.
-  **Fix:** darken to `#856419` — 5.48:1 on white, 5.17:1 on tint,
-  `oklch(0.5235 0.0976 83.15)` — visually indistinguishable at these sizes. Keep `#9A7420` only for
-  ≥24px numerals if you want the lighter tone there.
-- Verified contrast for the rest of the palette (all pass AA for normal text):
-  `#5B6B62`/white **5.64** · `#5B6B62`/`#F4F5F2` **5.15** · `#3F4D46`/white **8.89** ·
-  `#0B5D3B`/white **7.95** · `#C8102E`/white **5.88** · `#C8102E`/`#FDF3F4` **5.41** ·
-  `#8A5560`/`#FDF3F4` **5.44** · `#0B5D3B`/`#EEF5F1` **7.18** · `#9CCDB4`/`#083D28` **6.91** ·
-  `#CFE3D7`/`#083D28` **9.14**.
-- Choice cards are `<div>`s in the artboards. They must be real `<label>` + `<input>` pairs, or
-  `role="radio"`/`role="checkbox"` with keyboard handling. Do not ship div-based form controls on
-  a relief-request form.
-- Sticky mobile header + sticky tab bar leave ~430px of usable height on a small phone. Verify the
-  Help form is still usable with a keyboard open.
-- No focus-visible styling anywhere in the artboards. With radius 0 and no shadows, define one
-  explicitly (a 2px `#0B5D3B` outline with 2px offset works with this system).
+**Measured, 861–1199px, French.** The header row is `justify-between` with `shrink-0` on the brand
+and the CTA group, so it overflows silently rather than wrapping: at 861px it needed **1064px against
+789px of usable width**, pushing `J'ai besoin d'aide` 251px past the viewport edge. Arabic overflowed
+the same row by 95px. Every rebuilt route was affected, because the header is shared; page bodies
+were clean at 861px in both locales.
+
+A second, separate break sat at **exactly 1200px**, where three things expand at once — the brand
+subtitle appears, the nav switches to full labels, and the donate CTA returns — for 1246px of content
+inside a 1152px container. Above ~1294px the overflow hid itself in the page margin, so it only
+*looked* fine.
+
+**Fixed, three ways:**
+- `NavItem.labelCompact` — full labels ≥1200px, compact below (`Communiqués & données` →
+  `Communiqués`, `Carte des centres` → `Carte`). Same two-span pattern the platform band already used.
+- The secondary `J'ai des dons` CTA is `max-wide:hidden`, so it shows only ≥1200px. Below 861px the
+  tab bar carries it; in the 861–1199 band the header genuinely has no room, and the red emergency
+  CTA is the one that must survive. **`/donate` is therefore not in the header on tablets** — it is
+  still in the footer, the homepage action tiles, and the mobile tab bar.
+- French copy shortened where it was the binding constraint: `Communiqués & données` →
+  `Communiqués`, brand subtitle `Plateforme de coordination de la solidarité` →
+  `Coordination de la solidarité`.
+
+Plus a structural guard so this cannot silently return: the brand link lost `shrink-0` and its
+subtitle got `truncate`, so a future long string degrades instead of escaping the container.
+
+Verified at 861 / 1000 / 1199 / 1200 / 1280 / 1440 in both locales: nothing clipped, nothing
+escaping. French at 1200px has 33px of slack — tight, so re-measure before lengthening any header
+string.
+
+Remaining French debt: the orphan routes (§7.3) still hold untranslated Arabic — `/transport`,
+`/artisans`, `/needs`, `/transparency`, `/medical`. That belongs to step 7, not this pass.
+
+### 8.5 RESOLVED — Accessibility debts in the artboards
+- **Colour-only status.** `StatusDot` is `aria-hidden` and documented as requiring an adjacent text
+  label; every call site has one. `PointStatusBadge` pairs its dot with `getPointStatusLabel`.
+- **`--amber-700` (`#9A7420`) fails WCAG AA.** Measured **4.29:1** on `#fff` and **4.05:1** on its own
+  `#FDF8EC` tint. Fixed by darkening to `#856419` (5.48 / 5.17), `oklch(0.5235 0.0976 83.15)`.
+  `#9A7420` survives as `--color-haba-amber-bright`, used only for ≥24px numerals.
+- **Contrast verified by measurement, not by token arithmetic.** A rasterising audit (canvas
+  readback — Chrome returns `oklab()` for these tokens, which no regex parser reads) walked every
+  text-bearing element on all seven rebuilt routes in both locales, compositing translucent
+  backgrounds up the ancestor chain. **One real failure:** the recessive `01–04` numerals on the
+  how-it-works cards were drawn in `--color-haba-border` at **1.48:1**, against the 3:1 that ≥24px
+  text needs. Added `--color-haba-numeral` — same hue, `oklch(0.66 0.0102 155.07)`, **3.10:1** — which
+  keeps the numerals recessive. Everything else passes. Caveat: this audits the initial render only,
+  so hover and transient states are unverified.
+- **Choice cards must be real controls.** Done in step 6: `<label>` + `<input>` with `:has(:checked)`
+  selection. The last two hold-outs, the volunteers equipment list and the phone-privacy consent row,
+  were still shadcn `Checkbox` and were converted here.
+- **Keyboard-open mobile forms.** Confirmed as a real defect at 390×430: **8 of 26 controls on /help
+  and 13 of 33 on /volunteers landed under the fixed tab bar at the moment they received focus.**
+  The browser scrolls a focused control only until it touches the viewport edge and knows nothing
+  about the sticky header or the tab bar.
+  `scroll-margin` does **not** fix this — it changes how far to scroll once the browser has decided
+  to scroll at all, and a control sitting under the tab bar already counts as visible. The fix is
+  `scroll-padding` on the scrollport (`html:has([data-site])`, so /admin is untouched), which shrinks
+  the region that counts as visible: 108/88px on mobile, 130/24px on desktop.
+  Two follow-ons were needed. `ChoiceCard`'s hidden input was `sr-only`, a 1px box the browser
+  considered visible while the card itself was not — it now covers the card
+  (`absolute inset-0 opacity-0`). And with `showControl` the focus target is the 16px control, so
+  those get `scroll-mb-14` to clear the rest of the row. **Now 0 occluded on all three forms at both
+  390×430 and 390×844.**
+- **Focus-visible styling.** `FOCUS_RING` was defined in step 2 and is applied across the chrome and
+  the primitives.
+
+Found during this pass, beyond the artboard list:
+- **No skip link.** Three sticky strips plus a five-item nav sat ahead of the content on every page.
+  Added one as the first focusable element, targeting `<main id="main-content" tabIndex={-1}>`.
+- **Form fields with no programmatic label.** `/donate` (5), `/volunteers` (6) and `/map` (2) used
+  shared `Label` + `Input` as siblings with no `htmlFor`/`id`, so a screen reader announced them
+  unlabelled — on the forms people file aid offers through. All wired; the two base-ui `Select`
+  triggers use `aria-labelledby`. `/help` was already clean because it uses `Field`.
+- **Heading level skip** `h1 → h3` on all three form pages: `FormStep` rendered an `h3` with no `h2`
+  between it and the page title. Now `h2`, and the `<section>` is `aria-labelledby` its own heading
+  so steps are announced as named regions.
+- **Three unlabelled `<nav>` landmarks** in the footer, indistinguishable in a landmark list. Each is
+  now `aria-label`led with its column title.
+- **The news ticker announced every alert twice** — the scrolling copy and the `sr-only` static copy
+  were both in the accessibility tree. The visual one is now `aria-hidden`.
+- **`PointCard` was a `<div onClick>` opening a dialog** — no keyboard path, no role, on the centres
+  list. The point name is now a real `<button aria-haspopup="dialog">`.
+- **A dangling `hover:` class** in `point-card.tsx`, left when `hover:shadow-md` was stripped for the
+  flat system. Swept the whole tree for the pattern; this was the only one.
+
+Verified after the pass, all seven rebuilt routes × both locales: one `h1`, no heading skips, every
+landmark named, no unlabelled control or field, no contrast failure. `/admin/login` still reports no
+`[data-site]`, `scroll-padding: auto`, `--radius: .75rem` and its original font.
 
 ### 8.6 Open PR
 PR #72 (`chore/ponytail-overengineering-cleanup` — removes unused UI primitives and dependencies)
@@ -1003,6 +1067,8 @@ or expect conflicts in exactly the files §7.2 rewrites.
 6. **Forms** — Help, Donate, Volunteers. Wire to the existing Server Actions; do not
    re-architect submission as part of a visual pass.
 7. **Orphan routes** (§7.3) — restyle or consolidate, per whatever was decided.
-8. **Passes** — French copy, a11y (§8.5), 861–1199px band, keyboard-open mobile forms.
+8. **Passes** — French copy, a11y (§8.5), 861–1199px band, keyboard-open mobile forms. **DONE** —
+   see §8.4 and §8.5, both now marked RESOLVED. Step 7 (orphan routes) is still open and still needs
+   the IA decision in §7.3; the untranslated French on those routes belongs with it.
 
 Steps 1–3 are the real leverage. Do not start step 4 before step 3 is settled.

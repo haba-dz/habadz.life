@@ -55,7 +55,13 @@ export async function NewsTicker({ showFallback = false }: { showFallback?: bool
           <span className="hidden desktop:inline">{isFr ? "Urgent" : "عاجل"}</span>
         </span>
 
-        <div className="ticker-viewport relative flex-1 overflow-hidden">
+        {/*
+          The scrolling copy is decorative: the same messages are repeated
+          verbatim in the sr-only block below, where they are static and in
+          reading order. Without aria-hidden a screen reader announces every
+          alert twice. design.md §8.5
+        */}
+        <div aria-hidden className="ticker-viewport relative flex-1 overflow-hidden">
           <div
             className="animate-ticker whitespace-nowrap text-center text-[12.5px]"
             style={{ "--ticker-duration": `${duration}s` } as React.CSSProperties}
