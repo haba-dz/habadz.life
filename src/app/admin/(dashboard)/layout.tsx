@@ -20,16 +20,7 @@ export default async function AdminDashboardLayout({
   const profile = await getCurrentProfile();
 
   if (!profile || !["admin", "coordinator", "volunteer"].includes(profile.role)) {
-    return (
-      <div className="flex min-h-screen items-center justify-center px-4 text-center">
-        <div>
-          <p className="text-lg font-bold">ليس لديك صلاحية الوصول إلى لوحة الإدارة</p>
-          <p className="mt-2 text-sm text-muted-foreground">
-            تواصل مع مسؤول المنصة إذا كنت تعتقد أن هذا خطأ.
-          </p>
-        </div>
-      </div>
-    );
+    redirect("/");
   }
 
   const fullName = profile.full_name || "مشرف";

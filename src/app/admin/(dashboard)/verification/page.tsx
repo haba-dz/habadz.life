@@ -11,7 +11,10 @@ export default async function AdminVerificationPage() {
   const [{ data: points }, { data: hubs }, { data: requests }] = await Promise.all([
     supabase.from("collection_points").select("*").in("verification_level", pendingLevels),
     supabase.from("relief_hubs").select("*").in("verification_level", pendingLevels),
-    supabase.from("beneficiary_requests").select("*").in("verification_level", pendingLevels),
+    supabase
+      .from("beneficiary_requests")
+      .select("id, full_name, commune, wilaya, status, priority, verification_level")
+      .in("verification_level", pendingLevels),
   ]);
 
   const totalPending = (points?.length ?? 0) + (hubs?.length ?? 0) + (requests?.length ?? 0);

@@ -71,7 +71,7 @@ export async function submitDamageAssessment(
       .gte("created_at", tenMinAgo)
       .limit(1);
     if (recent && recent.length > 0) {
-      return { success: false, error: "تم تسجيل طلبك مؤخراً، يرجى الانتظار 10 دقائق قبل إعادة المحاولة." };
+      return { success: true };
     }
   } catch {
     // fail open for dedup check — do not block legitimate request if admin key missing locally
@@ -167,12 +167,12 @@ export async function submitDamageAssessment(
             category_id: category.id,
             wilaya: data.wilaya,
             commune: data.commune,
-            title: `مواد ترميم — ${data.full_name}`,
+            title: `مواد ترميم — ${data.commune}`,
             quantity_needed: estimate.paintCans > 0 ? estimate.paintCans : 1,
             quantity_available: 0,
             unit: "piece",
             priority: derivedPriority,
-            notes: data.finishing_notes || null,
+            notes: null,
             source_type: "public_report",
           })
           .select("id")
@@ -220,12 +220,12 @@ export async function submitDamageAssessment(
     const adminForLog = createAdminClient();
     await adminForLog.from("activity_logs").insert({
       actor_id: null,
-      action: `طلب تقييم أضرار جديد من ${data.full_name} (${data.commune})`,
+      action: `طلب تقييم أضرار جديد (${data.commune})`,
       entity_type: "damage_assessment",
     });
   } catch {
     await logActivity(supabase, {
-      action: `طلب تقييم أضرار جديد من ${data.full_name} (${data.commune})`,
+      action: `طلب تقييم أضرار جديد (${data.commune})`,
       entityType: "damage_assessment",
     });
   }
