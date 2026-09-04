@@ -19,8 +19,8 @@ import { readFileSync, writeFileSync } from "node:fs";
 // Verified against @iconify-json/hugeicons@1.2.33 — this script fails loudly
 // rather than silently emitting a blank icon if a name goes missing again.
 const NAMES = [
-  "alarm-clock", "alert-02", "alert-circle", "alert-diamond", "arrow-down-01",
-  "baby-bottle",
+  "alarm-clock", "alert-02", "alert-circle", "alert-diamond", "apple",
+  "app-store", "arrow-down-01", "baby-bottle",
   "bed", "building-03", "building-06", "calendar-03", "calendar-check-in-01",
   "call-02", "call-ringing-02", "cancel-01", "car-03", "car-04", "cleaning-bucket",
   "clock-01", "cloud-fast-wind", "compass", "dashboard-square-02", "delete-02",
@@ -31,7 +31,7 @@ const NAMES = [
   "location-user-02", "map-pinpoint-02", "maps",
   "maps-global-01", "maps-location-02", "medicine-02", "menu-01",
   "more-horizontal", "motorbike-02", "navigation-03", "news", "noodles", "package",
-  "package-process", "plus-sign", "police-badge", "pulse-02", "radio",
+  "package-process", "play-store", "plus-sign", "police-badge", "pulse-02", "radio",
   "refresh", "road-01", "search-01", "sent", "shield-01", "shield-user",
   "shipping-truck-01", "square-arrow-expand-01", "stethoscope", "table-01",
   "t-shirt", "tent", "tree-06", "truck",
