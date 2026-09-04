@@ -19,6 +19,7 @@ import { siteConfig } from "@/config/site";
 import { formatRelativeTime } from "@/lib/constants";
 import {
   getAffectedAreas,
+  getAllActiveNeeds,
   getOfficialUpdates,
   getPublicMedicalVolunteers,
   getShelters,
@@ -32,12 +33,15 @@ export default async function HomePage() {
   const t = await getDictionary(locale);
   const isFr = locale === "fr";
 
-  const [stats, updates, shelters, areas, medicalVolunteers] = await Promise.all([
+  const [stats, updates, shelters, areas, medicalVolunteers, activeNeeds] = await Promise.all([
     getStatOverview(),
     getOfficialUpdates(4),
     getShelters(),
     getAffectedAreas(),
     getPublicMedicalVolunteers(),
+    // Shares the cache entry /needs already fills, so this is one DB read per
+    // minute for the whole site, not an extra one per homepage render.
+    getAllActiveNeeds(),
   ]);
 
   const wilayaName = (a: (typeof areas)[number]) =>
@@ -135,10 +139,16 @@ export default async function HomePage() {
             {/* Fixed 2-up: the panel is ~557px at 1200px, which is 4px short of two
                 280px auto-fit tracks, and §5.2 wants 2-up on mobile anyway. */}
             <HairlineGrid cols={2} className="border-s-0 [&>*:nth-child(2n)]:border-e-0">
+              {/* Every tile here must be the same quantity the section below it
+                  breaks down, or the page argues with itself: the wilaya cards
+                  count `affected_areas` rows, so this counts rows too — not the
+                  43 distinct communes those 55 rows fall into.
+                  `stats.critical_needs` is likewise only the `critical` slice
+                  (4 of 22), so it cannot sit under an "active needs" label. */}
               <StatTile value={stats.active_points} label={t.home.stats.points} icon="package" tone="green" />
-              <StatTile value={communes.length} label={t.home.stats.areas} icon="fire" tone="red" />
+              <StatTile value={areas.length} label={t.home.stats.hotspots} icon="fire" tone="red" />
               <StatTile value={shelters.length} label={t.home.stats.shelters} icon="home-09" />
-              <StatTile value={stats.critical_needs} label={t.home.stats.activeNeeds} icon="alert-02" />
+              <StatTile value={activeNeeds.length} label={t.home.stats.activeNeeds} icon="alert-02" />
             </HairlineGrid>
             <p className="bg-haba-surface px-4 py-3 text-[12.5px] text-haba-muted desktop:px-[18px]">
               {t.home.hero.panelFootnote}

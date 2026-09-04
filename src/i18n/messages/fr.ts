@@ -116,7 +116,8 @@ const fr: Dictionary = {
     stats: {
       activeNeeds: "Besoins actifs",
       points: "Points d'accueil",
-      areas: "Zones sinistrées",
+      // Voir ar.ts : une ligne d'`affected_areas` est un foyer, pas une commune.
+      hotspots: "Foyers enregistrés",
       shelters: "Centres d'hébergement",
     },
     urgentNeeds: {
@@ -139,7 +140,8 @@ const fr: Dictionary = {
     },
     communes: {
       title: "Communes touchées",
-      subtitle: "Nombre de besoins actifs enregistrés dans chaque commune.",
+      // Le chiffre est le nombre de foyers de la commune, pas ses besoins.
+      subtitle: "Nombre de foyers enregistrés dans chaque commune.",
     },
     shelters: {
       title: "Centres d'hébergement ouverts",
