@@ -94,6 +94,31 @@ export async function SiteFooter() {
         </FooterColumn>
       </div>
 
+      {/*
+        People hand over a phone number and a home address in the middle of a
+        disaster. Say plainly who sees it and what it is not used for, on every
+        page rather than behind a link — and keep the claim accurate: the
+        volunteer directories are opt-in, so this cannot say "never published".
+      */}
+      <div className="border-t border-haba-green-400/30">
+        <section
+          aria-labelledby="footer-privacy"
+          className="mx-auto max-w-[1200px] px-4 py-6 desktop:px-6 desktop:py-7"
+        >
+          <h2
+            id="footer-privacy"
+            className="flex items-center gap-2 text-sm font-bold text-white"
+          >
+            <Icon name="shield-01" size={18} className="text-haba-green-300" />
+            {t.chrome.footer.privacyTitle}
+          </h2>
+          <div className="mt-2.5 grid gap-x-10 gap-y-2 text-[13px] leading-relaxed desktop:grid-cols-2">
+            <p>{t.chrome.footer.privacyShared}</p>
+            <p className="text-haba-green-300">{t.chrome.footer.privacyLimits}</p>
+          </div>
+        </section>
+      </div>
+
       <div className="border-t border-haba-green-400/30">
         <div className="mx-auto flex max-w-[1200px] flex-col gap-2 px-4 py-4 text-[12.5px] text-haba-green-300 desktop:px-6">
           <div className="flex flex-wrap items-center justify-between gap-x-6 gap-y-1">
@@ -102,7 +127,9 @@ export async function SiteFooter() {
             </span>
             <span>{t.chrome.footer.pledges}</span>
           </div>
-          <p className="leading-relaxed">{siteConfig.legalNotice}</p>
+          {/* t.site.legalNotice, not siteConfig.legalNotice: the config value is
+              Arabic-only and was printing Arabic into the French footer. */}
+          <p className="leading-relaxed">{t.site.legalNotice}</p>
           <p className="leading-relaxed">
             {t.footer.dataCreditBefore}{" "}
             <a

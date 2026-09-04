@@ -517,6 +517,11 @@ const fr: Dictionary = {
       sourceCode: "Code source sur GitHub",
       pledges: "Aucune collecte d'argent · Aucune donnée sensible · Code ouvert",
       copyright: "Initiative solidaire indépendante et à but non lucratif",
+      privacyTitle: "Confidentialité de vos données",
+      privacyShared:
+        "Les informations que vous enregistrez sur la plateforme — demandes d'aide, offres de dons et inscriptions de bénévoles — sont transmises uniquement aux organismes officiels chargés des secours : Protection Civile, autorités locales et cellules de coordination agréées. Dans un seul but : les aider à organiser l'intervention et à savoir où l'aide doit arriver en premier.",
+      privacyLimits:
+        "Ces données ne sont ni vendues, ni utilisées à des fins commerciales ou publicitaires, ni transmises à un tiers. Vos coordonnées n'apparaissent publiquement sur le site que si vous l'avez explicitement choisi lors de l'inscription, comme pour l'annuaire médical et vétérinaire.",
     },
   },
   time: {
