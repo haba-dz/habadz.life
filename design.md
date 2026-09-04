@@ -883,10 +883,16 @@ The redesign folds several of these into other pages:
 - The footer links `تقارير التوزيع` and the home CTA `صفحة الشفافية` → `/transparency`, which has
   **no artboard**.
 
-**Taken: option (a) — restyled with the new primitives, every route still reachable.** Option (b),
-consolidating them into `/volunteers` and `/official-information`, is an IA change that needs an
-explicit decision; links to `/transport` and `/medical` have already been shared in the field, so
-nothing was deleted or redirected. **The consolidation question is still open.**
+**Taken: option (a) — restyled with the new primitives, every route still reachable.**
+
+**Option (b) is declined, and the question is closed.** This is a UI project; the current flow
+stays. Consolidating the volunteer routes only looks like an IA change from the outside — each of
+`/transport`, `/medical`, `/artisans` and `/volunteers` writes to its own table through its own
+server action and is read back by its own admin list, so merging the pages would mean merging four
+tables and four dashboards. `/news` and `/official-information` are likewise different content, not
+a duplicate: one is the platform's own write-ups, the other third-party official statements. And
+links to `/transport` and `/medical` are already circulating in the field. Nothing is deleted,
+redirected, or re-pointed.
 
 Restyled in this step, nine routes in total — the six above plus three that had also been left
 behind and are reachable from redesigned pages, so leaving them would have shown a visible seam:
@@ -932,6 +938,33 @@ its `rounded-xl` is overridden per call site with `rounded-none`.
 **Known seam:** `NeedsFilters` still renders lucide glyphs from the shared `categoryIcon` and
 `priorityIcon` maps, while the rest of the site uses hugeicons. Those maps are admin-shared, so the
 shapes were restyled and the glyph source left alone.
+
+**French pass on these routes — RESOLVED.** Re-measured in the browser rather than by reading the
+source, walking every visible text node plus `placeholder`, `aria-label` and `title` on each route
+with the locale set to French. `/transport`, `/artisans`, `/medical` and `/transparency` came back
+**clean** — their Arabic was fixed during the restyle, so the debt noted in §8.4 was stale.
+
+What was actually left is a different bug, and it was site-wide rather than confined to these
+routes: **place names are stored in Arabic and were printed raw into French sentences.** `/map`,
+`/needs` and `/donate` all read `Wilaya de جيجل`, and commune filter chips on `/needs` were entirely
+Arabic in French. Six call sites built that string by hand, each with its own `isFr` ternary and an
+Arabic `، ` separator.
+
+Fixed with one set of helpers in `lib/algeria-cities.ts` — `findCommune`, `getCommuneName`,
+`formatWilaya`, `formatPlace` — resolving through the reference list that already carries `name_fr`
+at both levels, and falling back to the stored string when a value is not in the list. All six call
+sites now go through them. `/map` reads `Jijel · Wilaya de Jijel`, the `/needs` chips read
+`Chekfa · El Milia · Texenna`, and the separator is a plain comma in French. Arabic is byte-for-byte
+unchanged (`جيجل · ولاية جيجل`).
+
+**Display is localised; the filter value is not.** The `/needs` commune chips still submit the
+stored Arabic string, so `?commune=الشقفة` keeps matching — verified by clicking the chip labelled
+`Chekfa` and watching the count go 23 → 4.
+
+**Not a UI bug:** what still renders Arabic in French mode is database content — centre names,
+addresses, need titles. That is correct. One genuine data problem surfaced: a needs row has the
+literal word `البلدية` ("the commune") in its `commune` column, so it appears as a filter chip.
+Worth cleaning in the admin, not in the UI.
 
 ## 8. Gaps and risks
 
@@ -1055,8 +1088,9 @@ Verified at 861 / 1000 / 1199 / 1200 / 1280 / 1440 in both locales: nothing clip
 escaping. French at 1200px has 33px of slack — tight, so re-measure before lengthening any header
 string.
 
-Remaining French debt: the orphan routes (§7.3) still hold untranslated Arabic — `/transport`,
-`/artisans`, `/needs`, `/transparency`, `/medical`. That belongs to step 7, not this pass.
+~~Remaining French debt: the orphan routes (§7.3) still hold untranslated Arabic.~~ **Cleared** —
+re-measured in the browser; four of the five were already clean, and the real leak was stored place
+names printed raw into French sentences. See §7.3.
 
 ### 8.5 RESOLVED — Accessibility debts in the artboards
 - **Colour-only status.** `StatusDot` is `aria-hidden` and documented as requiring an adjacent text
@@ -1149,8 +1183,12 @@ or expect conflicts in exactly the files §7.2 rewrites.
      appeared. The site-owned select has no such split.
    - The `+`/`−` quantity steppers on `/donate` had no accessible name.
 
-**Still open:** the §7.3 consolidation decision. `src/lib/data/admin.ts` still has the
-`unstable_cache` + `cookies()` pattern in 12 places — a separate branch, since admin is out of
-scope here.
+10. **§7.3 close-out** — **DONE.** Consolidation declined: this is a UI project and the current
+    flow stays (the reasoning is in §7.3). The French debt §8.4 parked here was re-measured and
+    resolved — the leak was stored Arabic place names printed into French sentences across `/map`,
+    `/needs` and `/donate`, now routed through `formatPlace` / `formatWilaya` / `getCommuneName`.
+
+**Still open:** `src/lib/data/admin.ts` has the `unstable_cache` + `cookies()` pattern in 12 places
+— a separate branch, since admin is out of scope here.
 
 Steps 1–3 are the real leverage. Do not start step 4 before step 3 is settled.

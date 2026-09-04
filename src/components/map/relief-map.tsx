@@ -7,6 +7,7 @@ import "maplibre-gl/dist/maplibre-gl.css";
 import { Icon } from "@/components/icons";
 import { iconData } from "@/components/icons/icon-data";
 import { POINT_KINDS, getKindLabel } from "@/components/map/point-kind";
+import { formatPlace } from "@/lib/algeria-cities";
 import { FOCUS_RING } from "@/components/site";
 import { getPointStatusLabel, getVerificationLabel } from "@/lib/constants";
 import { cn } from "@/lib/utils";
@@ -201,7 +202,7 @@ export function ReliefMap({
         const tel = point.phone ? point.phone.replace(/\s/g, "") : null;
         const dir = `https://www.google.com/maps/dir/?api=1&destination=${point.lat},${point.lng}`;
         const dirStyle = isFr ? "direction:ltr;text-align:left" : "direction:rtl;text-align:right";
-        const wilayaText = isFr ? `Wilaya de ${esc(point.wilaya)}` : `ولاية ${esc(point.wilaya)}`;
+        const placeText = esc(point.address ?? formatPlace(point.commune, point.wilaya, locale));
         const rowStyle = `display:flex;align-items:center;gap:6px;margin:0 0 5px;font-size:12.5px;color:${INK_2}`;
         const btnStyle =
           "flex:1;display:inline-flex;align-items:center;justify-content:center;gap:6px;" +
@@ -221,7 +222,7 @@ export function ReliefMap({
             </h4>
 
             <p style="${rowStyle}">
-              ${iconSvg("location-01", 14, MUTED)}<span>${esc(point.address ?? `${point.commune}، ${wilayaText}`)}</span>
+              ${iconSvg("location-01", 14, MUTED)}<span>${placeText}</span>
             </p>
 
             ${

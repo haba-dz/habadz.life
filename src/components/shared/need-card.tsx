@@ -19,6 +19,7 @@ import {
 } from "@/lib/constants";
 import { CategoryIcon } from "@/components/shared/category-icon";
 import { splitNeedNotes } from "@/lib/notes";
+import { formatPlace } from "@/lib/algeria-cities";
 import { cn } from "@/lib/utils";
 import type { Database } from "@/types/database";
 import type { AvailableLocale } from "@/i18n/locales";
@@ -75,10 +76,10 @@ export function NeedCard({
     need.title ||
     (need.categories ? getCategoryName(need.categories.slug, need.categories.name_ar, locale) : (isFr ? "Besoin" : "احتياج"));
   const { detail, source } = splitNeedNotes(need.notes);
-  const wilayaText = isFr ? `Wilaya de ${need.wilaya}` : `ولاية ${need.wilaya}`;
+  const placeText = formatPlace(need.commune, need.wilaya, locale);
 
   async function share() {
-    const text = `${title} — ${need.commune}، ${wilayaText}`;
+    const text = `${title} — ${placeText}`;
     const url = typeof window !== "undefined" ? `${window.location.origin}/needs` : "";
     try {
       if (navigator.share) {
@@ -141,7 +142,7 @@ export function NeedCard({
             </button>
             <p className="flex items-center gap-1 text-[13.5px] text-haba-muted">
               <Icon name="location-01" size={13} className="shrink-0" />
-              {need.commune}، {wilayaText}
+              {placeText}
             </p>
           </div>
         </div>
@@ -242,7 +243,7 @@ export function NeedCard({
             </div>
             <DialogDescription className="flex items-center gap-1">
               <Icon name="location-01" size={14} />
-              {need.commune}، {wilayaText}
+              {placeText}
             </DialogDescription>
           </DialogHeader>
 

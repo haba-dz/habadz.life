@@ -17,6 +17,7 @@ import {
   DialogTitle,
   DialogDescription,
 } from "@/components/ui/dialog";
+import { formatPlace } from "@/lib/algeria-cities";
 import { splitNeedNotes } from "@/lib/notes";
 import {
   getCategoryName,
@@ -78,7 +79,7 @@ export function PointCard({
   const { detail, source } = splitNeedNotes(point.notes);
   const isFr = locale === "fr";
   const kind = POINT_KINDS[point.kind];
-  const wilayaText = isFr ? `Wilaya de ${point.wilaya}` : `ولاية ${point.wilaya}`;
+  const placeText = formatPlace(point.commune, point.wilaya, locale);
 
   return (
     <>
@@ -117,7 +118,7 @@ export function PointCard({
 
           <p className="mt-1.5 flex items-start gap-1.5 text-[13px] leading-relaxed text-haba-ink-2">
             <Icon name="location-01" size={14} className="mt-0.5 text-haba-muted" />
-            {point.address ?? `${point.commune}، ${wilayaText}`}
+            {point.address ?? placeText}
           </p>
 
           {point.openingHours && (
@@ -188,7 +189,7 @@ export function PointCard({
             </DialogTitle>
             <DialogDescription className="flex items-start gap-1.5 text-[13.5px] text-haba-ink-2">
               <Icon name="location-01" size={14} className="mt-0.5 shrink-0 text-haba-muted" />
-              {point.address ?? `${point.commune}، ${wilayaText}`}
+              {point.address ?? placeText}
             </DialogDescription>
           </DialogHeader>
 

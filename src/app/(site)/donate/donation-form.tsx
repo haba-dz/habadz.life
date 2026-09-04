@@ -38,6 +38,7 @@ import { SuccessPanel } from "@/components/shared/success-panel";
 import { submitDonation, type SubmitDonationResult } from "@/actions/donations";
 import type { Database } from "@/types/database";
 import type { AvailableLocale } from "@/i18n/locales";
+import { formatPlace } from "@/lib/algeria-cities";
 import { cn } from "@/lib/utils";
 
 type Category = Database["public"]["Tables"]["categories"]["Row"];
@@ -157,7 +158,7 @@ export function DonationForm({
                         </span>
                       </p>
                       <p className="text-xs text-muted-foreground">
-                        {m.need.commune}، {isFr ? `Wilaya de ${m.need.wilaya}` : `ولاية ${m.need.wilaya}`}
+                        {formatPlace(m.need.commune, m.need.wilaya, locale)}
                       </p>
                       <p className="text-xs pt-1">
                         {isFr ? "Manque estimé : " : "الخصاص المسجل: "}
@@ -191,7 +192,7 @@ export function DonationForm({
                     <p className="flex items-center gap-1.5 text-xs text-muted-foreground">
                       <MapPin className="size-3.5 shrink-0" />
                       <span>
-                        {p.address ?? `${p.commune}، ${isFr ? `Wilaya de ${p.wilaya}` : `ولاية ${p.wilaya}`}`}
+                        {p.address ?? formatPlace(p.commune, p.wilaya, locale)}
                       </span>
                       {p.distanceKm !== null && (
                         <span className="font-semibold text-foreground">

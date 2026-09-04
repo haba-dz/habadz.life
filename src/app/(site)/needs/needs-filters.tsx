@@ -12,6 +12,7 @@ import {
   priorityIcon,
   type PriorityLevel,
 } from "@/lib/constants";
+import { getCommuneName } from "@/lib/algeria-cities";
 import { cn } from "@/lib/utils";
 import type { AvailableLocale } from "@/i18n/locales";
 import type { Database } from "@/types/database";
@@ -141,7 +142,8 @@ export function NeedsFilters({
               active={current.commune === c}
               onClick={() => toggle("commune", c)}
             >
-              {c}
+              {/* Display localised, filter on the stored value. */}
+              {getCommuneName(c, locale)}
             </FilterChip>
           ))}
         </Group>

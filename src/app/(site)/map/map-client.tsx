@@ -18,7 +18,12 @@ import {
   StatusDot,
   WilayaSelect,
 } from "@/components/site";
-import { getCommunesByWilaya, priorityWilayas } from "@/lib/algeria-cities";
+import {
+  formatWilaya,
+  getCommuneName,
+  getCommunesByWilaya,
+  priorityWilayas,
+} from "@/lib/algeria-cities";
 import { getPointStatusLabel } from "@/lib/constants";
 import { cn } from "@/lib/utils";
 import type { AvailableLocale } from "@/i18n/locales";
@@ -571,10 +576,10 @@ function PointTable({
               </div>
 
               <p className="mt-2 text-[13px] leading-relaxed text-haba-ink-2 desktop:mt-0">
-                <span className="font-semibold">{p.commune}</span>
-                <span className="block text-haba-muted">
-                  {isFr ? `Wilaya de ${p.wilaya}` : `ولاية ${p.wilaya}`}
+                <span className="font-semibold">
+                  {getCommuneName(p.commune, locale, p.wilaya)}
                 </span>
+                <span className="block text-haba-muted">{formatWilaya(p.wilaya, locale)}</span>
               </p>
 
               <div className="mt-2 text-[13px] desktop:mt-0">
