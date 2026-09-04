@@ -476,3 +476,67 @@ html:has([data-site]) {
     .animate-ticker { animation: none; transform: none; }
   }
 }
+
+/* ============================================================
+   maplibre chrome inside the public site. design.md §5.5
+   The popup, its tip and the zoom control are built by the library as raw DOM,
+   so they carry its own rounded, shadowed defaults. Re-skin them here rather
+   than in the component: there is no class hook on the generated nodes.
+   ============================================================ */
+[data-site] .maplibregl-popup-content {
+  border-radius: 0;
+  border: 1px solid var(--color-haba-border);
+  box-shadow: none;
+  padding: 13px 15px;
+  font-family: var(--font-haba-sans);
+  color: var(--color-haba-ink);
+}
+
+[data-site] .maplibregl-popup-anchor-top .maplibregl-popup-tip,
+[data-site] .maplibregl-popup-anchor-top-left .maplibregl-popup-tip,
+[data-site] .maplibregl-popup-anchor-top-right .maplibregl-popup-tip {
+  border-bottom-color: var(--color-haba-border);
+}
+[data-site] .maplibregl-popup-anchor-bottom .maplibregl-popup-tip,
+[data-site] .maplibregl-popup-anchor-bottom-left .maplibregl-popup-tip,
+[data-site] .maplibregl-popup-anchor-bottom-right .maplibregl-popup-tip {
+  border-top-color: var(--color-haba-border);
+}
+[data-site] .maplibregl-popup-anchor-left .maplibregl-popup-tip {
+  border-right-color: var(--color-haba-border);
+}
+[data-site] .maplibregl-popup-anchor-right .maplibregl-popup-tip {
+  border-left-color: var(--color-haba-border);
+}
+
+[data-site] .maplibregl-popup-close-button {
+  inset-inline-end: 0;
+  inset-inline-start: auto;
+  width: 30px;
+  height: 30px;
+  border-radius: 0;
+  font-size: 18px;
+  color: var(--color-haba-muted);
+}
+[data-site] .maplibregl-popup-close-button:hover {
+  background: var(--color-haba-surface-2);
+  color: var(--color-haba-ink);
+}
+
+[data-site] .maplibregl-ctrl-group {
+  border-radius: 0;
+  box-shadow: none;
+  border: 1px solid var(--color-haba-border);
+}
+[data-site] .maplibregl-ctrl-group button {
+  border-radius: 0;
+  width: 34px;
+  height: 34px;
+}
+[data-site] .maplibregl-ctrl-group button + button {
+  border-top: 1px solid var(--color-haba-border);
+}
+[data-site] .maplibregl-ctrl-attrib {
+  border-radius: 0;
+  font-family: var(--font-haba-sans);
+}

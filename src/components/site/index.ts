@@ -22,6 +22,12 @@ export { FlagStripe } from "./flag-stripe";
 export { FOCUS_RING } from "./focus";
 export { FormStep } from "./form-step";
 export { HairlineCell, HairlineGrid, HairlineRail } from "./hairline-grid";
+export {
+  CommuneSelect,
+  WilayaSelect,
+  type CommuneSelectProps,
+  type WilayaSelectProps,
+} from "./location-select";
 export { NoticeBlock } from "./notice-block";
 export { PageHero, SECTION, SHELL } from "./page-shell";
 export { SectionHeader } from "./section-header";

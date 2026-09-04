@@ -6,8 +6,6 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import {
   Loader2,
   } from "lucide-react";
-import { WilayaSelect } from "@/components/ui/wilaya-select";
-import { CommuneSelect } from "@/components/ui/commune-select";
 import { priorityWilayas } from "@/lib/algeria-cities";
 import { cn } from "@/lib/utils";
 import {
@@ -19,12 +17,14 @@ import { Icon } from "@/components/icons";
 import {
   Action,
   ChoiceCard,
+  CommuneSelect,
   FieldInput,
   FieldLabel,
   FieldPhoneInput,
   FieldTextarea,
-  FormStep,
   FOCUS_RING,
+  FormStep,
+  WilayaSelect,
 } from "@/components/site";
 import { submitMedicalVolunteer } from "@/actions/medical";
 import type { AvailableLocale } from "@/i18n/locales";

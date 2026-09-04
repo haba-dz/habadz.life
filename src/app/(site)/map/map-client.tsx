@@ -1,58 +1,42 @@
 "use client";
 
-import { useState, useMemo, useCallback } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import dynamic from "next/dynamic";
+
+import { Icon, type IconName } from "@/components/icons";
 import {
-  Search,
-  X,
-  Home,
-  Package,
-  HeartHandshake,
-  Layers,
-  LayoutGrid,
-  Map as MapIcon,
-  RotateCcw,
-  SlidersHorizontal,
-  Phone,
-  Navigation,
-} from "lucide-react";
-import { Input } from "@/components/ui/input";
-import { Button } from "@/components/ui/button";
+  POINT_KINDS,
+  getKindLabel,
+  pointStatusTone,
+  type PointKind,
+} from "@/components/map/point-kind";
 import { PointCard, type PointCardData } from "@/components/shared/point-card";
-import { EmptyState } from "@/components/shared/empty-state";
-import { campaignWilayas } from "@/config/site";
-import { WilayaSelect } from "@/components/ui/wilaya-select";
-import { CommuneSelect } from "@/components/ui/commune-select";
-import { PointStatusBadge } from "@/components/shared/status-badge";
-import { VerificationBadge } from "@/components/shared/verification-badge";
 import {
-  Sheet,
-  SheetContent,
-  SheetHeader,
-  SheetTitle,
-  SheetTrigger,
-  SheetClose,
-} from "@/components/ui/sheet";
-import { priorityWilayas, getCommunesByWilaya } from "@/lib/algeria-cities";
-import type { AvailableLocale } from "@/i18n/locales";
+  Chip,
+  CommuneSelect,
+  FOCUS_RING,
+  StatusDot,
+  WilayaSelect,
+} from "@/components/site";
+import { getCommunesByWilaya, priorityWilayas } from "@/lib/algeria-cities";
+import { getPointStatusLabel } from "@/lib/constants";
 import { cn } from "@/lib/utils";
+import type { AvailableLocale } from "@/i18n/locales";
+import { MapLegend } from "./map-legend";
 
-const ReliefMap = dynamic(
-  () => import("@/components/map/relief-map").then((m) => m.ReliefMap),
-  {
-    ssr: false,
-    loading: () => (
-      <div className="flex h-full w-full items-center justify-center bg-muted/40 border border-border min-h-[420px]">
-        <div className="flex flex-col items-center gap-3">
-          <div className="size-8 animate-spin rounded-full border-4 border-algeria-green border-t-transparent" />
-          <p className="text-sm font-medium text-muted-foreground">جاري تحميل الخريطة التفاعلية...</p>
-        </div>
-      </div>
-    ),
-  },
-);
+const ReliefMap = dynamic(() => import("@/components/map/relief-map").then((m) => m.ReliefMap), {
+  ssr: false,
+  loading: () => (
+    <div className="flex size-full min-h-[300px] items-center justify-center bg-haba-map">
+      <span className="size-5 animate-pulse bg-haba-green-400" />
+    </div>
+  ),
+});
 
-type KindFilter = "all" | "shelter" | "relief_hub" | "collection_point";
+type KindFilter = "all" | PointKind;
+type View = "split" | "map" | "cards";
+
+const KIND_ORDER: PointKind[] = ["shelter", "relief_hub", "collection_point"];
 
 export function MapClient({
   points,
@@ -63,626 +47,567 @@ export function MapClient({
 }) {
   const isFr = locale === "fr";
 
-  // Filter States
   const [search, setSearch] = useState("");
   const [selectedKind, setSelectedKind] = useState<KindFilter>("all");
-  const [selectedWilaya, setSelectedWilaya] = useState<string>("all");
-  const [selectedCommune, setSelectedCommune] = useState<string>("all");
-  const [selectedStatus, setSelectedStatus] = useState<string>("all");
+  const [selectedWilaya, setSelectedWilaya] = useState("all");
+  const [selectedCommune, setSelectedCommune] = useState("all");
   const [selectedPointId, setSelectedPointId] = useState<string | null>(null);
-  const [mobileFilterOpen, setMobileFilterOpen] = useState(false);
+  const [view, setView] = useState<View>("split");
+  const [expanded, setExpanded] = useState(false);
 
-  // View States
-  const [viewMode, setViewMode] = useState<"split" | "map" | "grid">("split");
-  const [mobileTab, setMobileTab] = useState<"map" | "list">("map");
+  const availableCommunes = useMemo(
+    () => (selectedWilaya === "all" ? [] : getCommunesByWilaya(selectedWilaya)),
+    [selectedWilaya],
+  );
 
-  const availableCommunes = useMemo(() => {
-    if (selectedWilaya === "all") return [];
-    return getCommunesByWilaya(selectedWilaya);
-  }, [selectedWilaya]);
-
-  const handleWilayaChange = (wilaya: string) => {
+  const selectWilaya = useCallback((wilaya: string) => {
     setSelectedWilaya(wilaya);
     setSelectedCommune("all");
-  };
+  }, []);
 
-  // Filter Logic
+  // Unchanged from the pre-redesign filter: the commune match is deliberately
+  // fuzzy in both directions because the imported commune names and the ones
+  // typed into the admin do not always agree on prefixes.
+  const matchesLocation = useCallback(
+    (p: PointCardData) => {
+      if (selectedWilaya !== "all" && p.wilaya !== selectedWilaya) return false;
+      if (selectedCommune !== "all") {
+        const commune = (p.commune || "").trim().toLowerCase();
+        const wanted = selectedCommune.trim().toLowerCase();
+        if (!commune.includes(wanted) && !wanted.includes(commune)) return false;
+      }
+      return true;
+    },
+    [selectedWilaya, selectedCommune],
+  );
+
   const filteredPoints = useMemo(() => {
     const q = search.trim().toLowerCase();
 
     return points.filter((p) => {
-      // Kind Filter
       if (selectedKind !== "all" && p.kind !== selectedKind) return false;
+      if (!matchesLocation(p)) return false;
+      if (!q) return true;
 
-      // Wilaya Filter
-      if (selectedWilaya !== "all" && p.wilaya !== selectedWilaya) return false;
-
-      // Commune Filter
-      if (selectedCommune !== "all") {
-        const normCommune = (p.commune || "").trim().toLowerCase();
-        const normSelected = selectedCommune.trim().toLowerCase();
-        if (
-          normCommune !== normSelected &&
-          !normCommune.includes(normSelected) &&
-          !normSelected.includes(normCommune)
-        ) {
-          return false;
-        }
-      }
-
-      // Status Filter
-      if (selectedStatus !== "all" && p.status !== selectedStatus) return false;
-
-      // Search Query Filter
-      if (q) {
-        const inName = p.name.toLowerCase().includes(q);
-        const inCommune = p.commune.toLowerCase().includes(q);
-        const inWilaya = p.wilaya.toLowerCase().includes(q);
-        const inAddress = p.address ? p.address.toLowerCase().includes(q) : false;
-        const inCats = p.acceptedCategories ? p.acceptedCategories.some((c) => c.toLowerCase().includes(q)) : false;
-        if (!inName && !inCommune && !inWilaya && !inAddress && !inCats) {
-          return false;
-        }
-      }
-
-      return true;
+      return (
+        p.name.toLowerCase().includes(q) ||
+        p.commune.toLowerCase().includes(q) ||
+        p.wilaya.toLowerCase().includes(q) ||
+        (p.address?.toLowerCase().includes(q) ?? false) ||
+        (p.acceptedCategories?.some((c) => c.toLowerCase().includes(q)) ?? false)
+      );
     });
-  }, [points, search, selectedKind, selectedWilaya, selectedCommune, selectedStatus]);
+  }, [points, search, selectedKind, matchesLocation]);
 
-  // Dynamic Counts scoped to current location selection
+  /** Counts ignore the kind filter — they are how you *pick* a kind. */
   const counts = useMemo(() => {
-    const scope = points.filter((p) => {
-      if (selectedWilaya !== "all" && p.wilaya !== selectedWilaya) return false;
-      if (selectedCommune !== "all") {
-        const normCommune = (p.commune || "").trim().toLowerCase();
-        const normSelected = selectedCommune.trim().toLowerCase();
-        if (!normCommune.includes(normSelected) && !normSelected.includes(normCommune)) return false;
-      }
-      return true;
-    });
-
+    const scope = points.filter(matchesLocation);
     return {
       all: scope.length,
-      shelters: scope.filter((p) => p.kind === "shelter").length,
-      reliefHubs: scope.filter((p) => p.kind === "relief_hub").length,
-      collectionPoints: scope.filter((p) => p.kind === "collection_point").length,
+      shelter: scope.filter((p) => p.kind === "shelter").length,
+      relief_hub: scope.filter((p) => p.kind === "relief_hub").length,
+      collection_point: scope.filter((p) => p.kind === "collection_point").length,
     };
-  }, [points, selectedWilaya, selectedCommune]);
-
-  const selectedPoint = useMemo(() => {
-    if (!selectedPointId) return null;
-    return points.find((p) => p.id === selectedPointId) ?? null;
-  }, [points, selectedPointId]);
+  }, [points, matchesLocation]);
 
   const activeFilterCount =
     (selectedKind !== "all" ? 1 : 0) +
     (selectedWilaya !== "all" ? 1 : 0) +
     (selectedCommune !== "all" ? 1 : 0) +
-    (selectedStatus !== "all" ? 1 : 0) +
-    (search.trim() !== "" ? 1 : 0);
+    (search.trim() ? 1 : 0);
 
-  const hasActiveFilters = activeFilterCount > 0;
-
-  const handleResetFilters = useCallback(() => {
+  const resetFilters = useCallback(() => {
     setSearch("");
     setSelectedKind("all");
     setSelectedWilaya("all");
     setSelectedCommune("all");
-    setSelectedStatus("all");
     setSelectedPointId(null);
   }, []);
 
-  const handleSelectPointFromList = useCallback((point: PointCardData) => {
+  /** Selecting from the list flies the map; below 861px the map is above it. */
+  const showOnMap = useCallback((point: PointCardData) => {
     setSelectedPointId(point.id);
-    setMobileTab("map");
-    // Scroll map into view on mobile
-    if (typeof window !== "undefined" && window.innerWidth < 1024) {
-      window.scrollTo({ top: 180, behavior: "smooth" });
+    if (typeof window !== "undefined" && window.innerWidth < 861) {
+      document.getElementById("map-panel")?.scrollIntoView({ behavior: "smooth", block: "center" });
     }
   }, []);
 
+  useEffect(() => {
+    if (!expanded) return;
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === "Escape") setExpanded(false);
+    };
+    document.addEventListener("keydown", onKey);
+    const previous = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+    return () => {
+      document.removeEventListener("keydown", onKey);
+      document.body.style.overflow = previous;
+    };
+  }, [expanded]);
+
+  const views: { id: View; label: string; icon: IconName }[] = [
+    { id: "split", label: isFr ? "Vue combinée" : "عرض مدمج", icon: "layout-2-column" },
+    { id: "map", label: isFr ? "Carte" : "الخريطة", icon: "maps" },
+    { id: "cards", label: isFr ? "Fiches" : "البطاقات", icon: "grid-view" },
+  ];
+
+  const mapPanel = (
+    <section
+      id="map-panel"
+      aria-label={isFr ? "Carte de terrain" : "الخريطة الميدانية"}
+      className={cn(
+        "flex flex-col border border-haba-border bg-haba-surface",
+        expanded
+          ? "fixed inset-0 z-50"
+          : view === "split"
+            ? "max-desktop:order-first desktop:sticky desktop:top-[130px]"
+            : "",
+      )}
+    >
+      <div className="flex items-center justify-between gap-3 border-b border-haba-border px-4 py-3">
+        <h2 className="flex items-center gap-2 text-[15px] font-bold text-haba-forest">
+          <Icon name="maps" size={18} className="text-haba-green" />
+          {isFr ? "Carte de terrain" : "الخريطة الميدانية"}
+        </h2>
+        <button
+          type="button"
+          onClick={() => setExpanded((e) => !e)}
+          className={cn(
+            "inline-flex items-center gap-1.5 text-[13px] font-semibold text-haba-green hover:text-haba-green-dark",
+            FOCUS_RING,
+          )}
+        >
+          <Icon name={expanded ? "cancel-01" : "square-arrow-expand-01"} size={16} />
+          {expanded
+            ? isFr
+              ? "Réduire"
+              : "تصغير"
+            : isFr
+              ? "Plein écran"
+              : "فتح بحجم كامل"}
+        </button>
+      </div>
+
+      <div
+        className={cn(
+          "relative w-full",
+          expanded ? "flex-1" : "h-[380px] desktop:h-[520px]",
+        )}
+      >
+        <ReliefMap
+          points={filteredPoints}
+          selectedPointId={selectedPointId}
+          onSelectPoint={(p) => setSelectedPointId(p.id)}
+          locale={locale}
+        />
+      </div>
+
+      <div className="border-t border-haba-border px-4 py-3">
+        <MapLegend locale={locale} />
+      </div>
+    </section>
+  );
+
   return (
-    <div className="space-y-4">
-      {/* 1. Location, Search & Kind Filter Panel */}
-      <div className=" border border-border bg-card p-3.5 sm:p-4 space-y-3">
-        {/* Search & Wilaya Dropdown */}
-        <div className="flex flex-col sm:flex-row gap-2.5 sm:items-center">
-          {/* Search Input */}
-          <div className="relative flex-1 min-w-0">
-            <Search className="absolute right-3.5 top-1/2 size-4 -translate-y-1/2 text-muted-foreground rtl:right-3.5 rtl:left-auto ltr:left-3.5 ltr:right-auto" />
-            <Input
-              type="text"
-              aria-label={
-                isFr ? "Rechercher un centre" : "البحث عن مركز"
-              }
+    <div className="space-y-4 desktop:space-y-5">
+      {/* ---- filters --------------------------------------------------- */}
+      <div className="border border-haba-border bg-haba-surface">
+        <div className="flex flex-col gap-2.5 p-4 desktop:flex-row desktop:items-center desktop:px-5">
+          <div className="relative min-w-0 flex-1">
+            <Icon
+              name="search-01"
+              size={18}
+              className="pointer-events-none absolute start-3.5 top-1/2 -translate-y-1/2 text-haba-muted"
+            />
+            <input
+              type="search"
               value={search}
               onChange={(e) => setSearch(e.target.value)}
+              aria-label={isFr ? "Rechercher un centre" : "البحث عن مركز"}
               placeholder={
                 isFr
-                  ? "Rechercher par nom, commune, quartier ou matériel..."
-                  : "ابحث بالاسم، البلدية، الحي، أو نوع المساعدات..."
+                  ? "Nom, commune, quartier ou type d'aide…"
+                  : "ابحث بالاسم، البلدية، الحي، أو نوع المساعدات…"
               }
-              className="h-11 bg-background/80 px-10 text-sm shadow-inner"
+              className={cn(
+                "w-full border border-haba-border bg-haba-surface py-[11px] pe-3.5 ps-11 text-[14.5px] text-haba-ink placeholder:text-haba-muted",
+                "[&::-webkit-search-cancel-button]:appearance-none",
+                FOCUS_RING,
+              )}
             />
-            {search && (
-              <button
-                type="button"
-                onClick={() => setSearch("")}
-                aria-label={isFr ? "Effacer la recherche" : "مسح البحث"}
-                className="absolute left-3.5 top-1/2 -translate-y-1/2 p-1 text-muted-foreground hover:text-foreground rtl:left-3.5 rtl:right-auto ltr:right-3.5 ltr:left-auto cursor-pointer"
-              >
-                <X className="size-4" />
-              </button>
-            )}
           </div>
 
-          {/* Wilaya & Commune Dropdowns */}
-          <div className="flex flex-wrap items-center gap-2">
+          <div className="desktop:w-[190px]">
             <WilayaSelect
               aria-label={isFr ? "Filtrer par wilaya" : "التصفية حسب الولاية"}
               locale={locale}
-              includeAllOption={true}
+              includeAllOption
               value={selectedWilaya}
-              onChange={(e) => handleWilayaChange(e.target.value)}
-              className="w-full sm:w-auto min-w-[160px] h-11 cursor-pointer font-bold"
+              onChange={(e) => selectWilaya(e.target.value)}
             />
+          </div>
 
-            {selectedWilaya !== "all" && (
+          {selectedWilaya !== "all" && (
+            <div className="desktop:w-[190px]">
               <CommuneSelect
                 aria-label={isFr ? "Filtrer par commune" : "التصفية حسب البلدية"}
                 wilaya={selectedWilaya}
                 locale={locale}
-                includeAllOption={true}
+                includeAllOption
                 value={selectedCommune}
                 onChange={(e) => setSelectedCommune(e.target.value)}
-                className="w-full sm:w-auto min-w-[160px] h-11 cursor-pointer animate-in fade-in"
               />
-            )}
+            </div>
+          )}
 
-            {hasActiveFilters && (
-              <Button
-                type="button"
-                variant="ghost"
-                size="sm"
-                onClick={handleResetFilters}
-                className="h-11 text-xs font-bold text-muted-foreground hover:bg-destructive/10 hover:text-destructive gap-1.5 cursor-pointer shrink-0"
-              >
-                <RotateCcw className="size-3.5" />
-                <span>{isFr ? "Effacer" : "مسح"}</span>
-              </Button>
-            )}
-          </div>
-        </div>
-
-        {/* Priority Affected Wilayas Quick Chips Bar */}
-        <div className="flex items-center gap-1.5 overflow-x-auto pb-0.5 no-scrollbar pt-0.5">
-          <span className="text-xs font-bold text-priority-critical flex items-center gap-1 shrink-0">
-            <span className="inline-block size-2 bg-priority-critical animate-pulse" />
-            {isFr ? "Priorité :" : "الولايات الأكثر تضرراً:"}
-          </span>
-          {priorityWilayas.map((pw) => {
-            const active = selectedWilaya === pw.name_ar;
-            return (
-              <button
-                key={pw.code}
-                type="button"
-                onClick={() => handleWilayaChange(active ? "all" : pw.name_ar)}
-                className={cn(
-                  "inline-flex shrink-0 items-center gap-1 px-2.5 py-1.5 text-xs font-bold transition-all cursor-pointer border min-h-[36px]",
-                  active
-                    ? "bg-priority-critical text-white border-priority-critical scale-102"
-                    : "bg-priority-critical/10 text-priority-critical border-priority-critical/30 hover:bg-priority-critical/20 active:scale-95",
-                )}
-              >
-                <span>⚡</span>
-                <span>{isFr ? `${pw.codeStr} - ${pw.name_fr}` : `${pw.codeStr} - ${pw.name_ar}`}</span>
-              </button>
-            );
-          })}
-        </div>
-
-        {/* Dynamic Commune Chips Bar when a specific Wilaya is active */}
-        {selectedWilaya !== "all" && availableCommunes.length > 0 && (
-          <div className="flex items-center gap-1.5 overflow-x-auto pb-0.5 no-scrollbar pt-1 border-t border-border/50 animate-in fade-in">
-            <span className="text-xs font-bold text-muted-foreground flex items-center gap-1 shrink-0">
-              <span>📍</span>
-              <span>{isFr ? "Communes :" : "بلديات الولاية:"}</span>
-            </span>
+          {activeFilterCount > 0 && (
             <button
               type="button"
-              onClick={() => setSelectedCommune("all")}
+              onClick={resetFilters}
               className={cn(
-                "inline-flex shrink-0 items-center gap-1 px-2.5 py-1 text-xs font-bold transition-all cursor-pointer border min-h-[34px]",
-                selectedCommune === "all"
-                  ? "bg-algeria-green text-white border-algeria-green"
-                  : "bg-muted/70 text-foreground border-border hover:bg-muted active:scale-95"
+                "inline-flex shrink-0 items-center justify-center gap-2 border border-haba-border bg-haba-surface px-4 py-[11px] text-[13px] font-semibold text-haba-ink-2 hover:bg-haba-surface-2",
+                FOCUS_RING,
               )}
             >
-              {isFr ? "Toutes" : "كل البلديات"}
+              <Icon name="refresh" size={16} />
+              {isFr ? `Effacer (${activeFilterCount})` : `مسح (${activeFilterCount})`}
             </button>
-            {availableCommunes.map((c) => {
-              const active = selectedCommune === c.name_ar;
+          )}
+        </div>
+
+        {/* worst-hit wilayas */}
+        <div className="flex items-center gap-2.5 border-t border-haba-border px-4 py-3 desktop:px-5">
+          <span className="flex shrink-0 items-center gap-2 text-[12.5px] font-bold text-haba-red">
+            <span aria-hidden className="size-2 bg-haba-red" />
+            {isFr ? "Wilayas prioritaires :" : "الولايات الأكثر تضرراً:"}
+          </span>
+          <div className="flex gap-2 overflow-x-auto [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+            {priorityWilayas.map((w) => {
+              const active = selectedWilaya === w.name_ar;
               return (
                 <button
-                  key={c.id}
+                  key={w.code}
                   type="button"
-                  onClick={() => setSelectedCommune(active ? "all" : c.name_ar)}
-                  className={cn(
-                    "inline-flex shrink-0 items-center gap-1 px-2.5 py-1 text-xs font-semibold transition-all cursor-pointer border min-h-[34px]",
-                    active
-                      ? "bg-algeria-green text-white border-algeria-green font-bold scale-102"
-                      : "bg-background text-foreground border-border hover:border-algeria-green/50 hover:bg-algeria-green/5 active:scale-95"
-                  )}
+                  aria-pressed={active}
+                  onClick={() => selectWilaya(active ? "all" : w.name_ar)}
+                  className={FOCUS_RING}
                 >
-                  <span>{isFr ? c.name_fr : c.name_ar}</span>
+                  <Chip
+                    tone="red"
+                    fill={active ? "solid" : "tint"}
+                    size="sm"
+                    className={cn(!active && "hover:bg-haba-red-50")}
+                  >
+                    <Icon name="flash" size={13} />
+                    {w.codeStr} — {isFr ? w.name_fr : w.name_ar}
+                  </Chip>
                 </button>
               );
             })}
           </div>
+        </div>
+
+        {/* communes of the chosen wilaya */}
+        {selectedWilaya !== "all" && availableCommunes.length > 0 && (
+          <div className="flex items-center gap-2.5 border-t border-haba-border px-4 py-3 desktop:px-5">
+            <span className="flex shrink-0 items-center gap-2 text-[12.5px] font-bold text-haba-muted">
+              <Icon name="location-01" size={14} />
+              {isFr ? "Communes :" : "بلديات الولاية:"}
+            </span>
+            <div className="flex gap-2 overflow-x-auto [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+              <button
+                type="button"
+                aria-pressed={selectedCommune === "all"}
+                onClick={() => setSelectedCommune("all")}
+                className={FOCUS_RING}
+              >
+                <Chip tone="green" fill={selectedCommune === "all" ? "solid" : "outline"} size="sm">
+                  {isFr ? "Toutes" : "كل البلديات"}
+                </Chip>
+              </button>
+              {availableCommunes.map((c) => {
+                const active = selectedCommune === c.name_ar;
+                return (
+                  <button
+                    key={c.id}
+                    type="button"
+                    aria-pressed={active}
+                    onClick={() => setSelectedCommune(active ? "all" : c.name_ar)}
+                    className={FOCUS_RING}
+                  >
+                    <Chip tone="green" fill={active ? "solid" : "outline"} size="sm">
+                      {isFr ? c.name_fr : c.name_ar}
+                    </Chip>
+                  </button>
+                );
+              })}
+            </div>
+          </div>
         )}
+      </div>
 
-        {/* 2. Type Filter Buttons (مراكز إيواء، مراكز استقبال، نقاط تجميع) - POSITIONED DIRECTLY AFTER WILAYA */}
-        <div className="pt-2.5 border-t border-border/70 space-y-2">
-          <div className="flex items-center justify-between">
-            <span className="text-xs font-bold text-muted-foreground">
-              {isFr ? "Type de centre / aide :" : "نوع المركز والمساعدة :"}
-            </span>
-            {selectedWilaya !== "all" && (
-              <span className="text-xs font-bold text-algeria-green">
-                📍 {isFr ? `Wilaya de ${selectedWilaya}` : `ولاية ${selectedWilaya}`}
-                {selectedCommune !== "all" ? ` - ${selectedCommune}` : ""}
-              </span>
-            )}
-          </div>
-
-          <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
-            {/* All Points */}
-            <button
-              type="button"
-              onClick={() => setSelectedKind("all")}
-              className={cn(
-                "flex items-center justify-between border p-2.5 sm:p-3 text-start transition-all cursor-pointer min-h-[46px] active:scale-98",
-                selectedKind === "all"
-                  ? "border-foreground bg-foreground/10 ring-2 ring-foreground/20 font-bold"
-                  : "border-border bg-background hover:bg-muted/60"
-              )}
-            >
-              <div className="flex items-center gap-2">
-                <div className="flex size-7 items-center justify-center bg-foreground/10 text-foreground">
-                  <Layers className="size-4" />
-                </div>
-                <span className="text-xs font-bold">{isFr ? "Tous" : "الكل"}</span>
-              </div>
-              <span className="text-sm font-black tabular-nums">{counts.all}</span>
-            </button>
-
-            {/* Shelters */}
-            <button
-              type="button"
-              onClick={() => setSelectedKind(selectedKind === "shelter" ? "all" : "shelter")}
-              className={cn(
-                "flex items-center justify-between border p-2.5 sm:p-3 text-start transition-all cursor-pointer min-h-[46px] active:scale-98",
-                selectedKind === "shelter"
-                  ? "border-[#7c3aed] bg-[#7c3aed]/15 ring-2 ring-[#7c3aed]/30 font-bold"
-                  : "border-border bg-background hover:border-[#7c3aed]/40 hover:bg-[#7c3aed]/5"
-              )}
-            >
-              <div className="flex items-center gap-2">
-                <div className="flex size-7 items-center justify-center bg-[#7c3aed]/15 text-[#7c3aed]">
-                  <Home className="size-4" />
-                </div>
-                <span className="text-xs font-bold text-[#7c3aed]">{isFr ? "Hébergement" : "مراكز إيواء"}</span>
-              </div>
-              <span className="text-sm font-black tabular-nums text-[#7c3aed]">{counts.shelters}</span>
-            </button>
-
-            {/* Relief Hubs */}
-            <button
-              type="button"
-              onClick={() => setSelectedKind(selectedKind === "relief_hub" ? "all" : "relief_hub")}
-              className={cn(
-                "flex items-center justify-between border p-2.5 sm:p-3 text-start transition-all cursor-pointer min-h-[46px] active:scale-98",
-                selectedKind === "relief_hub"
-                  ? "border-[#1d4ed8] bg-[#1d4ed8]/15 ring-2 ring-[#1d4ed8]/30 font-bold"
-                  : "border-border bg-background hover:border-[#1d4ed8]/40 hover:bg-[#1d4ed8]/5"
-              )}
-            >
-              <div className="flex items-center gap-2">
-                <div className="flex size-7 items-center justify-center bg-[#1d4ed8]/15 text-[#1d4ed8]">
-                  <HeartHandshake className="size-4" />
-                </div>
-                <span className="text-xs font-bold text-[#1d4ed8]">{isFr ? "Accueil" : "مراكز استقبال"}</span>
-              </div>
-              <span className="text-sm font-black tabular-nums text-[#1d4ed8]">{counts.reliefHubs}</span>
-            </button>
-
-            {/* Collection Points */}
-            <button
-              type="button"
-              onClick={() => setSelectedKind(selectedKind === "collection_point" ? "all" : "collection_point")}
-              className={cn(
-                "flex items-center justify-between border p-2.5 sm:p-3 text-start transition-all cursor-pointer min-h-[46px] active:scale-98",
-                selectedKind === "collection_point"
-                  ? "border-algeria-green bg-algeria-green/15 ring-2 ring-algeria-green/30 font-bold"
-                  : "border-border bg-background hover:border-algeria-green/40 hover:bg-algeria-green/5"
-              )}
-            >
-              <div className="flex items-center gap-2">
-                <div className="flex size-7 items-center justify-center bg-algeria-green/15 text-algeria-green">
-                  <Package className="size-4" />
-                </div>
-                <span className="text-xs font-bold text-algeria-green">{isFr ? "Collecte" : "نقاط تجميع"}</span>
-              </div>
-              <span className="text-sm font-black tabular-nums text-algeria-green">{counts.collectionPoints}</span>
-            </button>
-          </div>
+      {/* ---- type counters --------------------------------------------- */}
+      <div>
+        <p className="mb-2 text-[12.5px] font-semibold text-haba-muted">
+          {isFr ? "Type de centre et d'aide" : "نوع المركز والمساعدة"}
+        </p>
+        <div className="grid grid-cols-2 border-s border-t border-haba-border desktop:grid-cols-4">
+          <KindTile
+            active={selectedKind === "all"}
+            icon="layers-01"
+            label={isFr ? "Tous" : "الكل"}
+            count={counts.all}
+            tone="ink"
+            onClick={() => setSelectedKind("all")}
+          />
+          {KIND_ORDER.map((kind) => (
+            <KindTile
+              key={kind}
+              active={selectedKind === kind}
+              icon={POINT_KINDS[kind].icon}
+              label={getKindLabel(kind, locale)}
+              count={counts[kind]}
+              tone={POINT_KINDS[kind].tone}
+              onClick={() => setSelectedKind(selectedKind === kind ? "all" : kind)}
+            />
+          ))}
         </div>
       </div>
 
-      {/* 3. Sticky View Switcher & Result Count */}
-      <div className="flex items-center justify-between px-1 text-xs">
-        <div className="flex items-center gap-2 text-muted-foreground font-semibold">
-          <span className="font-black text-foreground tabular-nums text-base">
+      {/* ---- result bar + view switcher -------------------------------- */}
+      <div className="flex flex-wrap items-center justify-between gap-3">
+        <p className="text-[14.5px] text-haba-ink-2" aria-live="polite">
+          <strong className="text-[19px] font-bold tabular-nums text-haba-ink">
             {filteredPoints.length}
-          </span>
-          <span>{isFr ? "points et centres disponibles" : "نقطة ومركز متاح"}</span>
-        </div>
+          </strong>{" "}
+          {isFr ? "points et centres disponibles" : "نقطة ومركز متاح حالياً"}
+        </p>
 
-        {/* Mobile View Switcher */}
-        <div className="flex lg:hidden bg-muted p-1 border border-border/80">
-          <button
-            type="button"
-            onClick={() => setMobileTab("map")}
-            className={cn(
-              "flex items-center gap-1.5 px-3.5 py-2 text-xs font-bold transition-all min-h-[36px] cursor-pointer",
-              mobileTab === "map"
-                ? "bg-background text-foreground scale-102"
-                : "text-muted-foreground hover:text-foreground"
-            )}
-          >
-            <MapIcon className="size-3.5 text-algeria-green" />
-            <span>{isFr ? "Carte" : "الخريطة"}</span>
-          </button>
-          <button
-            type="button"
-            onClick={() => setMobileTab("list")}
-            className={cn(
-              "flex items-center gap-1.5 px-3.5 py-2 text-xs font-bold transition-all min-h-[36px] cursor-pointer",
-              mobileTab === "list"
-                ? "bg-background text-foreground scale-102"
-                : "text-muted-foreground hover:text-foreground"
-            )}
-          >
-            <LayoutGrid className="size-3.5 text-algeria-green" />
-            <span>{isFr ? "Liste" : "القائمة"}</span>
-            <span className=" bg-algeria-green/15 text-algeria-green px-1.5 py-0.2 text-[10px] font-black">
-              {filteredPoints.length}
-            </span>
-          </button>
-        </div>
-
-        {/* Desktop View Switcher */}
-        <div className="hidden lg:flex items-center gap-1 bg-muted p-1">
-          <button
-            type="button"
-            onClick={() => setViewMode("split")}
-            className={cn(
-              "flex items-center gap-1.5 px-3 py-1.5 text-xs font-bold transition-all cursor-pointer",
-              viewMode === "split"
-                ? "bg-background text-foreground"
-                : "text-muted-foreground hover:text-foreground"
-            )}
-            title={isFr ? "Vue combinée (Carte & Liste)" : "عرض مدمج (خريطة + قائمة)"}
-          >
-            <SlidersHorizontal className="size-3.5" />
-            <span>{isFr ? "Split" : "عرض مدمج"}</span>
-          </button>
-          <button
-            type="button"
-            onClick={() => setViewMode("map")}
-            className={cn(
-              "flex items-center gap-1.5 px-3 py-1.5 text-xs font-bold transition-all cursor-pointer",
-              viewMode === "map"
-                ? "bg-background text-foreground"
-                : "text-muted-foreground hover:text-foreground"
-            )}
-            title={isFr ? "Carte seule" : "الخريطة فقط"}
-          >
-            <MapIcon className="size-3.5" />
-            <span>{isFr ? "Carte" : "الخريطة"}</span>
-          </button>
-          <button
-            type="button"
-            onClick={() => setViewMode("grid")}
-            className={cn(
-              "flex items-center gap-1.5 px-3 py-1.5 text-xs font-bold transition-all cursor-pointer",
-              viewMode === "grid"
-                ? "bg-background text-foreground"
-                : "text-muted-foreground hover:text-foreground"
-            )}
-            title={isFr ? "Grille seule" : "البطاقات فقط"}
-          >
-            <LayoutGrid className="size-3.5" />
-            <span>{isFr ? "Grille" : "البطاقات"}</span>
-          </button>
+        <div
+          role="group"
+          aria-label={isFr ? "Mode d'affichage" : "طريقة العرض"}
+          className="flex border border-haba-border bg-haba-surface"
+        >
+          {views.map((v) => (
+            <button
+              key={v.id}
+              type="button"
+              aria-pressed={view === v.id}
+              onClick={() => setView(v.id)}
+              className={cn(
+                "inline-flex items-center gap-1.5 px-3 py-2 text-[12.5px] font-semibold",
+                "border-e border-haba-border last:border-e-0",
+                v.id === "split" && "max-desktop:hidden",
+                view === v.id
+                  ? "bg-haba-forest text-white"
+                  : "text-haba-ink-2 hover:bg-haba-surface-2",
+                FOCUS_RING,
+              )}
+            >
+              <Icon name={v.icon} size={15} />
+              {v.label}
+            </button>
+          ))}
         </div>
       </div>
 
-      {/* 4. Main Responsive Display Area */}
+      {/* ---- results ---------------------------------------------------- */}
       {filteredPoints.length === 0 ? (
-        <EmptyState
-          title={isFr ? "Aucun point ne correspond à vos critères" : "لم يتم العثور على أي نقاط مطابقة"}
-          description={
-            isFr
-              ? "Essayez d'élargir votre recherche ou de réinitialiser les filtres."
-              : "جرب تغيير مصطلحات البحث أو إعادة تعيين الفلاتر لعرض كافة النقاط."
-          }
-        />
+        <div className="border border-haba-border bg-haba-surface px-5 py-12 text-center">
+          <p className="text-[15px] font-bold text-haba-ink">
+            {isFr
+              ? "Aucun point ne correspond à vos critères"
+              : "لم يتم العثور على أي نقاط مطابقة"}
+          </p>
+          <p className="mx-auto mt-1.5 max-w-[420px] text-[13.5px] leading-relaxed text-haba-muted">
+            {isFr
+              ? "Élargissez la recherche ou réinitialisez les filtres."
+              : "جرب تغيير مصطلحات البحث أو إعادة تعيين الفلاتر لعرض كافة النقاط."}
+          </p>
+        </div>
+      ) : view === "cards" ? (
+        <div className="grid gap-4 desktop:grid-cols-2 wide:grid-cols-3">
+          {filteredPoints.map((p) => (
+            <PointCard
+              key={`${p.kind}-${p.id}`}
+              point={p}
+              locale={locale}
+              isSelected={selectedPointId === p.id}
+              onShowOnMap={showOnMap}
+            />
+          ))}
+        </div>
+      ) : view === "map" ? (
+        mapPanel
       ) : (
-        <>
-          {/* Mobile Display: Tabbed with Floating Marker Card Overlay */}
-          <div className="block lg:hidden">
-            {mobileTab === "map" ? (
-              <div className="relative space-y-3">
-                {/* Full-Height Responsive Map Container */}
-                <div className="relative h-[calc(100dvh-270px)] min-h-[460px] w-full overflow-hidden border border-border">
-                  <ReliefMap
-                    points={filteredPoints}
-                    selectedPointId={selectedPointId}
-                    onSelectPoint={(p) => setSelectedPointId(p.id)}
-                    locale={locale}
-                  />
-
-                  {/* Floating Action Hint */}
-                  {!selectedPoint && (
-                    <div className="absolute top-3 inset-x-3 pointer-events-none flex justify-center z-10">
-                      <div className=" bg-background/90 backdrop-blur px-3.5 py-1 text-[11px] font-bold text-muted-foreground border border-border">
-                        {isFr ? "Touchez un marqueur pour voir les détails" : "اضغط على أي علامة في الخريطة لعرض التفاصيل"}
-                      </div>
-                    </div>
-                  )}
-
-                  {/* Interactive Floating Bottom Preview Sheet on Map */}
-                  {selectedPoint && (
-                    <div className="absolute bottom-3 inset-x-3 z-30 animate-in fade-in slide-in-from-bottom-4 duration-300">
-                      <div className=" border border-border/80 bg-background/98 backdrop-blur p-4 space-y-3">
-                        <div className="flex items-start justify-between gap-2">
-                          <div>
-                            <div className="flex items-center gap-1.5 mb-1">
-                              <PointStatusBadge status={selectedPoint.status} locale={locale} />
-                              <VerificationBadge level={selectedPoint.verificationLevel} locale={locale} />
-                            </div>
-                            <h3 className="text-sm font-black text-foreground">{selectedPoint.name}</h3>
-                            <p className="text-xs text-muted-foreground flex items-center gap-1 mt-0.5">
-                              <span className="font-bold text-foreground">ولاية {selectedPoint.wilaya}</span>
-                              <span>•</span>
-                              <span>بلدية {selectedPoint.commune}</span>
-                            </p>
-                          </div>
-                          <button
-                            type="button"
-                            onClick={() => setSelectedPointId(null)}
-                            className=" p-1.5 text-muted-foreground hover:bg-muted hover:text-foreground transition-colors cursor-pointer"
-                            aria-label="إغلاق"
-                          >
-                            <X className="size-4" />
-                          </button>
-                        </div>
-
-                        {/* Quick 1-Tap Action Buttons */}
-                        <div className="grid grid-cols-2 gap-2 pt-1">
-                          {selectedPoint.phone ? (
-                            <a
-                              href={`tel:${selectedPoint.phone}`}
-                              className="flex items-center justify-center gap-2 bg-algeria-green text-white h-11 px-3 text-xs font-bold active:scale-95 transition-transform"
-                            >
-                              <Phone className="size-4" />
-                              <span>{isFr ? "Appeler" : "اتصال مباشر"}</span>
-                            </a>
-                          ) : (
-                            <div className="flex items-center justify-center bg-muted text-muted-foreground h-11 px-3 text-[11px] font-semibold">
-                              {isFr ? "Sans téléphone" : "لا يوجد هاتف"}
-                            </div>
-                          )}
-
-                          <a
-                            href={
-                              selectedPoint.lat != null && selectedPoint.lng != null
-                                ? `https://www.google.com/maps/dir/?api=1&destination=${selectedPoint.lat},${selectedPoint.lng}`
-                                : `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(
-                                    `${selectedPoint.name} ${selectedPoint.commune} ${selectedPoint.wilaya}`
-                                  )}`
-                            }
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className="flex items-center justify-center gap-2 border border-border bg-card text-foreground hover:bg-muted h-11 px-3 text-xs font-bold active:scale-95 transition-transform"
-                          >
-                            <Navigation className="size-4 text-algeria-green" />
-                            <span>{isFr ? "Itinéraire" : "الاتجاهات GPS"}</span>
-                          </a>
-                        </div>
-                      </div>
-                    </div>
-                  )}
-                </div>
-              </div>
-            ) : (
-              <div className="grid gap-3.5 sm:grid-cols-2">
-                {filteredPoints.map((p) => (
-                  <PointCard
-                    key={`${p.kind}-${p.id}`}
-                    point={p}
-                    locale={locale}
-                    isSelected={selectedPointId === p.id}
-                    onShowOnMap={handleSelectPointFromList}
-                  />
-                ))}
-              </div>
-            )}
-          </div>
-
-          {/* Desktop Display: Split / Map Focus / Grid Focus */}
-          <div className="hidden lg:block">
-            {viewMode === "split" && (
-              <div className="grid grid-cols-12 gap-6 items-start">
-                {/* Scrollable Cards Sidebar */}
-                <div className="col-span-5 max-h-[750px] overflow-y-auto space-y-4 pr-1 pl-1">
-                  {filteredPoints.map((p) => (
-                    <div
-                      key={`${p.kind}-${p.id}`}
-                      onClick={() => setSelectedPointId(p.id)}
-                      className="transition-transform"
-                    >
-                      <PointCard
-                        point={p}
-                        locale={locale}
-                        isSelected={selectedPointId === p.id}
-                        onShowOnMap={handleSelectPointFromList}
-                      />
-                    </div>
-                  ))}
-                </div>
-
-                {/* Sticky Interactive Map */}
-                <div className="col-span-7 sticky top-20 h-[750px]">
-                  <ReliefMap
-                    points={filteredPoints}
-                    selectedPointId={selectedPointId}
-                    onSelectPoint={(p) => setSelectedPointId(p.id)}
-                    locale={locale}
-                  />
-                </div>
-              </div>
-            )}
-
-            {viewMode === "map" && (
-              <div className="h-[750px] w-full">
-                <ReliefMap
-                  points={filteredPoints}
-                  selectedPointId={selectedPointId}
-                  onSelectPoint={(p) => setSelectedPointId(p.id)}
-                  locale={locale}
-                />
-              </div>
-            )}
-
-            {viewMode === "grid" && (
-              <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-                {filteredPoints.map((p) => (
-                  <PointCard
-                    key={`${p.kind}-${p.id}`}
-                    point={p}
-                    locale={locale}
-                    isSelected={selectedPointId === p.id}
-                    onShowOnMap={handleSelectPointFromList}
-                  />
-                ))}
-              </div>
-            )}
-          </div>
-        </>
+        <div className="grid items-start gap-5 desktop:grid-cols-[minmax(min(330px,100%),1fr)_1.15fr]">
+          <PointTable
+            points={filteredPoints}
+            locale={locale}
+            selectedPointId={selectedPointId}
+            onSelect={showOnMap}
+          />
+          {mapPanel}
+        </div>
       )}
     </div>
   );
 }
 
+/** One of the four counters. design.md §5.5 */
+function KindTile({
+  active,
+  icon,
+  label,
+  count,
+  tone,
+  onClick,
+}: {
+  active: boolean;
+  icon: IconName;
+  label: string;
+  count: number;
+  tone: "ink" | "green" | "amber";
+  onClick: () => void;
+}) {
+  const toneText = { ink: "text-haba-ink", green: "text-haba-green", amber: "text-haba-amber" }[
+    tone
+  ];
+  const toneBar = {
+    ink: "before:bg-haba-ink",
+    green: "before:bg-haba-green",
+    amber: "before:bg-haba-amber",
+  }[tone];
+
+  return (
+    <button
+      type="button"
+      aria-pressed={active}
+      onClick={onClick}
+      className={cn(
+        // The 3px cap, not the fill, is what says "selected": the tint alone is
+        // a 2% lightness step and does not survive a bright screen. §8.5
+        "relative flex items-center justify-between gap-2 border-b border-e border-haba-border px-3.5 py-3 text-start",
+        active ? "bg-haba-surface-2" : "bg-haba-surface hover:bg-haba-surface-2",
+        active && "before:absolute before:inset-x-0 before:top-0 before:h-[3px]",
+        active && toneBar,
+        FOCUS_RING,
+      )}
+    >
+      <span className={cn("flex min-w-0 items-center gap-2 text-[13px]", toneText)}>
+        <Icon name={icon} size={18} />
+        <span className={cn("truncate", active ? "font-bold" : "font-semibold")}>{label}</span>
+      </span>
+      <span className={cn("text-[22px] font-bold tabular-nums desktop:text-[26px]", toneText)}>
+        {count}
+      </span>
+    </button>
+  );
+}
+
+/**
+ * The centre list. One markup for both widths: a stacked hairline list below
+ * 861px, the 1.9fr/1fr/1.1fr table above it. design.md §5.5
+ */
+function PointTable({
+  points,
+  locale,
+  selectedPointId,
+  onSelect,
+}: {
+  points: PointCardData[];
+  locale: AvailableLocale;
+  selectedPointId: string | null;
+  onSelect: (point: PointCardData) => void;
+}) {
+  const isFr = locale === "fr";
+  const cols = "desktop:grid desktop:grid-cols-[1.9fr_1fr_1.1fr] desktop:items-start desktop:gap-4";
+
+  return (
+    <div className="border border-haba-border bg-haba-surface">
+      <div
+        className={cn(
+          "hidden border-b border-haba-border bg-haba-surface-2 px-4 py-2.5 text-[12px] font-bold text-haba-muted",
+          cols,
+        )}
+      >
+        <span>{isFr ? "Centre" : "المركز"}</span>
+        <span>{isFr ? "Commune" : "البلدية والولاية"}</span>
+        <span>{isFr ? "Horaires et contact" : "المواعيد والاتصال"}</span>
+      </div>
+
+      <ul className="max-h-[720px] overflow-y-auto">
+        {points.map((p) => {
+          const kind = POINT_KINDS[p.kind];
+          const selected = selectedPointId === p.id;
+          return (
+            <li
+              key={`${p.kind}-${p.id}`}
+              className={cn(
+                "border-b border-haba-border px-4 py-3.5 last:border-b-0",
+                cols,
+                selected && "bg-haba-green-tint",
+              )}
+            >
+              <div className="min-w-0">
+                <Chip tone={kind.tone} fill="tint" size="xs">
+                  <Icon name={kind.icon} size={12} />
+                  {getKindLabel(p.kind, locale)}
+                </Chip>
+                <button
+                  type="button"
+                  onClick={() => onSelect(p)}
+                  className={cn(
+                    "mt-1.5 block text-start text-[14.5px] font-bold leading-snug text-haba-ink hover:text-haba-green",
+                    FOCUS_RING,
+                  )}
+                >
+                  {p.name}
+                </button>
+                {p.address && (
+                  <p className="mt-0.5 text-[12.5px] leading-relaxed text-haba-muted">{p.address}</p>
+                )}
+              </div>
+
+              <p className="mt-2 text-[13px] leading-relaxed text-haba-ink-2 desktop:mt-0">
+                <span className="font-semibold">{p.commune}</span>
+                <span className="block text-haba-muted">
+                  {isFr ? `Wilaya de ${p.wilaya}` : `ولاية ${p.wilaya}`}
+                </span>
+              </p>
+
+              <div className="mt-2 text-[13px] desktop:mt-0">
+                <p className="flex items-center gap-1.5 text-haba-ink-2">
+                  <Icon name="clock-01" size={14} className="text-haba-muted" />
+                  {p.openingHours ?? (isFr ? "Horaires non précisés" : "المواقيت غير محددة")}
+                </p>
+                {p.phone ? (
+                  <a
+                    href={`tel:${p.phone.replace(/\s/g, "")}`}
+                    dir="ltr"
+                    className={cn(
+                      "mt-1 inline-flex items-center gap-1.5 font-bold text-haba-green hover:underline",
+                      FOCUS_RING,
+                    )}
+                  >
+                    <Icon name="call-02" size={14} />
+                    {p.phone}
+                  </a>
+                ) : (
+                  <p className="mt-1 text-haba-muted">
+                    {isFr ? "Pas de téléphone" : "لا يوجد رقم هاتف"}
+                  </p>
+                )}
+                <p className="mt-1 flex items-center gap-1.5 text-[12px] text-haba-muted">
+                  <StatusDot tone={pointStatusTone[p.status]} />
+                  {getPointStatusLabel(p.status, locale)}
+                </p>
+              </div>
+            </li>
+          );
+        })}
+      </ul>
+    </div>
+  );
+}

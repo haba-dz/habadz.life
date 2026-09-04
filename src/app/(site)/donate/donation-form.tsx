@@ -25,7 +25,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Card, CardContent } from "@/components/ui/card";
-import { Action, Chip, ChoiceCard, FormStep } from "@/components/site";
+import { Action, Chip, ChoiceCard, CommuneSelect, FormStep, WilayaSelect } from "@/components/site";
 import { Icon } from "@/components/icons";
 import { Alert, AlertTitle, AlertDescription } from "@/components/ui/alert";
 import { PriorityBadge } from "@/components/shared/priority-badge";
@@ -33,8 +33,6 @@ import { PointStatusBadge } from "@/components/shared/status-badge";
 import { donationSchema, unitOptions, type DonationInput } from "@/schemas/donation";
 import { formatQuantity, getUnitLabel, getCategoryLabel } from "@/lib/constants";
 import { CategoryIcon } from "@/components/shared/category-icon";
-import { WilayaSelect } from "@/components/ui/wilaya-select";
-import { CommuneSelect } from "@/components/ui/commune-select";
 import { priorityWilayas } from "@/lib/algeria-cities";
 import { SuccessPanel } from "@/components/shared/success-panel";
 import { submitDonation, type SubmitDonationResult } from "@/actions/donations";
@@ -334,6 +332,7 @@ export function DonationForm({
                         variant="outline"
                         size="icon"
                         className="size-10 shrink-0"
+                        aria-label={isFr ? "Diminuer la quantité" : "إنقاص الكمية"}
                         onClick={() => {
                           const q = Math.max(1, (quantity || 1) - 1);
                           setValue(`items.${index}.quantity`, q);
@@ -353,6 +352,7 @@ export function DonationForm({
                         variant="outline"
                         size="icon"
                         className="size-10 shrink-0"
+                        aria-label={isFr ? "Augmenter la quantité" : "زيادة الكمية"}
                         onClick={() => {
                           const q = (quantity || 1) + 1;
                           setValue(`items.${index}.quantity`, q);

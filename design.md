@@ -570,11 +570,35 @@ under the ≤860px rules. Differences beyond the responsive rules:
 - **Split layout** — `minmax(min(330px,100%),1fr)`, gap **20px** (a real gap, not hairline):
   - Left: centre table (`1.9fr 1fr 1.1fr`) — name + type badge + accepted-goods caption /
     commune, wilaya / hours + `tel:` link.
-  - Right: map panel. Header `الخريطة الميدانية` + `فتح بحجم كامل`. **Map viewport 300px tall**,
-    `#EEF1EE`, currently a placeholder — wire to the existing map component. Below it a legend
+  - Right: map panel. Header `الخريطة الميدانية` + `فتح بحجم كامل`. Below it a legend
     (10px squares: ink = إيواء, green = استقبال, amber = تجميع) and a `#F9FAF8` advisory
     `قبل التوجّه إلى أي مركز` + two CTAs.
 - Emergency numbers + footer.
+
+**BUILT.** Notes on where the implementation departs from, or goes past, the artboard:
+
+- **Kind colours are the artboard's, not the old app's.** إيواء = ink, استقبال = green,
+  تجميع = amber, replacing the `#7c3aed` / `#1d4ed8` / `#00843D` triple that was off-palette.
+  One source of truth in `src/components/map/point-kind.ts`, which also carries the literal hex
+  for the maplibre markers and popups — those are raw DOM strings that no Tailwind class or
+  `[data-site]` variable can reach, so the values are duplicated there deliberately.
+- **The table is one markup at both widths**: a stacked hairline list below 861px, the
+  `1.9fr 1fr 1.1fr` grid above it. No second mobile component to keep in sync.
+- **`فتح بحجم كامل` is a real full-viewport toggle** (`fixed inset-0`), not a link to a bigger
+  page. Escape closes it and the body scroll lock is restored on unmount. maplibre v6 observes its
+  container with a ResizeObserver, so the same map instance resizes with no remount and no refetch.
+- **The advisory stays full-width below the split**, not inside the right column. It reads as a
+  page-level instruction and it already lived in `page.tsx`.
+- **The map degrades instead of taking the page down.** maplibre needs WebGL2; without it the
+  constructor fires an error event, finishes with no painter, and the next `map.remove()` throws a
+  TypeError that reached the route error boundary and blanked the entire page — list included,
+  though the list needs no GPU. `relief-map.tsx` now probes for a `webgl2` context first and
+  renders a panel-sized explanation, so old phones and blocklisted GPUs still get every centre,
+  phone number and opening time.
+- **Deviation from §3.11 for the two location selects.** `components/ui/{wilaya,commune}-select.tsx`
+  are shared with `/admin`, so they were not restyled. `components/site/location-select.tsx` is a
+  site-owned pair with the same props and the same option data, in the site's control metrics; all
+  eight site call sites now use it. The admin dialog keeps the originals untouched.
 
 ### 5.6 Help / relief request (`Help.dc.html` → `/help`) — `max-width: 900px`
 
@@ -1114,5 +1138,19 @@ or expect conflicts in exactly the files §7.2 rewrites.
 8. **Passes** — French copy, a11y (§8.5), 861–1199px band, keyboard-open mobile forms. **DONE** —
    see §8.4 and §8.5, both now marked RESOLVED. Step 7 (orphan routes) is still open and still needs
    the IA decision in §7.3; the untranslated French on those routes belongs with it.
+9. **Centres map + the two dialogs** — §5.5 in full (filters, counters, result bar, table, map
+   panel, legend, full-screen), the first-visit `WelcomeDialog`, and the centre-detail dialog.
+   **DONE.** Also fixed here, all pre-existing:
+   - `WelcomeDialog` opened on the next animation frame, i.e. while React was still hydrating.
+     Marking the page outside it `aria-hidden` mid-hydration is reported as an attribute mismatch on
+     every container in `<main>`, on every route, on a first visit. It now opens on a 700ms timer.
+   - The wilaya select's chevron was positioned against a `w-full` wrapper while the select itself
+     was `sm:w-auto`, so the two came apart as soon as a wilaya was chosen and the commune select
+     appeared. The site-owned select has no such split.
+   - The `+`/`−` quantity steppers on `/donate` had no accessible name.
+
+**Still open:** the §7.3 consolidation decision. `src/lib/data/admin.ts` still has the
+`unstable_cache` + `cookies()` pattern in 12 places — a separate branch, since admin is out of
+scope here.
 
 Steps 1–3 are the real leverage. Do not start step 4 before step 3 is settled.

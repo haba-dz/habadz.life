@@ -1,21 +1,21 @@
+import { POINT_KINDS, type PointKind } from "@/components/map/point-kind";
 import type { AvailableLocale } from "@/i18n/locales";
 
-export function MapLegend({ locale = "ar" }: { locale?: AvailableLocale }) {
-  const isFr = locale === "fr";
-  const items = [
-    { color: "#00843D", label: isFr ? "Point de collecte" : "نقطة تجميع" },
-    { color: "#1d4ed8", label: isFr ? "Centre d'accueil" : "مركز استقبال" },
-    { color: "#7c3aed", label: isFr ? "Centre d'hébergement" : "مركز إيواء" },
-  ];
+const ORDER: PointKind[] = ["shelter", "relief_hub", "collection_point"];
 
+/** 10px squares under the map panel. design.md §5.5 */
+export function MapLegend({ locale = "ar" }: { locale?: AvailableLocale }) {
   return (
-    <div className="mb-3 flex flex-wrap justify-center gap-3 text-sm">
-      {items.map((i) => (
-        <span key={i.label} className="flex items-center gap-1.5">
-          <span className="size-3 rounded-full" style={{ background: i.color }} />
-          {i.label}
-        </span>
-      ))}
-    </div>
+    <ul className="flex flex-wrap items-center gap-x-4 gap-y-2 text-[12.5px] text-haba-ink-2">
+      {ORDER.map((kind) => {
+        const k = POINT_KINDS[kind];
+        return (
+          <li key={kind} className="flex items-center gap-2">
+            <span aria-hidden className={`size-2.5 ${k.bg}`} />
+            {k.label[locale] ?? k.label.ar}
+          </li>
+        );
+      })}
+    </ul>
   );
 }

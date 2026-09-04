@@ -14,7 +14,7 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { type IconName } from "@/components/icons";
-import { Action, ChoiceCard, FormStep, WarningBlock } from "@/components/site";
+import { Action, ChoiceCard, CommuneSelect, FormStep, WarningBlock, WilayaSelect } from "@/components/site";
 import {
   fieldVolunteerSchema,
   type FieldVolunteerInput,
@@ -30,8 +30,6 @@ import {
   fieldVolunteerAvailabilityLabels,
   fieldVolunteerEquipmentLabels,
 } from "@/lib/constants";
-import { WilayaSelect } from "@/components/ui/wilaya-select";
-import { CommuneSelect } from "@/components/ui/commune-select";
 import { priorityWilayas } from "@/lib/algeria-cities";
 import { LinkButton } from "@/components/shared/link-button";
 import type { AvailableLocale } from "@/i18n/locales";

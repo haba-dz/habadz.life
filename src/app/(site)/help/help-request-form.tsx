@@ -8,14 +8,14 @@ import { Icon, type IconName } from "@/components/icons";
 import {
   Action,
   ChoiceCard,
+  CommuneSelect,
   Field,
   FieldInput,
   FieldLabel,
   FieldPhoneInput,
   FormStep,
+  WilayaSelect,
 } from "@/components/site";
-import { WilayaSelect } from "@/components/ui/wilaya-select";
-import { CommuneSelect } from "@/components/ui/commune-select";
 import {
   beneficiaryRequestSchema,
   needCategoryOptions,

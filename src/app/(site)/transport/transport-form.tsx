@@ -12,18 +12,18 @@ import {
   vehicleOptions,
   type TransportOfferInput,
 } from "@/schemas/transport-offer";
-import { WilayaSelect } from "@/components/ui/wilaya-select";
 import { Icon, type IconName } from "@/components/icons";
 import {
   Action,
+  Chip,
   ChoiceCard,
   FieldInput,
   FieldLabel,
   FieldPhoneInput,
   FieldTextarea,
-  FormStep,
   FOCUS_RING,
-  Chip,
+  FormStep,
+  WilayaSelect,
 } from "@/components/site";
 import { priorityWilayas } from "@/lib/algeria-cities";
 import { formatQuantity, getVehicleLabel } from "@/lib/constants";

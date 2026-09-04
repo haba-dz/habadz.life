@@ -10,19 +10,19 @@ import {
   type DamageAssessmentActionState,
 } from "@/actions/damage-assessments";
 import { priorityWilayas } from "@/lib/algeria-cities";
-import { WilayaSelect } from "@/components/ui/wilaya-select";
 import { Icon, type IconName } from "@/components/icons";
 import {
   Action,
   ChoiceCard,
+  CommuneSelect,
   FieldInput,
   FieldLabel,
   FieldPhoneInput,
   FieldTextarea,
-  FormStep,
   FOCUS_RING,
+  FormStep,
+  WilayaSelect,
 } from "@/components/site";
-import { CommuneSelect } from "@/components/ui/commune-select";
 import { cn } from "@/lib/utils";
 import type { AvailableLocale } from "@/i18n/locales";
 
