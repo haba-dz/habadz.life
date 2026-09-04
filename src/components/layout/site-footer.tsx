@@ -87,6 +87,33 @@ export async function SiteFooter() {
             <Icon name="github" size={16} className="text-haba-green-300" />
             {t.chrome.footer.sourceCode}
           </a>
+          {/*
+            The mobile auto-redirect to the stores is gone (see src/proxy.ts):
+            a link shared during a disaster has to open the thing it points at.
+            The apps are offered here instead, as a choice.
+          */}
+          <a
+            href={siteConfig.appStoreUrl}
+            target="_blank"
+            rel="noopener noreferrer"
+            className={linkClass}
+          >
+            <Icon name="apple" size={16} className="text-haba-green-300" />
+            {t.chrome.footer.appStore}
+          </a>
+          <a
+            href={siteConfig.playStoreUrl}
+            target="_blank"
+            rel="noopener noreferrer"
+            className={linkClass}
+          >
+            <Icon name="play-store" size={16} className="text-haba-green-300" />
+            {t.chrome.footer.playStore}
+          </a>
+          <Link href="/privacy" className={linkClass}>
+            <Icon name="shield-01" size={16} className="text-haba-green-300" />
+            {t.chrome.footer.privacyLink}
+          </Link>
           <Link href="/admin/login" className={linkClass}>
             <Icon name="shield-user" size={16} className="text-haba-green-300" />
             {t.footer.staffLogin}
@@ -116,6 +143,16 @@ export async function SiteFooter() {
             <p>{t.chrome.footer.privacyShared}</p>
             <p className="text-haba-green-300">{t.chrome.footer.privacyLimits}</p>
           </div>
+          <Link
+            href="/privacy"
+            className={cn(
+              "mt-3 inline-flex items-center gap-2 text-[13px] font-semibold text-white hover:underline",
+              FOCUS_RING,
+            )}
+          >
+            {t.chrome.footer.privacyLink}
+            <span aria-hidden>{isFr ? "\u2192" : "\u2190"}</span>
+          </Link>
         </section>
       </div>
 
