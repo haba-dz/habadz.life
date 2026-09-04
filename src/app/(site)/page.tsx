@@ -153,7 +153,9 @@ export default async function HomePage() {
           <Icon name="grid-view" size={22} className="text-haba-green" />
           {t.home.tiles.heading}
         </h2>
-        <HairlineGrid min={180} className="max-desktop:grid-cols-2">
+        {/* 2-up on mobile: a percentage basis, since HairlineGrid wraps with flex
+            and a grid-cols utility would be inert there. */}
+        <HairlineGrid min={180} className="max-desktop:[--hairline-basis:50%]">
           {tiles.map((tile) => (
             <a
               key={tile.title}

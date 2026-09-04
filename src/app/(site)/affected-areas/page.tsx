@@ -156,22 +156,45 @@ export default async function AffectedAreasPage({
             </p>
           ) : (
             rows.map((r) => (
+              /*
+                One markup, two layouts. Below 861px the five table cells were
+                each taking a full-width line, so every row was five stacked
+                lines against an empty half — and the bare count had no column
+                header left to explain it. On mobile the row is placed as a
+                compact card instead: name and count on the first line, wilaya
+                and severity on the second, the field note across the third.
+              */
               <div
                 key={`${r.wilaya}/${r.commune}`}
-                className="grid gap-1.5 border-t border-haba-border p-4 text-[14.5px] first:border-t-0 desktop:grid-cols-[1.4fr_1fr_.9fr_.8fr_1.8fr] desktop:items-center desktop:gap-3 desktop:px-[22px] desktop:py-[15px] desktop:first:border-t"
+                className="grid grid-cols-[1fr_auto] items-center gap-x-3 gap-y-0.5 border-t border-haba-border p-4 text-[14.5px] first:border-t-0 desktop:grid-cols-[1.4fr_1fr_.9fr_.8fr_1.8fr] desktop:gap-3 desktop:px-[22px] desktop:py-[15px] desktop:first:border-t"
               >
-                <span className="flex items-center gap-2 font-semibold text-haba-ink">
+                <span className="col-start-1 row-start-1 flex items-center gap-2 font-semibold text-haba-ink desktop:row-auto">
                   <Icon name="location-05" size={18} className="text-haba-green" />
                   {r.commune}
                 </span>
-                <span className="text-haba-ink-2">{r.wilaya}</span>
-                <span>
+                <span className="col-start-1 row-start-2 text-haba-ink-2 desktop:col-auto desktop:row-auto">
+                  {r.wilaya}
+                </span>
+                <span className="col-start-2 row-start-2 justify-self-end desktop:col-auto desktop:row-auto desktop:justify-self-start">
                   <Chip tone={severityTone[r.severity]} fill="tint" size="sm">
                     {getSeverityLabel(r.severity, locale)}
                   </Chip>
                 </span>
-                <span className="font-bold text-haba-red">{r.count}</span>
-                <span className="text-[13.5px] text-haba-ink-2">{r.note || "—"}</span>
+                <span className="col-start-2 row-start-1 justify-self-end whitespace-nowrap desktop:col-auto desktop:row-auto desktop:justify-self-start">
+                  <span className="font-bold text-haba-red">{r.count}</span>
+                  {/* The desktop column header carries this; on mobile there is none. */}
+                  <span className="text-[12px] text-haba-muted desktop:hidden">
+                    {" "}
+                    {isFr ? "foyers" : "بؤرة"}
+                  </span>
+                </span>
+                {r.note ? (
+                  <span className="col-span-2 row-start-3 text-[13.5px] text-haba-ink-2 desktop:col-auto desktop:row-auto">
+                    {r.note}
+                  </span>
+                ) : (
+                  <span className="hidden text-[13.5px] text-haba-ink-2 desktop:block">—</span>
+                )}
               </div>
             ))
           )}
