@@ -53,11 +53,13 @@ export function MobileBottomNav({ labels }: { labels: TabBarLabels }) {
             href={item.href}
             aria-current={active ? "page" : undefined}
             className={cn(
-              "flex flex-col items-center justify-center gap-[5px] px-1 py-2.5 text-center text-[10.5px] leading-tight",
+              "relative flex flex-col items-center justify-center gap-[5px] px-1 py-2.5 text-center text-[10.5px] leading-tight",
               item.cta
                 ? "bg-haba-red font-bold text-white"
                 : active
-                  ? "font-bold text-haba-green"
+                  ? // 3px cap on the top edge: colour alone does not carry
+                    // state, and the bar reads at a glance. design.md §8.5
+                    "font-bold text-haba-green before:absolute before:inset-x-0 before:-top-px before:h-[3px] before:bg-haba-green"
                   : "font-semibold text-haba-muted",
               FOCUS_RING,
             )}

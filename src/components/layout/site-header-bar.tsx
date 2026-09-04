@@ -81,8 +81,14 @@ export function SiteHeaderBar({
                 href={item.href}
                 aria-current={active ? "page" : undefined}
                 className={cn(
-                  "whitespace-nowrap py-1.5",
-                  active ? "font-semibold text-haba-green" : "text-haba-ink hover:text-haba-green",
+                  // The 3px underline is the state, not the green: at 14.5px a
+                  // colour swap alone is easy to miss, and colour on its own is
+                  // not an allowed carrier of state. design.md §8.5
+                  "relative whitespace-nowrap py-1.5",
+                  "after:absolute after:inset-x-0 after:-bottom-1 after:h-[3px] after:bg-haba-green",
+                  active
+                    ? "font-bold text-haba-green"
+                    : "text-haba-ink hover:text-haba-green after:scale-x-0 hover:after:scale-x-100 after:bg-haba-green/40 after:transition-transform",
                   FOCUS_RING,
                 )}
               >
@@ -136,19 +142,27 @@ export function SiteHeaderBar({
         hidden={!open}
         className="border-b border-haba-border bg-haba-surface py-2 desktop:hidden"
       >
-        {items.map((item) => (
-          <Link
-            key={item.href}
-            href={item.href}
-            className={cn(
-              "flex items-center gap-2.5 px-4 py-3.5 text-[14.5px] font-semibold text-haba-ink",
-              FOCUS_RING,
-            )}
-          >
-            <Icon name={item.icon} size={20} className="text-haba-green" />
-            {item.label}
-          </Link>
-        ))}
+        {items.map((item) => {
+          const active =
+            item.href === "/" ? pathname === "/" : pathname.startsWith(item.href);
+          return (
+            <Link
+              key={item.href}
+              href={item.href}
+              aria-current={active ? "page" : undefined}
+              className={cn(
+                "flex items-center gap-2.5 border-s-[3px] px-4 py-3.5 text-[14.5px]",
+                active
+                  ? "border-haba-green bg-haba-green-tint font-bold text-haba-green"
+                  : "border-transparent font-semibold text-haba-ink",
+                FOCUS_RING,
+              )}
+            >
+              <Icon name={item.icon} size={20} className="text-haba-green" />
+              {item.label}
+            </Link>
+          );
+        })}
       </div>
     </header>
   );
