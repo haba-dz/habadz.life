@@ -10,9 +10,11 @@ interface LanguageSwitcherProps {
   current: AvailableLocale;
   label?: string;
   className?: string;
+  /** `band` is the plain `عربي | FR` toggle used in the dark platform band. design.md §3.3 */
+  variant?: "default" | "band";
 }
 
-export function LanguageSwitcher({ current, label, className }: LanguageSwitcherProps) {
+export function LanguageSwitcher({ current, label, className, variant = "default" }: LanguageSwitcherProps) {
   const [isPending, startTransition] = useTransition();
   const isFr = current === "fr";
   const targetLocale: AvailableLocale = isFr ? "ar" : "fr";
@@ -22,6 +24,26 @@ export function LanguageSwitcher({ current, label, className }: LanguageSwitcher
       void setLocale(targetLocale);
     });
   };
+
+  if (variant === "band") {
+    return (
+      <button
+        type="button"
+        onClick={handleToggle}
+        disabled={isPending}
+        aria-label={label || (isFr ? "Passer à l'arabe" : "التبديل إلى الفرنسية")}
+        className={cn(
+          "inline-flex items-center gap-2 disabled:opacity-60",
+          "focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white",
+          className,
+        )}
+      >
+        <span className={cn(!isFr ? "font-bold text-white" : "text-haba-green-50/80")}>عربي</span>
+        <span aria-hidden className="opacity-40">|</span>
+        <span className={cn(isFr ? "font-bold text-white" : "text-haba-green-50/80")}>FR</span>
+      </button>
+    );
+  }
 
   return (
     <button

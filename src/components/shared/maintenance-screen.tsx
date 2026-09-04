@@ -243,7 +243,11 @@ export function MaintenanceScreen({ locale = "ar" }: MaintenanceScreenProps) {
       {/* Footer */}
       <footer className="relative z-10 w-full border-t border-border/60 bg-background/60 py-4 text-center text-xs text-muted-foreground">
         <div className="mx-auto max-w-5xl px-4 flex flex-col sm:flex-row items-center justify-between gap-2">
-          <p>{siteConfig.legalNotice}</p>
+          <p>
+            {isFr
+              ? "Initiative numérique indépendante de coordination de la solidarité — non gouvernementale, sans affiliation officielle."
+              : siteConfig.legalNotice}
+          </p>
           <p className="font-semibold">{siteConfig.shortName} © 2026</p>
         </div>
       </footer>

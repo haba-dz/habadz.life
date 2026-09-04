@@ -145,3 +145,63 @@ export function isPriorityWilaya(wilayaQuery: string | number): boolean {
   const wilaya = findWilaya(wilayaQuery);
   return wilaya ? wilaya.isPriority : false;
 }
+
+/* ---------------------------------------------------------------------------
+ * Display helpers for place names that come out of the database.
+ *
+ * Rows store the Arabic name — `wilaya: "جيجل"`, `commune: "الشقفة"` — because
+ * that is what the field teams and the admin type. Printing those straight into
+ * a French sentence produced "Wilaya de جيجل" on /map, /needs and /donate. The
+ * reference list already carries `name_fr` for both levels, so resolve through
+ * it and fall back to the stored string when a value is not in the list (an
+ * operator's free text, or a misspelling).
+ * ------------------------------------------------------------------------- */
+
+const communesByArabicName = new Map<string, CommuneItem[]>();
+for (const c of algeriaCommunes) {
+  const key = c.name_ar.trim();
+  const bucket = communesByArabicName.get(key);
+  if (bucket) bucket.push(c);
+  else communesByArabicName.set(key, [c]);
+}
+
+/**
+ * A commune name is not unique across the country, so pass the wilaya when one
+ * is known; without it the first match wins, which is right for display.
+ */
+export function findCommune(name: string, wilayaQuery?: string | number): CommuneItem | undefined {
+  const matches = communesByArabicName.get(name.trim());
+  if (!matches) return undefined;
+  if (matches.length === 1 || wilayaQuery === undefined) return matches[0];
+  const wilaya = findWilaya(wilayaQuery);
+  return matches.find((c) => c.wilaya_code === wilaya?.code) ?? matches[0];
+}
+
+export function getCommuneName(
+  name: string,
+  locale: AvailableLocale = "ar",
+  wilayaQuery?: string | number,
+): string {
+  if (locale !== "fr") return name;
+  return findCommune(name, wilayaQuery)?.name_fr ?? name;
+}
+
+/** `ولاية جيجل` · `Wilaya de Jijel` */
+export function formatWilaya(wilaya: string, locale: AvailableLocale = "ar"): string {
+  const match = findWilaya(wilaya);
+  const name = match ? getWilayaName(match, locale) : wilaya;
+  return locale === "fr" ? `Wilaya de ${name}` : `ولاية ${name}`;
+}
+
+/**
+ * `الشقفة، ولاية جيجل` · `Chekfa, Wilaya de Jijel`
+ * The separator is the Arabic comma in Arabic and a plain one in French.
+ */
+export function formatPlace(
+  commune: string,
+  wilaya: string,
+  locale: AvailableLocale = "ar",
+): string {
+  const sep = locale === "fr" ? ", " : "، ";
+  return `${getCommuneName(commune, locale, wilaya)}${sep}${formatWilaya(wilaya, locale)}`;
+}

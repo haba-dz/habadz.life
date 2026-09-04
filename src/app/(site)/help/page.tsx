@@ -1,8 +1,7 @@
 import type { Metadata } from "next";
-import { HandHeart, ShieldCheck, PhoneCall, TriangleAlert } from "lucide-react";
+import { EmergencySection } from "@/components/shared/emergency-section";
+import { PageHero, SECTION } from "@/components/site";
 import { HelpRequestForm } from "./help-request-form";
-import { siteConfig } from "@/config/site";
-import { getDictionary } from "@/i18n/dictionaries";
 import { getLocale } from "@/i18n/server";
 
 export async function generateMetadata(): Promise<Metadata> {
@@ -16,33 +15,34 @@ export async function generateMetadata(): Promise<Metadata> {
   };
 }
 
+/** design.md §5.6 — form pages are 900px, narrower than the 1200px shell. */
 export default async function HelpPage() {
   const locale = await getLocale();
-  const t = await getDictionary(locale);
   const isFr = locale === "fr";
 
   return (
-    <div className="mx-auto max-w-2xl px-4 py-8 sm:py-12">
-      {/* Header */}
-      <div className="text-center space-y-3 mb-8">
-        <div className="inline-flex items-center gap-2 rounded-full border border-priority-critical/30 bg-priority-critical/10 px-3.5 py-1 text-xs font-bold text-priority-critical">
-          <TriangleAlert className="size-3.5 animate-pulse" />
-          <span>{isFr ? "Espace d'assistance aux familles sinistrées" : "فضاء استقبال طلبات الأسر والعائلات المتضررة"}</span>
-        </div>
+    <>
+      <PageHero
+        tone="red"
+        eyebrow={
+          isFr
+            ? "Espace d'assistance aux familles sinistrées"
+            : "فضاء استقبال طلبات الأسر والعائلات المتضررة"
+        }
+        eyebrowIcon="alert-02"
+        title={isFr ? "Demande d'aide et d'assistance" : "طلب مساعدة وإغاثة عاجلة"}
+        lede={
+          isFr
+            ? "Si votre foyer ou votre entourage est touché par les incendies, enregistrez vos besoins (vivres, eau, couchage, santé, abri) pour une prise en charge coordonnée."
+            : "إذا تضرر منزلك أو عائلتك من الحرائق، سجّل احتياجاتكم العاجلة (أغذية، مياه، أفرشة، أدوية، مأوى) ليتم توجيهها مباشرة لفرق الإغاثة الميدانية."
+        }
+      />
 
-        <h1 className="text-2xl sm:text-4xl font-black tracking-tight text-foreground">
-          {isFr ? "Demande d'aide et d'assistance" : "طلب مساعدة وإغاثة عاجلة"}
-        </h1>
-
-        <p className="text-xs sm:text-sm text-muted-foreground leading-relaxed max-w-lg mx-auto">
-          {isFr
-            ? "Si votre foyer ou votre entourage est touché par les incendies, enregistrez vos besoins (vivres, eau, couchage, santé) pour une prise en charge coordonnée."
-            : "إذا تضرر منزلك أو عائلتك من الحرائق، سجّل احتياجاتكم العاجلة (أغذية، مياه، أفرشة، أدوية، مأوى) ليتم توجيهها مباشرة لفرق الإغاثة الميدانية."}
-        </p>
+      <div className={`mx-auto w-full max-w-[900px] px-4 desktop:px-6 ${SECTION}`}>
+        <HelpRequestForm locale={locale} />
       </div>
 
-      {/* Form */}
-      <HelpRequestForm locale={locale} />
-    </div>
+      <EmergencySection />
+    </>
   );
 }

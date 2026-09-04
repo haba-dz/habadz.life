@@ -1,6 +1,6 @@
 import "server-only";
 import { unstable_cache } from "next/cache";
-import { createClient } from "@/lib/supabase/server";
+import { createPublicClient } from "@/lib/supabase/server";
 import { activeCampaignSlug } from "@/config/site";
 import type { Database } from "@/types/database";
 
@@ -10,7 +10,7 @@ type CategoryRow = Database["public"]["Tables"]["categories"]["Row"];
 export const getActiveCampaign = unstable_cache(
   async () => {
     try {
-      const supabase = await createClient();
+      const supabase = createPublicClient();
       const { data } = await supabase
         .from("campaigns")
         .select("*")
@@ -28,7 +28,7 @@ export const getActiveCampaign = unstable_cache(
 export const getCategories = unstable_cache(
   async (): Promise<CategoryRow[]> => {
     try {
-      const supabase = await createClient();
+      const supabase = createPublicClient();
       const { data } = await supabase.from("categories").select("*").order("sort_order");
       return data ?? [];
     } catch {
@@ -42,7 +42,7 @@ export const getCategories = unstable_cache(
 export const getAllActiveNeeds = unstable_cache(
   async () => {
     try {
-      const supabase = await createClient();
+      const supabase = createPublicClient();
       const { data } = await supabase
         .from("needs")
         .select("*, categories(slug, name_ar, default_unit)")
@@ -61,7 +61,7 @@ export const getAllActiveNeeds = unstable_cache(
 export const getCriticalNeeds = unstable_cache(
   async (limit = 6) => {
     try {
-      const supabase = await createClient();
+      const supabase = createPublicClient();
       const { data } = await supabase
         .from("needs")
         .select("*, categories(slug, name_ar, default_unit)")
@@ -90,7 +90,7 @@ const emptyStatOverview = {
 export const getStatOverview = unstable_cache(
   async () => {
     try {
-      const supabase = await createClient();
+      const supabase = createPublicClient();
       const { data } = await supabase.rpc("get_stat_overview").maybeSingle();
       return data ?? emptyStatOverview;
     } catch {
@@ -104,7 +104,7 @@ export const getStatOverview = unstable_cache(
 export const getStatDonationsByCategory = unstable_cache(
   async () => {
     try {
-      const supabase = await createClient();
+      const supabase = createPublicClient();
       const { data } = await supabase.rpc("get_stat_donations_by_category");
       return data ?? [];
     } catch {
@@ -118,7 +118,7 @@ export const getStatDonationsByCategory = unstable_cache(
 export const getStatDistributionsByCategory = unstable_cache(
   async () => {
     try {
-      const supabase = await createClient();
+      const supabase = createPublicClient();
       const { data } = await supabase.rpc("get_stat_distributions_by_category");
       return data ?? [];
     } catch {
@@ -132,7 +132,7 @@ export const getStatDistributionsByCategory = unstable_cache(
 export const getPublicCollectionPoints = unstable_cache(
   async () => {
     try {
-      const supabase = await createClient();
+      const supabase = createPublicClient();
       const { data, error } = await supabase.rpc("get_public_collection_points");
       if (!error && data && data.length > 0) {
         const filtered = (data as unknown as { status: string }[]).filter((r) => r.status !== "closed");
@@ -155,7 +155,7 @@ export const getPublicCollectionPoints = unstable_cache(
 export const getPublicReliefHubs = unstable_cache(
   async () => {
     try {
-      const supabase = await createClient();
+      const supabase = createPublicClient();
       const { data, error } = await supabase.rpc("get_public_relief_hubs");
       if (!error && data && data.length > 0) {
         const filtered = (data as unknown as { status: string }[]).filter((r) => r.status !== "closed");
@@ -178,7 +178,7 @@ export const getPublicReliefHubs = unstable_cache(
 export const getOfficialUpdates = unstable_cache(
   async (limit = 5) => {
     try {
-      const supabase = await createClient();
+      const supabase = createPublicClient();
       const { data } = await supabase
         .from("official_updates")
         .select("*")
@@ -195,7 +195,7 @@ export const getOfficialUpdates = unstable_cache(
 
 export async function getOfficialUpdateById(id: string) {
   try {
-    const supabase = await createClient();
+    const supabase = createPublicClient();
     const { data } = await supabase.from("official_updates").select("*").eq("id", id).maybeSingle();
     return data;
   } catch {
@@ -206,7 +206,7 @@ export async function getOfficialUpdateById(id: string) {
 export const getShelters = unstable_cache(
   async () => {
     try {
-      const supabase = await createClient();
+      const supabase = createPublicClient();
       const { data } = await supabase.rpc("get_public_relief_hubs");
       return (data ?? []).filter((h) => h.is_shelter && h.status === "open");
     } catch {
@@ -220,7 +220,7 @@ export const getShelters = unstable_cache(
 export const getAffectedCommunes = unstable_cache(
   async () => {
     try {
-      const supabase = await createClient();
+      const supabase = createPublicClient();
       const { data } = await supabase
         .from("needs")
         .select("commune, priority")
@@ -245,7 +245,7 @@ export const getAffectedCommunes = unstable_cache(
 export const getAffectedAreas = unstable_cache(
   async (): Promise<AffectedAreaRow[]> => {
     try {
-      const supabase = await createClient();
+      const supabase = createPublicClient();
       const { data } = await supabase
         .from("affected_areas")
         .select("*")
@@ -264,7 +264,7 @@ export const getAffectedAreas = unstable_cache(
 export const getPublishedPosts = unstable_cache(
   async (limit = 50) => {
     try {
-      const supabase = await createClient();
+      const supabase = createPublicClient();
       const { data } = await supabase
         .from("posts")
         .select("id, slug, title, excerpt, published_at, author_name")
@@ -282,7 +282,7 @@ export const getPublishedPosts = unstable_cache(
 
 export async function getPostBySlug(slug: string) {
   try {
-    const supabase = await createClient();
+    const supabase = createPublicClient();
     const { data } = await supabase
       .from("posts")
       .select("*")
@@ -298,7 +298,7 @@ export async function getPostBySlug(slug: string) {
 export const getPublicMedicalVolunteers = unstable_cache(
   async () => {
     try {
-      const supabase = await createClient();
+      const supabase = createPublicClient();
       const { data } = await supabase.rpc("get_public_medical_volunteers");
       return data ?? [];
     } catch {
@@ -312,7 +312,7 @@ export const getPublicMedicalVolunteers = unstable_cache(
 export const getPublicFieldVolunteers = unstable_cache(
   async () => {
     try {
-      const supabase = await createClient();
+      const supabase = createPublicClient();
       const rpc = supabase.rpc as unknown as (fn: string) => PromiseLike<{ data: unknown[] | null }>;
       const { data } = await rpc("get_public_field_volunteers");
       return data ?? [];

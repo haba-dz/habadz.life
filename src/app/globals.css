@@ -117,6 +117,73 @@
   --color-verify-field: var(--verify-field);
 }
 
+/* ============================================================
+   هبة الجزائر — public site design system (design.md §2)
+   Registered globally so utilities exist (bg-haba-green, …), but the
+   SEMANTIC overrides that re-skin shadcn live in [data-site] below.
+   /admin never opts in, so it keeps :root untouched. design.md §8.1
+   ============================================================ */
+@theme {
+  /* surfaces */
+  --color-haba-bg: oklch(0.9686 0.0041 121.56);            /* #F4F5F2 */
+  --color-haba-surface: oklch(1 0 0);                      /* #FFFFFF */
+  --color-haba-surface-2: oklch(0.9838 0.0028 128.49);     /* #F9FAF8 */
+  --color-haba-map: oklch(0.9550 0.0051 145.54);           /* #EEF1EE */
+
+  /* greens — platform, safe, act */
+  --color-haba-forest: oklch(0.3205 0.0655 161.33);        /* #083D28 */
+  --color-haba-green: oklch(0.4237 0.0928 159.05);         /* #0B5D3B */
+  --color-haba-green-dark: oklch(0.3401 0.0716 160.29);    /* #08432B hover */
+  --color-haba-green-400: oklch(0.6834 0.0748 160.59);     /* #6FA88A on-dark border */
+  --color-haba-green-300: oklch(0.8068 0.0623 162.42);     /* #9CCDB4 on-dark muted */
+  --color-haba-green-100: oklch(0.8976 0.0268 159.53);     /* #CFE3D7 on-dark body */
+  --color-haba-green-50: oklch(0.9271 0.0191 157.85);      /* #DDEBE2 band text */
+  --color-haba-green-tint: oklch(0.9638 0.0091 161.35);    /* #EEF5F1 selected */
+
+  /* reds — urgency, damage, emergency */
+  --color-haba-red: oklch(0.5304 0.2074 22.32);            /* #C8102E */
+  --color-haba-red-dark: oklch(0.4563 0.1777 21.94);       /* #A30C25 hover */
+  --color-haba-red-500: oklch(0.6055 0.2038 25.74);        /* #E23B3B alert dot */
+  --color-haba-red-200: oklch(0.8244 0.0490 8.55);         /* #E3B9BF border */
+  --color-haba-red-50: oklch(0.9722 0.0108 10.33);         /* #FDF3F4 tint */
+  --color-haba-red-muted: oklch(0.5123 0.0717 6.43);       /* #8A5560 */
+
+  /* ambers — warning, medium severity.
+     Base is #856419, NOT the artboards' #9A7420: that failed WCAG AA at the
+     11.5–14.5px bold sizes it is actually used at (4.29:1 on white). See
+     design.md §8.5. -bright keeps the original tone for ≥24px numerals only. */
+  --color-haba-amber: oklch(0.5235 0.0976 83.15);          /* #856419 */
+  --color-haba-amber-bright: oklch(0.5821 0.1077 82.67);   /* #9A7420 ≥24px only */
+  --color-haba-amber-900: oklch(0.4530 0.0833 85.42);      /* #6B5214 */
+  --color-haba-amber-200: oklch(0.8407 0.0850 90.26);      /* #E0C98A border */
+  --color-haba-amber-50: oklch(0.9797 0.0167 88.00);       /* #FDF8EC tint */
+
+  /* ink and neutrals */
+  --color-haba-ink: oklch(0.2311 0.0184 165.14);           /* #15201B */
+  --color-haba-ink-2: oklch(0.4056 0.0213 163.69);         /* #3F4D46 body */
+  --color-haba-muted: oklch(0.5116 0.0239 160.82);         /* #5B6B62 */
+  --color-haba-border: oklch(0.8693 0.0102 155.07);
+  /* Recessive display numerals (the "01–04" on the how-it-works cards). The
+     border colour they were drawn in measures 1.48:1 on white — below the 3:1
+     that large text needs. Same hue, dark enough to pass at 3.10:1, still far
+     lighter than any body text. design.md §8.5 */
+  --color-haba-numeral: oklch(0.6600 0.0102 155.07);        /* #CFD6D1 */
+  --color-haba-border-subtle: oklch(0.9271 0.0059 153.77); /* #E4E8E5 */
+  --color-haba-border-dashed: oklch(0.7683 0.0209 159.60); /* #A9B8AF */
+  --color-haba-icon-faint: oklch(0.7182 0.0195 160.91);    /* #9AA8A0 */
+
+  /* breakpoints — design.md §2.5. The artboards switch at 860/1199, not at
+     Tailwind's defaults, and the table-collapse + tab-bar offset are hard
+     requirements. `desktop:` = ≥861px, `max-desktop:` = ≤860px (mobile),
+     `max-wide:` = ≤1199px (the band where nav and brand subtitle tighten). */
+  --breakpoint-desktop: 861px;
+  --breakpoint-wide: 1200px;
+
+  /* type — design.md §2.2 */
+  --font-haba-sans: var(--font-ibm-plex-arabic), system-ui, sans-serif;
+  --font-haba-display: 'Thmanyah Sans', var(--font-ibm-plex-arabic), system-ui, sans-serif;
+}
+
 :root {
   /* ============================================================
      Pure OKLCH Space Emergency Response Palette
@@ -238,6 +305,113 @@
   --verify-field: oklch(0.65 0.16 250);
 }
 
+/* ============================================================
+   Public site scope. Applied by src/app/(site)/layout.tsx only.
+   Everything here is an override of an EXISTING token, so shadcn
+   components re-skin without being edited. design.md §8.1
+   ============================================================ */
+[data-site] {
+  /* radius 0 everywhere — the derived --radius-sm…4xl are calc() on this,
+     so the whole chain zeroes inside this subtree and nowhere else. */
+  --radius: 0;
+
+  --background: var(--color-haba-bg);
+  --foreground: var(--color-haba-ink);
+  --card: var(--color-haba-surface);
+  --card-foreground: var(--color-haba-ink);
+  --popover: var(--color-haba-surface);
+  --popover-foreground: var(--color-haba-ink);
+
+  --primary: var(--color-haba-green);
+  --primary-foreground: oklch(1 0 0);
+
+  --secondary: var(--color-haba-surface-2);
+  --secondary-foreground: var(--color-haba-ink);
+
+  --muted: var(--color-haba-surface-2);
+  --muted-foreground: var(--color-haba-muted);
+
+  --accent: var(--color-haba-green-tint);
+  --accent-foreground: var(--color-haba-green);
+
+  --destructive: var(--color-haba-red);
+  --border: var(--color-haba-border);
+  --input: var(--color-haba-border);
+  --ring: var(--color-haba-green);
+
+  --algeria-red: var(--color-haba-red);
+  --algeria-green: var(--color-haba-green);
+
+  --priority-critical: var(--color-haba-red);
+  --priority-high: var(--color-haba-red);
+  --priority-medium: var(--color-haba-amber);
+  --priority-low: var(--color-haba-green);
+
+  --status-open: var(--color-haba-green);
+  --status-full: var(--color-haba-amber);
+  --status-paused: var(--color-haba-muted);
+  --status-closed: var(--color-haba-red);
+
+  --verify-unverified: var(--color-haba-muted);
+  --verify-pending: var(--color-haba-amber);
+  --verify-verified: var(--color-haba-green);
+
+  /* Body face. NOT done by overriding --font-sans: that token is declared
+     under `@theme inline`, so the font-sans utility compiles to a literal and
+     ignores a scoped redefinition. Set the property directly and inherit. */
+  font-family: var(--font-haba-sans);
+  color: var(--color-haba-ink);
+  background-color: var(--color-haba-bg);
+}
+
+/* Headings keep Thmanyah Sans (design.md §2.2). */
+[data-site] :is(h1, h2, h3, h4) {
+  font-family: var(--font-haba-display);
+}
+
+/* <body> carries bg-background from the shared root layout, resolved against
+   :root — so overscroll gutters would paint the admin background behind the
+   site. Repaint the body when it is hosting the site shell. design.md §8.1 */
+body:has([data-site]) {
+  background-color: var(--color-haba-bg);
+}
+
+/* The fixed tab bar is 74px tall; without this the last element of every page
+   sits under it. Hard requirement, design.md §2.5. */
+@media (max-width: 860px) {
+  body:has([data-site]) {
+    padding-bottom: 74px;
+  }
+}
+
+/* Focus scrolling vs. the sticky chrome. design.md §8.5
+   ---------------------------------------------------------------------------
+   The browser scrolls a newly focused control only until it is inside the
+   viewport, and it knows nothing about the sticky header above or the fixed tab
+   bar below. On a phone with the soft keyboard open (~430px of viewport) a
+   tabbed-to field therefore lands *underneath* the tab bar: measured at
+   390x430, 8 of 26 controls on /help and 13 of 33 on /volunteers were covered.
+
+   scroll-padding, not scroll-margin, is the fix. scroll-margin only changes how
+   far to scroll once the browser has decided to scroll at all — a control that
+   is technically on screen but sitting under the tab bar counts as visible and
+   never moves. scroll-padding shrinks the scrollport's optimal viewing region,
+   so the chrome-covered strips stop counting as visible in the first place.
+
+   It goes on the scroll container, which is <html>. Scoped with :has() so
+   /admin, which has no tab bar, is unaffected. design.md §8.1 */
+html:has([data-site]) {
+  scroll-padding-top: 108px;   /* 94px header + breathing room */
+  scroll-padding-bottom: 88px; /* 74px tab bar + breathing room */
+}
+
+@media (min-width: 861px) {
+  html:has([data-site]) {
+    scroll-padding-top: 130px; /* 116px header + breathing room */
+    scroll-padding-bottom: 24px;
+  }
+}
+
 @layer base {
   *, ::before, ::after {
     @apply border-border outline-ring/50;
@@ -301,4 +475,68 @@
   @media (prefers-reduced-motion: reduce) {
     .animate-ticker { animation: none; transform: none; }
   }
+}
+
+/* ============================================================
+   maplibre chrome inside the public site. design.md §5.5
+   The popup, its tip and the zoom control are built by the library as raw DOM,
+   so they carry its own rounded, shadowed defaults. Re-skin them here rather
+   than in the component: there is no class hook on the generated nodes.
+   ============================================================ */
+[data-site] .maplibregl-popup-content {
+  border-radius: 0;
+  border: 1px solid var(--color-haba-border);
+  box-shadow: none;
+  padding: 13px 15px;
+  font-family: var(--font-haba-sans);
+  color: var(--color-haba-ink);
+}
+
+[data-site] .maplibregl-popup-anchor-top .maplibregl-popup-tip,
+[data-site] .maplibregl-popup-anchor-top-left .maplibregl-popup-tip,
+[data-site] .maplibregl-popup-anchor-top-right .maplibregl-popup-tip {
+  border-bottom-color: var(--color-haba-border);
+}
+[data-site] .maplibregl-popup-anchor-bottom .maplibregl-popup-tip,
+[data-site] .maplibregl-popup-anchor-bottom-left .maplibregl-popup-tip,
+[data-site] .maplibregl-popup-anchor-bottom-right .maplibregl-popup-tip {
+  border-top-color: var(--color-haba-border);
+}
+[data-site] .maplibregl-popup-anchor-left .maplibregl-popup-tip {
+  border-right-color: var(--color-haba-border);
+}
+[data-site] .maplibregl-popup-anchor-right .maplibregl-popup-tip {
+  border-left-color: var(--color-haba-border);
+}
+
+[data-site] .maplibregl-popup-close-button {
+  inset-inline-end: 0;
+  inset-inline-start: auto;
+  width: 30px;
+  height: 30px;
+  border-radius: 0;
+  font-size: 18px;
+  color: var(--color-haba-muted);
+}
+[data-site] .maplibregl-popup-close-button:hover {
+  background: var(--color-haba-surface-2);
+  color: var(--color-haba-ink);
+}
+
+[data-site] .maplibregl-ctrl-group {
+  border-radius: 0;
+  box-shadow: none;
+  border: 1px solid var(--color-haba-border);
+}
+[data-site] .maplibregl-ctrl-group button {
+  border-radius: 0;
+  width: 34px;
+  height: 34px;
+}
+[data-site] .maplibregl-ctrl-group button + button {
+  border-top: 1px solid var(--color-haba-border);
+}
+[data-site] .maplibregl-ctrl-attrib {
+  border-radius: 0;
+  font-family: var(--font-haba-sans);
 }

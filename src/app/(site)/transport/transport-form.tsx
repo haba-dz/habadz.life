@@ -5,30 +5,26 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import {
   Loader2,
-  Truck,
-  Car,
-  Calendar,
-  Clock,
-  MapPin,
-  CheckCircle2,
-  HeartHandshake,
-  Package,
-  Zap,
-} from "lucide-react";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Textarea } from "@/components/ui/textarea";
-import { Label } from "@/components/ui/label";
-import { Checkbox } from "@/components/ui/checkbox";
-import { Card, CardContent } from "@/components/ui/card";
-import { Alert, AlertDescription } from "@/components/ui/alert";
+  } from "lucide-react";
 import { EmptyState } from "@/components/shared/empty-state";
 import {
   transportOfferSchema,
   vehicleOptions,
   type TransportOfferInput,
 } from "@/schemas/transport-offer";
-import { WilayaSelect } from "@/components/ui/wilaya-select";
+import { Icon, type IconName } from "@/components/icons";
+import {
+  Action,
+  Chip,
+  ChoiceCard,
+  FieldInput,
+  FieldLabel,
+  FieldPhoneInput,
+  FieldTextarea,
+  FOCUS_RING,
+  FormStep,
+  WilayaSelect,
+} from "@/components/site";
 import { priorityWilayas } from "@/lib/algeria-cities";
 import { formatQuantity, getVehicleLabel } from "@/lib/constants";
 import { SuccessPanel } from "@/components/shared/success-panel";
@@ -36,11 +32,11 @@ import { submitTransportOffer, type SubmitTransportResult } from "@/actions/tran
 import type { AvailableLocale } from "@/i18n/locales";
 import { cn } from "@/lib/utils";
 
-const vehicleIcons: Record<string, typeof Car> = {
-  car: Car,
-  van: Truck,
-  small_truck: Truck,
-  large_truck: Truck,
+const vehicleIcons: Record<string, IconName> = {
+  car: "car-03",
+  van: "delivery-truck-02",
+  small_truck: "truck",
+  large_truck: "shipping-truck-01",
 };
 
 export function TransportForm({
@@ -122,8 +118,8 @@ export function TransportForm({
         />
 
         <div className="space-y-3">
-          <h2 className="text-base sm:text-lg font-bold text-foreground flex items-center gap-2">
-            <Package className="size-5 text-blue-600 dark:text-blue-400" />
+          <h2 className="flex items-center gap-2 text-[17px] font-bold text-haba-forest">
+            <Icon name="package" size={20} className="text-haba-green" />
             <span>{isFr ? "Dons pouvant être acheminés sur votre trajet" : "مساعدات بانتظار وسيلة شحن على مسارك"}</span>
           </h2>
 
@@ -143,24 +139,25 @@ export function TransportForm({
           ) : (
             <div className="grid gap-3 sm:grid-cols-2">
               {result.candidates.map((c) => (
-                <Card key={c.donationId} className="border-border shadow-xs">
-                  <CardContent className="flex items-center justify-between gap-3 p-4">
-                    <div className="space-y-1">
-                      <p className="font-bold text-sm text-foreground">
-                        {c.itemsSummary || (isFr ? "Dons divers" : "مساعدات إغاثية")}
-                      </p>
-                      <p className="text-xs text-muted-foreground flex items-center gap-1">
-                        <MapPin className="size-3.5 shrink-0" />
-                        <span>{isFr ? "De : " : "نقطة الانطلاق: "}{c.donorWilaya}</span>
-                      </p>
-                    </div>
-                    {c.distanceKm !== null && (
-                      <span className="shrink-0 rounded-full bg-blue-500/10 px-2.5 py-1 text-xs font-black text-blue-700 dark:text-blue-300">
-                        ~{formatQuantity(c.distanceKm, locale)} km
-                      </span>
-                    )}
-                  </CardContent>
-                </Card>
+                <div
+                  key={c.donationId}
+                  className="flex items-center justify-between gap-3 border border-haba-border bg-haba-surface p-4"
+                >
+                  <div className="flex flex-col gap-1">
+                    <p className="text-sm font-bold text-haba-ink">
+                      {c.itemsSummary || (isFr ? "Dons divers" : "مساعدات إغاثية")}
+                    </p>
+                    <p className="flex items-center gap-1 text-xs text-haba-muted">
+                      <Icon name="location-01" size={13} className="shrink-0" />
+                      <span>{isFr ? "De : " : "نقطة الانطلاق: "}{c.donorWilaya}</span>
+                    </p>
+                  </div>
+                  {c.distanceKm !== null && (
+                    <Chip tone="green" fill="tint" size="xs" className="shrink-0">
+                      ~{formatQuantity(c.distanceKm, locale)} km
+                    </Chip>
+                  )}
+                </div>
               ))}
             </div>
           )}
@@ -172,52 +169,41 @@ export function TransportForm({
   return (
     <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
       {/* 1. Driver Identity */}
-      <Card>
-        <CardContent className="space-y-4 px-5 pt-6">
-          <div className="flex items-center gap-2 text-foreground font-bold">
-            <span className="flex size-7 items-center justify-center rounded-lg bg-blue-500/10 text-blue-600 dark:text-blue-400 text-sm font-extrabold">
-              1
-            </span>
-            <h2>{isFr ? "Informations du chauffeur" : "بيانات السائق أو الناقل"}</h2>
+      <FormStep step={1} title={isFr ? "Informations du chauffeur" : "بيانات السائق أو الناقل"}>
+        <div className="grid grid-cols-1 gap-3.5 desktop:grid-cols-2">
+          <div>
+            <FieldLabel htmlFor="tr-driver">
+              {isFr ? "Nom et prénom *" : "الاسم الكامل *"}
+            </FieldLabel>
+            <FieldInput
+              id="tr-driver"
+              placeholder={isFr ? "Ex : Samir Amari" : "مثال: سمير عماري"}
+              {...register("driver_name")}
+            />
+            {errors.driver_name && (
+              <p className="mt-1 text-xs text-haba-red">{errors.driver_name.message}</p>
+            )}
           </div>
 
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
-            <div>
-              <Label className="mb-1.5">{isFr ? "Nom et prénom *" : "الاسم الكامل *"}</Label>
-              <Input
-                placeholder={isFr ? "Ex : Samir Amari" : "مثال: سمير عماري"}
-                {...register("driver_name")}
-              />
-              {errors.driver_name && (
-                <p className="mt-1 text-xs text-destructive">{errors.driver_name.message}</p>
-              )}
-            </div>
-
-            <div>
-              <Label className="mb-1.5">{isFr ? "Numéro de téléphone *" : "رقم الهاتف للتواصل *"}</Label>
-              <Input dir="ltr" placeholder="0555xxxxxx" {...register("phone")} />
-              {errors.phone && (
-                <p className="mt-1 text-xs text-destructive">{errors.phone.message}</p>
-              )}
-            </div>
+          <div>
+            <FieldLabel htmlFor="tr-phone">
+              {isFr ? "Numéro de téléphone *" : "رقم الهاتف للتواصل *"}
+            </FieldLabel>
+            <FieldPhoneInput id="tr-phone" placeholder="0555xxxxxx" {...register("phone")} />
+            {errors.phone && <p className="mt-1 text-xs text-haba-red">{errors.phone.message}</p>}
           </div>
-        </CardContent>
-      </Card>
+        </div>
+      </FormStep>
 
       {/* 2. Route & Destination */}
-      <Card>
-        <CardContent className="space-y-4 px-5 pt-6">
-          <div className="flex items-center gap-2 text-foreground font-bold">
-            <span className="flex size-7 items-center justify-center rounded-lg bg-blue-500/10 text-blue-600 dark:text-blue-400 text-sm font-extrabold">
-              2
-            </span>
-            <h2>{isFr ? "Itinéraire du trajet" : "مسار الرحلة ونقاط العبور"}</h2>
-          </div>
+      <FormStep step={2} title={isFr ? "Itinéraire du trajet" : "مسار الرحلة ونقاط العبور"}>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             {/* Origin Wilaya */}
             <div>
-              <Label className="mb-1.5">{isFr ? "Point de départ (Wilaya) *" : "ولاية الانطلاق *"}</Label>
+              <FieldLabel htmlFor="tr-origin">
+                {isFr ? "Point de départ (Wilaya) *" : "ولاية الانطلاق *"}
+              </FieldLabel>
               <div className="mb-2 flex flex-wrap gap-1.5">
                 {priorityWilayas.map((pw) => {
                   const isSelected =
@@ -228,31 +214,35 @@ export function TransportForm({
                       type="button"
                       onClick={() => setValue("origin_wilaya", pw.name_ar, { shouldValidate: true })}
                       className={cn(
-                        "inline-flex items-center gap-1 rounded-lg px-2.5 py-1 text-xs font-bold transition-all active:scale-95",
+                        "inline-flex items-center gap-1 border px-2.5 py-1 text-xs font-bold transition-colors",
                         isSelected
-                          ? "bg-priority-critical text-white shadow-xs"
-                          : "bg-priority-critical/10 text-priority-critical hover:bg-priority-critical/20"
+                          ? "border-haba-red bg-haba-red text-white"
+                          : "border-haba-red-200 bg-haba-red-50 text-haba-red hover:border-haba-red",
+                        FOCUS_RING,
                       )}
                     >
-                      <Zap className="size-3 text-amber-500 shrink-0 fill-amber-500" />
+                      <Icon name="fire" size={12} className="shrink-0" />
                       <span>{isFr ? `${pw.codeStr} - ${pw.name_fr}` : `${pw.codeStr} - ${pw.name_ar}`}</span>
                     </button>
                   );
                 })}
               </div>
               <WilayaSelect
+                id="tr-origin"
                 locale={locale}
                 value={selectedOrigin}
                 onChange={(e) => setValue("origin_wilaya", e.target.value, { shouldValidate: true })}
               />
               {errors.origin_wilaya && (
-                <p className="mt-1 text-xs text-destructive">{errors.origin_wilaya.message}</p>
+                <p className="mt-1 text-xs text-haba-red">{errors.origin_wilaya.message}</p>
               )}
             </div>
 
             {/* Destination Wilaya with Priority Chips */}
             <div>
-              <Label className="mb-1.5">{isFr ? "Destination (Wilaya) *" : "ولاية الوصول / الوجهة *"}</Label>
+              <FieldLabel htmlFor="tr-dest">
+                {isFr ? "Destination (Wilaya) *" : "ولاية الوصول / الوجهة *"}
+              </FieldLabel>
               <div className="mb-2 flex flex-wrap gap-1.5">
                 {priorityWilayas.map((pw) => {
                   const isSelected =
@@ -263,74 +253,67 @@ export function TransportForm({
                       type="button"
                       onClick={() => setValue("destination_wilaya", pw.name_ar, { shouldValidate: true })}
                       className={cn(
-                        "inline-flex items-center gap-1 rounded-lg px-2.5 py-1 text-xs font-bold transition-all active:scale-95",
+                        "inline-flex items-center gap-1 border px-2.5 py-1 text-xs font-bold transition-colors",
                         isSelected
-                          ? "bg-priority-critical text-white shadow-xs"
-                          : "bg-priority-critical/10 text-priority-critical hover:bg-priority-critical/20"
+                          ? "border-haba-red bg-haba-red text-white"
+                          : "border-haba-red-200 bg-haba-red-50 text-haba-red hover:border-haba-red",
+                        FOCUS_RING,
                       )}
                     >
-                      <Zap className="size-3 text-amber-500 shrink-0 fill-amber-500" />
+                      <Icon name="fire" size={12} className="shrink-0" />
                       <span>{isFr ? `${pw.codeStr} - ${pw.name_fr}` : `${pw.codeStr} - ${pw.name_ar}`}</span>
                     </button>
                   );
                 })}
               </div>
               <WilayaSelect
+                id="tr-dest"
                 locale={locale}
                 value={selectedDest}
                 onChange={(e) => setValue("destination_wilaya", e.target.value, { shouldValidate: true })}
               />
               {errors.destination_wilaya && (
-                <p className="mt-1 text-xs text-destructive">{errors.destination_wilaya.message}</p>
+                <p className="mt-1 text-xs text-haba-red">{errors.destination_wilaya.message}</p>
               )}
             </div>
           </div>
-        </CardContent>
-      </Card>
+      </FormStep>
 
       {/* 3. Vehicle & Capacity */}
-      <Card>
-        <CardContent className="space-y-4 px-5 pt-6">
-          <div className="flex items-center gap-2 text-foreground font-bold">
-            <span className="flex size-7 items-center justify-center rounded-lg bg-blue-500/10 text-blue-600 dark:text-blue-400 text-sm font-extrabold">
-              3
-            </span>
-            <h2>{isFr ? "Type de véhicule & Disponibilité" : "نوع المركبة والقدرة الاستيعابية"}</h2>
-          </div>
-
-          {/* Vehicle Type Visual Cards */}
-          <div className="space-y-2">
-            <Label className="text-xs font-semibold text-muted-foreground">
+      <FormStep
+        step={3}
+        title={isFr ? "Type de véhicule & Disponibilité" : "نوع المركبة والقدرة الاستيعابية"}
+      >
+        <div className="flex flex-col gap-4">
+          {/* Real radios, not buttons — design.md §8.5 */}
+          <fieldset>
+            <legend className="mb-1.5 block text-[13px] font-semibold text-haba-ink-2">
               {isFr ? "Sélectionnez votre type de véhicule :" : "اختر نوع المركبة المتوفرة لديك :"}
-            </Label>
-            <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
-              {vehicleOptions.map((v) => {
-                const isSelected = selectedVehicle === v.value;
-                const Icon = vehicleIcons[v.value] || Truck;
-                return (
-                  <button
-                    key={v.value}
-                    type="button"
-                    onClick={() => setValue("vehicle_type", v.value as TransportOfferInput["vehicle_type"])}
-                    className={cn(
-                      "flex flex-col items-center justify-center p-3 rounded-2xl border text-center transition-all cursor-pointer",
-                      isSelected
-                        ? "border-blue-500 bg-blue-500/10 text-foreground font-bold shadow-xs"
-                        : "border-border bg-card/60 text-muted-foreground hover:bg-secondary/40"
-                    )}
-                  >
-                    <Icon className="size-5 mb-1.5 text-blue-600 dark:text-blue-400" />
-                    <span className="text-xs leading-tight">{getVehicleLabel(v.value, locale)}</span>
-                  </button>
-                );
-              })}
+            </legend>
+            <div className="grid grid-cols-2 gap-2 desktop:grid-cols-4">
+              {vehicleOptions.map((v) => (
+                <ChoiceCard
+                  key={v.value}
+                  name="vehicle_type"
+                  compact
+                  icon={vehicleIcons[v.value] ?? "truck"}
+                  title={getVehicleLabel(v.value, locale)}
+                  checked={selectedVehicle === v.value}
+                  onChange={() =>
+                    setValue("vehicle_type", v.value as TransportOfferInput["vehicle_type"])
+                  }
+                />
+              ))}
             </div>
-          </div>
+          </fieldset>
 
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+          <div className="grid grid-cols-1 gap-3 desktop:grid-cols-3">
             <div>
-              <Label className="mb-1.5">{isFr ? "Capacité estimée (kg)" : "الحمولة التقريبية (كغ)"}</Label>
-              <Input
+              <FieldLabel htmlFor="tr-capacity">
+                {isFr ? "Capacité estimée (kg)" : "الحمولة التقريبية (كغ)"}
+              </FieldLabel>
+              <FieldInput
+                id="tr-capacity"
                 type="number"
                 min={0}
                 placeholder="500"
@@ -341,34 +324,43 @@ export function TransportForm({
             </div>
 
             <div>
-              <Label className="mb-1.5">{isFr ? "Date du trajet" : "تاريخ الانطلاق"}</Label>
-              <Input type="date" {...register("travel_date")} />
+              <FieldLabel htmlFor="tr-date">
+                {isFr ? "Date du trajet" : "تاريخ الانطلاق"}
+              </FieldLabel>
+              <FieldInput id="tr-date" type="date" {...register("travel_date")} />
             </div>
 
             <div>
-              <Label className="mb-1.5">{isFr ? "Créneau horaire" : "التوقيت المفضل"}</Label>
-              <Input
+              <FieldLabel htmlFor="tr-window">
+                {isFr ? "Créneau horaire" : "التوقيت المفضل"}
+              </FieldLabel>
+              <FieldInput
+                id="tr-window"
                 placeholder={isFr ? "Ex : Matin 08h" : "مثال: الصباح الباكر"}
                 {...register("time_window")}
               />
             </div>
           </div>
 
-          <label className="flex items-center gap-2 text-xs font-semibold cursor-pointer pt-1">
-            <Checkbox
-              checked={hasEmptySpace}
-              onCheckedChange={(v) => setValue("has_empty_space", Boolean(v))}
-            />
-            <span>
-              {isFr
+          <ChoiceCard
+            type="checkbox"
+            compact
+            showControl
+            title={
+              isFr
                 ? "J'ai un espace libre disponible prêt à charger des colis d'urgence"
-                : "أملك مساحة فارغة في المركبة وجاهز لتحميل طرود ومساعدات إغاثية"}
-            </span>
-          </label>
+                : "أملك مساحة فارغة في المركبة وجاهز لتحميل طرود ومساعدات إغاثية"
+            }
+            checked={hasEmptySpace}
+            onChange={(e) => setValue("has_empty_space", e.target.checked)}
+          />
 
           <div>
-            <Label className="mb-1.5">{isFr ? "Remarques (facultatif)" : "ملاحظات إضافية عن الرحلة (اختياري)"}</Label>
-            <Textarea
+            <FieldLabel htmlFor="tr-notes">
+              {isFr ? "Remarques (facultatif)" : "ملاحظات إضافية عن الرحلة (اختياري)"}
+            </FieldLabel>
+            <FieldTextarea
+              id="tr-notes"
               placeholder={
                 isFr
                   ? "Villes de passage, contraintes de volume..."
@@ -377,28 +369,26 @@ export function TransportForm({
               {...register("notes")}
             />
           </div>
-        </CardContent>
-      </Card>
+        </div>
+      </FormStep>
 
       {submitError && (
-        <Alert variant="destructive">
-          <AlertDescription>{submitError}</AlertDescription>
-        </Alert>
+        <p
+          role="alert"
+          className="border border-haba-red bg-haba-red-50 p-4 text-sm font-semibold text-haba-red"
+        >
+          {submitError}
+        </p>
       )}
 
-      <Button
-        type="submit"
-        size="lg"
-        className="w-full bg-blue-600 hover:bg-blue-700 text-white font-extrabold text-base shadow-md h-12 rounded-2xl"
-        disabled={submitting}
-      >
+      <Action type="submit" variant="primary" size="submit" disabled={submitting}>
         {submitting ? (
           <Loader2 className="size-5 animate-spin" />
         ) : (
-          <Truck className="size-5 ms-1" />
+          <Icon name="truck-delivery" size={20} />
         )}
         <span>{isFr ? "Enregistrer mon offre de transport" : "تأكيد تسجيل عرض النقل والشحن"}</span>
-      </Button>
+      </Action>
     </form>
   );
 }

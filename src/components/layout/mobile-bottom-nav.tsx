@@ -1,133 +1,89 @@
 "use client";
 
-import { useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { Home, MapPin, Gift, TriangleAlert, Menu } from "lucide-react";
-import { MobileNav } from "./mobile-nav";
-import type { AvailableLocale } from "@/i18n/locales";
+
 import { cn } from "@/lib/utils";
+import { Icon, type IconName } from "@/components/icons";
+import { FOCUS_RING } from "@/components/site";
+import { useMobileMenu } from "./mobile-menu-context";
 
-export function MobileBottomNav({ locale }: { locale: AvailableLocale }) {
+export type TabBarLabels = {
+  label: string;
+  home: string;
+  donate: string;
+  help: string;
+  map: string;
+  menu: string;
+};
+
+/**
+ * Five-item tab bar, ≤860px. design.md §3.6
+ *
+ * The middle item is inverted — red ground, white text — so the emergency
+ * action is the visual anchor of the bar. Flat, not a floating circle.
+ *
+ * The artboard says `position: sticky`; that only works because the artboard is
+ * one scrolling column. `fixed` is what actually pins it in the real layout,
+ * paired with the 74px body padding in globals.css.
+ */
+export function MobileBottomNav({ labels }: { labels: TabBarLabels }) {
   const pathname = usePathname();
-  const [drawerOpen, setDrawerOpen] = useState(false);
-  const isFr = locale === "fr";
+  const { open, toggle } = useMobileMenu();
 
-  // Hide bottom nav on admin routes
-  if (pathname?.startsWith("/admin")) {
-    return null;
-  }
+  if (pathname?.startsWith("/admin")) return null;
 
-  const items = [
-    {
-      href: "/",
-      label: isFr ? "Accueil" : "الرئيسية",
-      icon: Home,
-      active: pathname === "/",
-    },
-    {
-      href: "/donate",
-      label: isFr ? "Faire un don" : "تقديم مساعدة",
-      icon: Gift,
-      active: pathname === "/donate",
-      tone: "text-algeria-green",
-    },
-    {
-      href: "/help",
-      label: isFr ? "Besoin d'aide" : "طلب إغاثة",
-      icon: TriangleAlert,
-      active: pathname === "/help",
-      isCta: true,
-    },
-    {
-      href: "/map",
-      label: isFr ? "Carte" : "الخريطة",
-      icon: MapPin,
-      active: pathname === "/map",
-    },
+  const items: { href: string; label: string; icon: IconName; cta?: boolean }[] = [
+    { href: "/", label: labels.home, icon: "home-09" },
+    { href: "/donate", label: labels.donate, icon: "gift" },
+    { href: "/help", label: labels.help, icon: "alert-02", cta: true },
+    { href: "/map", label: labels.map, icon: "maps-location-02" },
   ];
 
   return (
-    <>
-      <nav
-        aria-label={isFr ? "Navigation mobile principale" : "شريط التنقل السفلي"}
-        className="fixed bottom-0 inset-x-0 z-40 block lg:hidden border-t border-border/80 bg-background/95 backdrop-blur-md supports-backdrop-filter:bg-background/90 shadow-lg safe-area-pb"
-      >
-        <div className="flex h-16 items-center justify-around px-2 max-w-md mx-auto">
-          {items.map((item) => {
-            const Icon = item.icon;
-            if (item.isCta) {
-              return (
-                <Link
-                  key={item.href}
-                  href={item.href}
-                  className="flex flex-col items-center justify-center -mt-5 relative group"
-                  aria-label={item.label}
-                >
-                  <div
-                    className={cn(
-                      "flex size-12 items-center justify-center rounded-full bg-priority-critical text-white shadow-lg shadow-priority-critical/30 transition-transform duration-200 active:scale-95 group-hover:scale-105",
-                      item.active && "scale-105 shadow-priority-critical/50 ring-2 ring-priority-critical/30"
-                    )}
-                  >
-                    <Icon className="size-6 shrink-0 animate-pulse" />
-                  </div>
-                  <span
-                    className={cn(
-                      "mt-1 text-[10px] font-extrabold truncate leading-tight transition-colors",
-                      item.active ? "text-priority-critical font-black" : "text-priority-critical"
-                    )}
-                  >
-                    {item.label}
-                  </span>
-                </Link>
-              );
-            }
-
-            return (
-              <Link
-                key={item.href}
-                href={item.href}
-                className={cn(
-                  "flex flex-1 flex-col items-center justify-center py-1 text-center transition-colors min-h-[48px] rounded-xl active:bg-muted/40",
-                  item.active
-                    ? (item.tone || "text-algeria-green") + " font-bold"
-                    : "text-muted-foreground hover:text-foreground"
-                )}
-              >
-                <Icon className={cn("size-5 transition-transform", item.active && "scale-110")} />
-                <span className="mt-1 text-[10px] font-semibold leading-none truncate">
-                  {item.label}
-                </span>
-                {item.active && (
-                  <span className={cn("mt-0.5 size-1 rounded-full", item.tone === "text-algeria-green" ? "bg-algeria-green" : "bg-primary")} />
-                )}
-              </Link>
-            );
-          })}
-
-          {/* More Drawer Trigger Button */}
-          <button
-            type="button"
-            onClick={() => setDrawerOpen(true)}
-            className="flex flex-1 flex-col items-center justify-center py-1 text-center text-muted-foreground hover:text-foreground transition-colors min-h-[48px] rounded-xl active:bg-muted/40 cursor-pointer"
-            aria-label={isFr ? "Toutes les rubriques" : "جميع الأقسام والخدمات"}
+    <nav
+      aria-label={labels.label}
+      className="fixed inset-x-0 bottom-0 z-40 grid grid-cols-5 border-t border-haba-border bg-haba-surface desktop:hidden"
+    >
+      {items.map((item) => {
+        const active = item.href === "/" ? pathname === "/" : pathname.startsWith(item.href);
+        return (
+          <Link
+            key={item.href}
+            href={item.href}
+            aria-current={active ? "page" : undefined}
+            className={cn(
+              "relative flex flex-col items-center justify-center gap-[5px] px-1 py-2.5 text-center text-[10.5px] leading-tight",
+              item.cta
+                ? "bg-haba-red font-bold text-white"
+                : active
+                  ? // 3px cap on the top edge: colour alone does not carry
+                    // state, and the bar reads at a glance. design.md §8.5
+                    "font-bold text-haba-green before:absolute before:inset-x-0 before:-top-px before:h-[3px] before:bg-haba-green"
+                  : "font-semibold text-haba-muted",
+              FOCUS_RING,
+            )}
           >
-            <Menu className="size-5" />
-            <span className="mt-1 text-[10px] font-semibold leading-none truncate">
-              {isFr ? "Menu" : "القائمة"}
-            </span>
-          </button>
-        </div>
-      </nav>
+            <Icon name={item.icon} size={20} />
+            {item.label}
+          </Link>
+        );
+      })}
 
-      {/* Categorized Drawer Instance */}
-      <MobileNav
-        locale={locale}
-        isOpen={drawerOpen}
-        onOpenChange={setDrawerOpen}
-        trigger={null}
-      />
-    </>
+      <button
+        type="button"
+        onClick={toggle}
+        aria-expanded={open}
+        aria-controls="site-mobile-menu"
+        className={cn(
+          "flex flex-col items-center justify-center gap-[5px] px-1 py-2.5 text-center text-[10.5px] font-semibold leading-tight",
+          open ? "text-haba-green" : "text-haba-muted",
+          FOCUS_RING,
+        )}
+      >
+        <Icon name="menu-01" size={20} />
+        {labels.menu}
+      </button>
+    </nav>
   );
 }

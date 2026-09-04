@@ -51,3 +51,24 @@ export const emergencyContacts: EmergencyContact[] = [
     icon: TreePine,
   },
 ];
+
+/**
+ * Flattens the contacts into the row shape the emergency-numbers block renders
+ * (design.md §3.17): the short number, plus a second row for the toll-free
+ * number where one exists, labelled as such with the authority beneath it.
+ *
+ * The artboards hardcode five rows; this derives them from the verified list
+ * above, which also carries 1070 (forest fires).
+ */
+export function emergencyNumberRows(
+  locale: "ar" | "fr",
+  greenLabel: string,
+): { number: string; name: string; sub: string }[] {
+  return emergencyContacts.flatMap((c) => {
+    const name = (locale === "fr" ? c.label_fr : c.label) ?? c.label;
+    const sub = ((locale === "fr" ? c.hint_fr : c.hint) ?? "") as string;
+    const rows = [{ number: c.number, name, sub }];
+    if (c.greenNumber) rows.push({ number: c.greenNumber, name: greenLabel, sub: name });
+    return rows;
+  });
+}

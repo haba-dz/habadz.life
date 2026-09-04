@@ -2,7 +2,9 @@
 
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import { HeartHandshake, Gift, Truck, MapPin, TriangleAlert } from "lucide-react";
+
+import { Icon, type IconName } from "@/components/icons";
+import { actionVariants, BrandMark, FOCUS_RING } from "@/components/site";
 import {
   Dialog,
   DialogContent,
@@ -10,26 +12,99 @@ import {
   DialogTitle,
   DialogDescription,
 } from "@/components/ui/dialog";
-import { Button } from "@/components/ui/button";
 import { siteConfig } from "@/config/site";
+import { cn } from "@/lib/utils";
 import type { AvailableLocale } from "@/i18n/locales";
 
 const STORAGE_KEY = "haba_welcome_seen_v1";
 
-const rolesAr = [
-  { href: "/help", icon: TriangleAlert, title: "أحتاج مساعدة (عائلة متضررة)", desc: "تسجيل احتياجات أسرتكم لإيصال الإغاثة والمواد الأساسية", color: "bg-priority-critical/10 text-priority-critical" },
-  { href: "/donate", icon: Gift, title: "لدي مساعدات عينية", desc: "أملك مواد وإعانات وأريد إيصالها للمتضررين", color: "bg-algeria-green/10 text-algeria-green" },
-  { href: "/volunteers", icon: HeartHandshake, title: "أريد التطوع ميدانيًا أو طبياً", desc: "المشاركة في فرز الطرود، الإغاثة، أو الرعاية الصحية", color: "bg-amber-500/10 text-amber-600" },
-  { href: "/map", icon: MapPin, title: "خريطة المراكز ونقاط الإغاثة", desc: "الاطلاع على نقاط التجميع ومراكز الاستقبال المفتوحة", color: "bg-blue-500/10 text-blue-600" },
+type Role = {
+  href: string;
+  icon: IconName;
+  /** Chip tone for the icon tile. */
+  tone: "red" | "green" | "amber" | "ink";
+  title: string;
+  desc: string;
+};
+
+const rolesAr: Role[] = [
+  {
+    href: "/help",
+    icon: "alert-02",
+    tone: "red",
+    title: "أحتاج مساعدة (عائلة متضررة)",
+    desc: "تسجيل احتياجات أسرتكم لإيصال الإغاثة والمواد الأساسية",
+  },
+  {
+    href: "/donate",
+    icon: "gift",
+    tone: "green",
+    title: "لدي مساعدات عينية",
+    desc: "أملك مواد وإعانات وأريد إيصالها للمتضررين",
+  },
+  {
+    href: "/volunteers",
+    icon: "user-group",
+    tone: "amber",
+    title: "أريد التطوع ميدانيًا أو طبياً",
+    desc: "المشاركة في فرز الطرود، الإغاثة، أو الرعاية الصحية",
+  },
+  {
+    href: "/map",
+    icon: "maps-location-02",
+    tone: "ink",
+    title: "خريطة المراكز ونقاط الإغاثة",
+    desc: "الاطلاع على نقاط التجميع ومراكز الاستقبال المفتوحة",
+  },
 ];
 
-const rolesFr = [
-  { href: "/help", icon: TriangleAlert, title: "J'ai besoin d'aide (famille sinistrée)", desc: "Enregistrer vos besoins urgents (vivres, hébergement, soins)", color: "bg-priority-critical/10 text-priority-critical" },
-  { href: "/donate", icon: Gift, title: "J'ai des dons matériels", desc: "Fournir des vivres et produits de première nécessité", color: "bg-algeria-green/10 text-algeria-green" },
-  { href: "/volunteers", icon: HeartHandshake, title: "Volontariat de terrain & Médical", desc: "Aider au tri des colis, secours ou soins", color: "bg-amber-500/10 text-amber-600" },
-  { href: "/map", icon: MapPin, title: "Carte des secours & centres", desc: "Consulter les points de collecte et centres d'accueil", color: "bg-blue-500/10 text-blue-600" },
+const rolesFr: Role[] = [
+  {
+    href: "/help",
+    icon: "alert-02",
+    tone: "red",
+    title: "J'ai besoin d'aide (famille sinistrée)",
+    desc: "Enregistrer vos besoins urgents (vivres, hébergement, soins)",
+  },
+  {
+    href: "/donate",
+    icon: "gift",
+    tone: "green",
+    title: "J'ai des dons matériels",
+    desc: "Fournir des vivres et produits de première nécessité",
+  },
+  {
+    href: "/volunteers",
+    icon: "user-group",
+    tone: "amber",
+    title: "Volontariat de terrain et médical",
+    desc: "Aider au tri des colis, aux secours ou aux soins",
+  },
+  {
+    href: "/map",
+    icon: "maps-location-02",
+    tone: "ink",
+    title: "Carte des secours et des centres",
+    desc: "Consulter les points de collecte et centres d'accueil",
+  },
 ];
 
+const toneTile: Record<Role["tone"], string> = {
+  red: "border-haba-red-200 bg-haba-red-50 text-haba-red",
+  green: "border-haba-green bg-haba-green-tint text-haba-green",
+  amber: "border-haba-amber-200 bg-haba-amber-50 text-haba-amber",
+  ink: "border-haba-border bg-haba-surface-2 text-haba-ink",
+};
+
+/**
+ * First-visit role chooser. design.md §3.9
+ *
+ * Opened on a timer rather than on the next frame: the dialog marks everything
+ * outside it aria-hidden, and doing that while React is still hydrating the
+ * page is reported as a hydration attribute mismatch on every container in
+ * <main>. A short delay also stops the modal from landing before the page has
+ * painted, which read as a blocker rather than a welcome.
+ */
 export function WelcomeDialog({ locale = "ar" }: { locale?: AvailableLocale }) {
   const router = useRouter();
   const [open, setOpen] = useState(false);
@@ -38,8 +113,8 @@ export function WelcomeDialog({ locale = "ar" }: { locale?: AvailableLocale }) {
 
   useEffect(() => {
     if (localStorage.getItem(STORAGE_KEY)) return;
-    const id = requestAnimationFrame(() => setOpen(true));
-    return () => cancelAnimationFrame(id);
+    const id = window.setTimeout(() => setOpen(true), 700);
+    return () => window.clearTimeout(id);
   }, []);
 
   function dismiss() {
@@ -59,47 +134,60 @@ export function WelcomeDialog({ locale = "ar" }: { locale?: AvailableLocale }) {
         if (!v) dismiss();
       }}
     >
-      <DialogContent className="sm:max-w-md">
-        <DialogHeader className="text-center sm:text-start">
-          <div className="mx-auto mb-2 flex size-12 items-center justify-center rounded-2xl bg-algeria-green/10 text-algeria-green sm:mx-0">
-            <HeartHandshake className="size-6" />
-          </div>
-          <DialogTitle className="text-xl">
+      <DialogContent className="max-h-[88vh] overflow-y-auto rounded-none border-haba-border sm:max-w-lg">
+        <DialogHeader>
+          <span className="flex size-11 items-center justify-center bg-haba-green text-white">
+            <BrandMark size={24} />
+          </span>
+          <DialogTitle className="text-[21px] font-bold leading-tight text-haba-forest">
             {isFr ? `Bienvenue sur ${siteConfig.name}` : `مرحبًا بك في ${siteConfig.name}`}
           </DialogTitle>
-          <DialogDescription>
+          <DialogDescription className="text-[13.5px] leading-relaxed text-haba-ink-2">
             {isFr
-              ? "Plateforme citoyenne solidaire pour coordonner les secours. Comment souhaitez-vous participer ?"
+              ? "Plateforme citoyenne de coordination des secours. Comment souhaitez-vous participer ?"
               : "منصة وطنية لتنسيق التضامن وتقديم المساعدات. كيف ترغب في المشاركة اليوم؟"}
           </DialogDescription>
         </DialogHeader>
 
-        <div className="grid gap-2.5 py-2">
-          {roles.map((r) => {
-            const Icon = r.icon;
-            return (
-              <button
-                key={r.href}
-                type="button"
-                onClick={() => choose(r.href)}
-                className="flex items-center gap-3.5 rounded-xl border border-border bg-card p-3.5 text-start transition-all hover:border-algeria-green hover:bg-muted/50 active:scale-[0.98] cursor-pointer"
+        <div className="border-s border-t border-haba-border">
+          {roles.map((r) => (
+            <button
+              key={r.href}
+              type="button"
+              onClick={() => choose(r.href)}
+              className={cn(
+                "flex w-full items-center gap-3.5 border-b border-e border-haba-border bg-haba-surface p-3.5 text-start hover:bg-haba-surface-2",
+                FOCUS_RING,
+              )}
+            >
+              <span
+                className={cn(
+                  "flex size-10 shrink-0 items-center justify-center border",
+                  toneTile[r.tone],
+                )}
               >
-                <div className={`flex size-10 shrink-0 items-center justify-center rounded-xl ${r.color}`}>
-                  <Icon className="size-5" />
-                </div>
-                <div className="flex-1 min-w-0">
-                  <div className="font-bold text-sm leading-tight text-foreground">{r.title}</div>
-                  <div className="text-xs text-muted-foreground line-clamp-1">{r.desc}</div>
-                </div>
-              </button>
-            );
-          })}
+                <Icon name={r.icon} size={20} />
+              </span>
+              <span className="min-w-0 flex-1">
+                <span className="block text-[14px] font-bold leading-tight text-haba-ink">
+                  {r.title}
+                </span>
+                <span className="mt-0.5 block truncate text-[12.5px] text-haba-muted">
+                  {r.desc}
+                </span>
+              </span>
+            </button>
+          ))}
         </div>
 
-        <div className="flex justify-end pt-1">
-          <Button variant="ghost" size="sm" onClick={dismiss}>
+        <div className="flex justify-end">
+          <button
+            type="button"
+            onClick={dismiss}
+            className={cn(actionVariants({ variant: "neutral", size: "sm" }))}
+          >
             {isFr ? "Fermer et parcourir le site" : "إغلاق والتصفح مباشرة"}
-          </Button>
+          </button>
         </div>
       </DialogContent>
     </Dialog>

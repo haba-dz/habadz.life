@@ -31,6 +31,29 @@ export const createClient = cache(async () => {
   );
 });
 
+/**
+ * عميل عام بلا كوكيز — للقراءات العمومية المخزَّنة مؤقتًا فقط.
+ *
+ * `createClient` أعلاه يستدعي `cookies()`، و Next.js 16 يمنع مصادر البيانات
+ * الديناميكية داخل `unstable_cache()`. استدعاؤه هناك كان يُعطّل الصفحة الرئيسية
+ * في وضع التطوير، ويُرجع أصفارًا صامتة في الإنتاج لأن الخطأ يُبتلع في try/catch.
+ *
+ * وهو الأصحّ أمنيًا كذلك: نتيجة RLS هنا مجهولة الهوية ومحدَّدة سلفًا، فيصحّ
+ * تخزينها في ذاكرة مشتركة بين كل الزوار. راجع design.md §8.1b
+ */
+export function createPublicClient() {
+  return createServerClient<Database>(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+    {
+      cookies: {
+        getAll: () => [],
+        setAll: () => {},
+      },
+    },
+  );
+}
+
 // Fetches the current user, memoized within the request to avoid repeated
 // lookups between the layout and child pages.
 export const getCurrentUser = cache(async () => {

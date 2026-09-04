@@ -1,11 +1,18 @@
 "use client";
 
 import { useState } from "react";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
-import { Input } from "@/components/ui/input";
-import { Phone, MapPin, Stethoscope, Briefcase, Search, PawPrint } from "lucide-react";
+
+import { Icon, type IconName } from "@/components/icons";
+import {
+  Chip,
+  FieldInput,
+  FOCUS_RING,
+  HairlineCell,
+  HairlineGrid,
+  SectionHeader,
+} from "@/components/site";
 import { findWilaya } from "@/lib/algeria-cities";
+import { cn } from "@/lib/utils";
 import type { AvailableLocale } from "@/i18n/locales";
 
 export interface Volunteer {
@@ -19,6 +26,39 @@ export interface Volunteer {
   can_teleconsult?: boolean;
 }
 
+type Filter = "all" | "human" | "vet";
+
+function FilterChip({
+  active,
+  onClick,
+  icon,
+  children,
+}: {
+  active: boolean;
+  onClick: () => void;
+  icon?: IconName;
+  children: React.ReactNode;
+}) {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      aria-pressed={active}
+      className={cn(
+        "inline-flex items-center gap-1.5 border px-3 py-[7px] text-[13px] transition-colors",
+        active
+          ? "border-haba-green bg-haba-green font-bold text-white"
+          : "border-haba-border bg-haba-surface font-semibold text-haba-ink hover:border-haba-green hover:text-haba-green",
+        FOCUS_RING,
+      )}
+    >
+      {icon && <Icon name={icon} size={15} />}
+      {children}
+    </button>
+  );
+}
+
+/** No artboard — design.md §7.3, restyle-and-keep. */
 export function MedicalVolunteersList({
   volunteers,
   locale = "ar",
@@ -28,7 +68,7 @@ export function MedicalVolunteersList({
 }) {
   const isFr = locale === "fr";
   const [search, setSearch] = useState("");
-  const [filterType, setFilterType] = useState<"all" | "human" | "vet">("all");
+  const [filterType, setFilterType] = useState<Filter>("all");
 
   if (!volunteers || volunteers.length === 0) {
     return null;
@@ -41,6 +81,8 @@ export function MedicalVolunteersList({
       v.specialty.toLowerCase().includes(term) ||
       v.commune_id.toLowerCase().includes(term);
 
+    // Kept verbatim from before the restyle — this is the existing predicate,
+    // not a new one.
     const isVet = v.specialty.includes("بيطر") || v.specialty.toLowerCase().includes("vet");
 
     if (filterType === "vet") return matchesSearch && isVet;
@@ -49,121 +91,129 @@ export function MedicalVolunteersList({
   });
 
   return (
-    <div className="space-y-6 pt-10">
-      <div className="text-center space-y-1">
-        <h2 className="text-2xl font-bold">
-          {isFr ? "Personnel médical et vétérinaire bénévole" : "الأطقم الطبية والبيطرية المتطوعة"}
-        </h2>
-        <p className="text-sm text-muted-foreground">
-          {isFr
-            ? "Annuaire des professionnels inscrits pour les interventions d'urgence et les téléconsultations"
-            : "قائمة الكوادر المسجلة للتدخل السريع وتقديم الاستشارات"}
-        </p>
-      </div>
+    <section className="pt-8 desktop:pt-[clamp(30px,4.8vw,64px)]">
+      <SectionHeader
+        icon="stethoscope"
+        title={
+          isFr
+            ? "Personnel médical et vétérinaire bénévole"
+            : "الأطقم الطبية والبيطرية المتطوعة"
+        }
+        caption={
+          isFr
+            ? "Annuaire des professionnels inscrits"
+            : "قائمة الكوادر المسجلة للتدخل السريع"
+        }
+      />
 
-      {/* Search bar and filters */}
-      <div className="space-y-3">
+      <div className="mb-4 flex flex-col gap-3 border border-haba-border bg-haba-surface p-4 desktop:p-5">
         <div className="relative">
-          <Search className="absolute right-3 top-2.5 h-4 w-4 text-muted-foreground" />
-          <Input
-            placeholder={isFr ? "Rechercher par nom, spécialité ou commune..." : "ابحث بالاسم، التخصص أو البلدية..."}
+          {/* Logical inset: this used `right-3`, which put the icon over the
+              text once the page flipped to LTR French. */}
+          <Icon
+            name="search-01"
+            size={16}
+            className="pointer-events-none absolute end-3.5 top-1/2 -translate-y-1/2 text-haba-muted"
+          />
+          <FieldInput
+            aria-label={
+              isFr ? "Rechercher un professionnel de santé" : "البحث عن كادر صحي"
+            }
+            placeholder={
+              isFr
+                ? "Rechercher par nom, spécialité ou commune..."
+                : "ابحث بالاسم، التخصص أو البلدية..."
+            }
             value={search}
             onChange={(e) => setSearch(e.target.value)}
-            className="pr-9"
+            className="pe-10"
           />
         </div>
 
-        <div className="flex gap-2 justify-center">
-          <button
-            type="button"
-            onClick={() => setFilterType("all")}
-            className={`px-3 py-1 text-xs rounded-full border transition-colors ${
-              filterType === "all"
-                ? "bg-primary text-primary-foreground border-primary"
-                : "bg-background hover:bg-muted text-muted-foreground"
-            }`}
-          >
+        <div role="group" className="flex flex-wrap gap-2">
+          <FilterChip active={filterType === "all"} onClick={() => setFilterType("all")}>
             {isFr ? `Tous (${volunteers.length})` : `الكل (${volunteers.length})`}
-          </button>
-          <button
-            type="button"
+          </FilterChip>
+          <FilterChip
+            active={filterType === "human"}
             onClick={() => setFilterType("human")}
-            className={`px-3 py-1 text-xs rounded-full border transition-colors ${
-              filterType === "human"
-                ? "bg-emerald-600 text-white border-emerald-600"
-                : "bg-background hover:bg-muted text-muted-foreground"
-            }`}
+            icon="stethoscope"
           >
-            <span className="inline-flex items-center gap-1">
-              <Stethoscope className="size-3.5" /> {isFr ? "Médecine humaine" : "طب بشري"}
-            </span>
-          </button>
-          <button
-            type="button"
+            {isFr ? "Médecine humaine" : "طب بشري"}
+          </FilterChip>
+          <FilterChip
+            active={filterType === "vet"}
             onClick={() => setFilterType("vet")}
-            className={`px-3 py-1 text-xs rounded-full border transition-colors ${
-              filterType === "vet"
-                ? "bg-emerald-600 text-white border-emerald-600"
-                : "bg-background hover:bg-muted text-muted-foreground"
-            }`}
+            icon="horse"
           >
-            <span className="inline-flex items-center gap-1">
-              <PawPrint className="size-3.5" /> {isFr ? "Médecine vétérinaire" : "طب بيطري"}
-            </span>
-          </button>
+            {isFr ? "Médecine vétérinaire" : "طب بيطري"}
+          </FilterChip>
         </div>
       </div>
 
-      {/* Cards list */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-        {filtered.map((v) => (
-          <Card key={v.id} className="border-border/70 shadow-sm">
-            <CardHeader className="pb-2">
-              <div className="flex justify-between items-start">
-                <CardTitle className="text-base flex items-center gap-2">
-                  <Stethoscope className="h-4 w-4 text-emerald-600" />
-                  {v.full_name}
-                </CardTitle>
-                <Badge variant="secondary" className="text-xs">{v.specialty}</Badge>
-              </div>
-            </CardHeader>
-            <CardContent className="space-y-2 text-sm text-muted-foreground">
-              <div className="flex items-center gap-2">
-                <MapPin className="h-4 w-4 text-primary shrink-0" />
-                <span>
-                  {v.commune_id}
-                  {v.wilaya_code ? `، ${isFr ? (findWilaya(v.wilaya_code)?.name_fr ?? v.wilaya_code) : (findWilaya(v.wilaya_code)?.name_ar ?? v.wilaya_code)}` : ""}
-                </span>
-              </div>
-              {v.phone && (
-                <div className="flex items-center gap-2">
-                  <Phone className="h-4 w-4 text-primary shrink-0" />
-                  <a href={`tel:${v.phone}`} className="text-foreground font-medium hover:underline" dir="ltr">
-                    {v.phone}
-                  </a>
-                </div>
-              )}
-              {v.current_workplace && (
-                <div className="flex items-center gap-2">
-                  <Briefcase className="h-4 w-4 text-primary shrink-0" />
-                  <span>{v.current_workplace}</span>
-                </div>
-              )}
-              {v.can_teleconsult && (
-                <Badge variant="outline" className="bg-emerald-50 text-emerald-700 dark:bg-emerald-950 dark:text-emerald-300 text-xs mt-1">
-                  {isFr ? "Téléconsultation disponible" : "متاح للاستشارة الهاتفية"}
-                </Badge>
-              )}
-            </CardContent>
-          </Card>
-        ))}
-      </div>
-
-      {filtered.length === 0 && (
-        <p className="text-center text-sm text-muted-foreground py-6">
-          {isFr ? "Aucun résultat ne correspond à votre recherche." : "لا توجد نتائج مطابقة لبحثك."}
+      {filtered.length === 0 ? (
+        <p className="border border-haba-border bg-haba-surface p-6 text-center text-sm text-haba-muted">
+          {isFr
+            ? "Aucun résultat ne correspond à votre recherche."
+            : "لا توجد نتائج مطابقة لبحثك."}
         </p>
+      ) : (
+        <HairlineGrid min={300}>
+          {filtered.map((v) => {
+            const wilaya = v.wilaya_code ? findWilaya(v.wilaya_code) : null;
+            const wilayaName = wilaya
+              ? (isFr ? wilaya.name_fr : wilaya.name_ar)
+              : v.wilaya_code;
+
+            return (
+              <HairlineCell key={v.id} className="flex flex-col gap-2 p-4 desktop:p-5">
+                <div className="flex items-start justify-between gap-2">
+                  <p className="flex items-center gap-2 font-bold text-haba-ink">
+                    <Icon name="stethoscope" size={16} className="shrink-0 text-haba-green" />
+                    {v.full_name}
+                  </p>
+                  <Chip tone="green" fill="tint" size="xs" className="shrink-0">
+                    {v.specialty}
+                  </Chip>
+                </div>
+
+                <p className="flex items-center gap-2 text-[13.5px] text-haba-ink-2">
+                  <Icon name="location-01" size={14} className="shrink-0 text-haba-muted" />
+                  {v.commune_id}
+                  {wilayaName ? `، ${wilayaName}` : ""}
+                </p>
+
+                {v.phone && (
+                  <p className="flex items-center gap-2 text-[13.5px]">
+                    <Icon name="call-02" size={14} className="shrink-0 text-haba-muted" />
+                    <a
+                      href={`tel:${v.phone}`}
+                      dir="ltr"
+                      className={cn("font-semibold text-haba-green hover:underline", FOCUS_RING)}
+                    >
+                      {v.phone}
+                    </a>
+                  </p>
+                )}
+
+                {v.current_workplace && (
+                  <p className="flex items-center gap-2 text-[13.5px] text-haba-ink-2">
+                    <Icon name="building-06" size={14} className="shrink-0 text-haba-muted" />
+                    {v.current_workplace}
+                  </p>
+                )}
+
+                {v.can_teleconsult && (
+                  <Chip tone="green" fill="outline" size="xs" className="mt-0.5">
+                    <Icon name="call-ringing-02" size={12} />
+                    {isFr ? "Téléconsultation disponible" : "متاح للاستشارة الهاتفية"}
+                  </Chip>
+                )}
+              </HairlineCell>
+            );
+          })}
+        </HairlineGrid>
       )}
-    </div>
+    </section>
   );
 }

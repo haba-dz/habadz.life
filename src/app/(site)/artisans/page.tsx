@@ -1,7 +1,10 @@
 import type { Metadata } from "next";
-import { ArtisanForm } from "./artisan-form";
+
+import { EmergencySection } from "@/components/shared/emergency-section";
+import { PageHero, SECTION } from "@/components/site";
 import { getDictionary } from "@/i18n/dictionaries";
 import { getLocale } from "@/i18n/server";
+import { ArtisanForm } from "./artisan-form";
 
 export async function generateMetadata(): Promise<Metadata> {
   const locale = await getLocale();
@@ -12,19 +15,26 @@ export async function generateMetadata(): Promise<Metadata> {
   };
 }
 
+/** No artboard — design.md §7.3, restyle-and-keep. */
 export default async function ArtisansPage() {
   const locale = await getLocale();
   const t = await getDictionary(locale);
+  const isFr = locale === "fr";
 
   return (
-    <div className="mx-auto max-w-2xl px-4 py-10">
-      <div className="mb-6 text-center">
-        <h1 className="text-3xl font-extrabold">{t.artisans.pageTitle}</h1>
-        <p className="mt-2 text-muted-foreground">
-          {t.artisans.pageSubtitle}
-        </p>
+    <>
+      <PageHero
+        eyebrow={isFr ? "Reconstruction et réparations" : "الترميم وإعادة البناء"}
+        eyebrowIcon="house-04"
+        title={t.artisans.pageTitle}
+        lede={t.artisans.pageSubtitle}
+      />
+
+      <div className={`mx-auto w-full max-w-[900px] px-4 desktop:px-6 ${SECTION}`}>
+        <ArtisanForm locale={locale} />
       </div>
-      <ArtisanForm locale={locale} />
-    </div>
+
+      <EmergencySection />
+    </>
   );
 }

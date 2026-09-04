@@ -1,5 +1,5 @@
 import type { Metadata, Viewport } from "next";
-import { Vazirmatn } from "next/font/google";
+import { IBM_Plex_Sans_Arabic, Vazirmatn } from "next/font/google";
 import { Analytics } from "@vercel/analytics/next"
 import "./globals.css";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -11,6 +11,16 @@ import { localeMeta } from "@/i18n/locales";
 const vazirmatn = Vazirmatn({
   subsets: ["arabic", "latin"],
   variable: "--font-vazirmatn",
+  display: "swap",
+});
+
+// Body face for the public site (design.md §2.2). next/font self-hosts it, so
+// no runtime request to fonts.gstatic.com. Not a variable font — weights are
+// the four the design actually uses.
+const ibmPlexArabic = IBM_Plex_Sans_Arabic({
+  subsets: ["arabic", "latin"],
+  weight: ["400", "500", "600", "700"],
+  variable: "--font-ibm-plex-arabic",
   display: "swap",
 });
 
@@ -47,7 +57,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
   const { htmlLang, dir } = localeMeta[await getLocale()];
 
   return (
-    <html lang={htmlLang} dir={dir} className={`${vazirmatn.variable} h-full antialiased`}>
+    <html lang={htmlLang} dir={dir} className={`${vazirmatn.variable} ${ibmPlexArabic.variable} h-full antialiased`}>
       <body className="min-h-full flex flex-col bg-background text-foreground overflow-x-clip w-full max-w-full">
         <TooltipProvider>
           <Analytics />

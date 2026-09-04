@@ -3,35 +3,19 @@
 import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
+
+import { Icon, type IconName } from "@/components/icons";
 import {
-  Loader2,
-  HeartHandshake,
-  MapPin,
-  Phone,
-  Home,
-  Users,
-  ShieldCheck,
-  CheckCircle2,
-  AlertTriangle,
-  Send,
-  Droplets,
-  Utensils,
-  Shirt,
-  Sparkles,
-  Baby,
-  Pill,
-  Tent,
-  Hammer,
-} from "lucide-react";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Textarea } from "@/components/ui/textarea";
-import { Label } from "@/components/ui/label";
-import { Checkbox } from "@/components/ui/checkbox";
-import { Card, CardContent } from "@/components/ui/card";
-import { Alert, AlertDescription } from "@/components/ui/alert";
-import { WilayaSelect } from "@/components/ui/wilaya-select";
-import { CommuneSelect } from "@/components/ui/commune-select";
+  Action,
+  ChoiceCard,
+  CommuneSelect,
+  Field,
+  FieldInput,
+  FieldLabel,
+  FieldPhoneInput,
+  FormStep,
+  WilayaSelect,
+} from "@/components/site";
 import {
   beneficiaryRequestSchema,
   needCategoryOptions,
@@ -40,21 +24,21 @@ import {
 import { submitBeneficiaryRequest } from "@/actions/beneficiary-requests";
 import { SuccessPanel } from "@/components/shared/success-panel";
 import type { AvailableLocale } from "@/i18n/locales";
-import { cn } from "@/lib/utils";
 
-const categoryIcons: Record<string, typeof Droplets> = {
-  water: Droplets,
-  food: Utensils,
-  clothing: Shirt,
-  blankets: Sparkles,
-  baby_supplies: Baby,
-  medical: Pill,
-  veterinary: Pill,
-  hygiene: Sparkles,
-  kitchenware: Utensils,
-  shelter: Tent,
-  construction_materials: Hammer,
-  other: HeartHandshake,
+/** design.md §5.6 */
+const categoryIcons: Record<string, IconName> = {
+  water: "water-energy",
+  food: "noodles",
+  clothing: "t-shirt",
+  blankets: "bed",
+  baby_supplies: "baby-bottle",
+  medical: "medicine-02",
+  veterinary: "horse",
+  hygiene: "cleaning-bucket",
+  kitchenware: "kitchen-utensils",
+  shelter: "tent",
+  construction_materials: "building-06",
+  other: "more-horizontal",
 };
 
 export function HelpRequestForm({
@@ -154,237 +138,264 @@ export function HelpRequestForm({
   }
 
   return (
-    <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
-      {/* 1. Identity & Location */}
-      <Card>
-        <CardContent className="space-y-4 px-5 pt-6">
-          <div className="flex items-center gap-2 text-foreground font-bold">
-            <span className="flex size-7 items-center justify-center rounded-lg bg-priority-critical/10 text-priority-critical text-sm font-extrabold">
-              1
-            </span>
-            <h2>{isFr ? "Identité et localisation du foyer" : "بيانات الاتصال ومكان التواجد"}</h2>
-          </div>
-
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
-            <div>
-              <Label className="mb-1.5">{isFr ? "Nom et prénom du responsable *" : "الاسم واللقب (رب الأسرة أو المتصل) *"}</Label>
-              <Input placeholder={isFr ? "Ex: Karim Benali" : "مثال: عبد القادر بوعلام"} {...register("full_name")} />
-              {errors.full_name && <p className="mt-1 text-xs text-destructive">{errors.full_name.message}</p>}
-            </div>
-
-            <div>
-              <Label className="mb-1.5">{isFr ? "Numéro de téléphone joignable *" : "رقم الهاتف للتواصل المباشر *"}</Label>
-              <Input dir="ltr" placeholder="0555xxxxxx" {...register("phone")} />
-              {errors.phone && <p className="mt-1 text-xs text-destructive">{errors.phone.message}</p>}
-            </div>
-          </div>
-
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
-            <div>
-              <Label className="mb-1.5">{isFr ? "Wilaya *" : "الولاية *"}</Label>
-              <WilayaSelect
-                locale={locale}
-                value={selectedWilaya}
-                onChange={(e) => {
-                  setValue("wilaya", e.target.value, { shouldValidate: true });
-                  setValue("commune", "");
-                }}
-              />
-              {errors.wilaya && <p className="mt-1 text-xs text-destructive">{errors.wilaya.message}</p>}
-            </div>
-
-            <div>
-              <Label className="mb-1.5">{isFr ? "Commune / Village *" : "البلدية / القرية أو الحي *"}</Label>
-              <CommuneSelect
-                wilaya={selectedWilaya}
-                locale={locale}
-                value={watch("commune")}
-                onChange={(e) => setValue("commune", e.target.value, { shouldValidate: true })}
-              />
-              {errors.commune && <p className="mt-1 text-xs text-destructive">{errors.commune.message}</p>}
-            </div>
-          </div>
-
-          <div>
-            <Label className="mb-1.5">{isFr ? "Précision sur le lieu (facultatif)" : "تحديد العنوان أو معالم الوصول (اختياري)"}</Label>
-            <Input
-              placeholder={isFr ? "Ex: Village Tala, près de l'école..." : "مثال: قرية تالامان، بجوار المدرسة الابتدائية..."}
-              {...register("address_note")}
+    <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
+      <FormStep
+        step={1}
+        title={isFr ? "Identité et localisation du foyer" : "بيانات الاتصال ومكان التواجد"}
+      >
+        <div className="grid gap-3.5 desktop:grid-cols-2">
+          <Field
+            label={isFr ? "Nom et prénom du responsable" : "الاسم واللقب (رب الأسرة أو المتصل)"}
+            required
+            htmlFor="help-name"
+            error={errors.full_name?.message}
+          >
+            <FieldInput
+              id="help-name"
+              placeholder={isFr ? "Ex : Karim Benali" : "مثال: عبد القادر بوعلام"}
+              {...register("full_name")}
             />
-          </div>
-        </CardContent>
-      </Card>
+          </Field>
 
-      {/* 2. Family & Housing Situation */}
-      <Card>
-        <CardContent className="space-y-4 px-5 pt-6">
-          <div className="flex items-center gap-2 text-foreground font-bold">
-            <span className="flex size-7 items-center justify-center rounded-lg bg-priority-critical/10 text-priority-critical text-sm font-extrabold">
-              2
-            </span>
-            <h2>{isFr ? "Situation familiale et état du logement" : "حجم الأسرة ووضعية السكن"}</h2>
-          </div>
+          <Field
+            label={isFr ? "Numéro de téléphone joignable" : "رقم الهاتف للتواصل المباشر"}
+            required
+            htmlFor="help-phone"
+            error={errors.phone?.message}
+          >
+            <FieldPhoneInput id="help-phone" placeholder="0555xxxxxx" {...register("phone")} />
+          </Field>
 
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
-            <div>
-              <Label className="mb-1.5">{isFr ? "Nombre de membres de la famille" : "عدد أفراد العائلة الإجمالي"}</Label>
-              <Input
-                type="number"
-                min="1"
-                max="50"
-                {...register("family_members_count", { valueAsNumber: true })}
-              />
-              {errors.family_members_count && (
-                <p className="mt-1 text-xs text-destructive">{errors.family_members_count.message}</p>
-              )}
-            </div>
+          <Field
+            label={isFr ? "Wilaya" : "الولاية"}
+            required
+            htmlFor="help-wilaya"
+            error={errors.wilaya?.message}
+          >
+            <WilayaSelect
+              id="help-wilaya"
+              locale={locale}
+              value={selectedWilaya}
+              onChange={(e) => {
+                setValue("wilaya", e.target.value, { shouldValidate: true });
+                setValue("commune", "");
+              }}
+            />
+          </Field>
 
-            <div>
-              <Label className="mb-1.5">{isFr ? "Dont nombre d'enfants / bébés" : "منهم عدد الأطفال والرُّضع"}</Label>
-              <Input
-                type="number"
-                min="0"
-                max="50"
-                {...register("children_count", { valueAsNumber: true })}
-              />
-              {errors.children_count && (
-                <p className="mt-1 text-xs text-destructive">{errors.children_count.message}</p>
-              )}
-            </div>
-          </div>
+          <Field
+            label={isFr ? "Commune / Village" : "البلدية / القرية أو الحي"}
+            required
+            htmlFor="help-commune"
+            error={errors.commune?.message}
+          >
+            <CommuneSelect
+              id="help-commune"
+              wilaya={selectedWilaya}
+              locale={locale}
+              value={watch("commune")}
+              onChange={(e) => setValue("commune", e.target.value, { shouldValidate: true })}
+            />
+          </Field>
+        </div>
 
-          {/* Housing Habitable status */}
-          <div>
-            <Label className="mb-1.5">{isFr ? "Le logement est-il habitable actuellement ?" : "هل السكن صالح للإقامة حالياً أم تضرر؟"}</Label>
-            <div className="grid grid-cols-3 gap-2 pt-1">
-              {([
-                { val: "yes", label: isFr ? "Oui, habitable" : "نعم، صالح للإقامة" },
-                { val: "no", label: isFr ? "Non, sinistré / évacué" : "لا، متضرر أو تم إخلاؤه" },
-                { val: "unknown", label: isFr ? "Partiellement" : "أضرار جزئية" },
-              ] as const).map((opt) => (
-                <button
-                  key={opt.val}
-                  type="button"
-                  onClick={() => setValue("is_housing_habitable", opt.val, { shouldValidate: true })}
-                  className={cn(
-                    "rounded-xl border p-2.5 text-xs font-bold transition-all cursor-pointer text-center",
-                    housingHabitable === opt.val
-                      ? "border-priority-critical bg-priority-critical/10 text-priority-critical ring-2 ring-priority-critical/20"
-                      : "border-border bg-card hover:bg-secondary/40 text-muted-foreground"
-                  )}
-                >
-                  {opt.label}
-                </button>
-              ))}
-            </div>
-          </div>
-        </CardContent>
-      </Card>
+        <Field
+          className="mt-3.5"
+          label={
+            isFr ? "Précision sur le lieu (facultatif)" : "تحديد العنوان أو معالم الوصول (اختياري)"
+          }
+          htmlFor="help-address"
+        >
+          <FieldInput
+            id="help-address"
+            placeholder={
+              isFr
+                ? "Ex: Village Tala, près de l'école..."
+                : "مثال: قرية تالامان، بجوار المدرسة الابتدائية…"
+            }
+            {...register("address_note")}
+          />
+        </Field>
+      </FormStep>
 
-      {/* 3. Needed Aid Categories */}
-      <Card>
-        <CardContent className="space-y-4 px-5 pt-6">
-          <div className="flex items-center gap-2 text-foreground font-bold">
-            <span className="flex size-7 items-center justify-center rounded-lg bg-priority-critical/10 text-priority-critical text-sm font-extrabold">
-              3
-            </span>
-            <h2>{isFr ? "Besoins prioritaires demandés *" : "نوع المساعدات المطلوبة بإلحاح *"}</h2>
-          </div>
+      <FormStep
+        step={2}
+        title={isFr ? "Situation familiale et état du logement" : "حجم الأسرة ووضعية السكن"}
+      >
+        <div className="grid gap-3.5 desktop:grid-cols-2">
+          <Field
+            label={isFr ? "Nombre de membres de la famille" : "عدد أفراد العائلة الإجمالي"}
+            htmlFor="help-family"
+            error={errors.family_members_count?.message}
+          >
+            <FieldInput
+              id="help-family"
+              type="number"
+              min="1"
+              max="50"
+              {...register("family_members_count", { valueAsNumber: true })}
+            />
+          </Field>
 
-          <p className="text-xs text-muted-foreground">
+          <Field
+            label={isFr ? "Dont nombre d'enfants / bébés" : "منهم عدد الأطفال والرُّضع"}
+            htmlFor="help-children"
+            error={errors.children_count?.message}
+          >
+            <FieldInput
+              id="help-children"
+              type="number"
+              min="0"
+              max="50"
+              {...register("children_count", { valueAsNumber: true })}
+            />
+          </Field>
+        </div>
+
+        <fieldset className="mt-4">
+          <legend className="mb-1.5 block text-[13px] font-semibold text-haba-ink-2">
             {isFr
-              ? "Sélectionnez toutes les catégories nécessaires pour votre famille :"
-              : "حدد المواد الأساسية التي تحتاجها أسرتكم في الوقت الراهن :"}
+              ? "Le logement est-il habitable actuellement ?"
+              : "هل السكن صالح للإقامة حالياً أم تضرّر؟"}
+          </legend>
+          <div className="grid gap-3 desktop:grid-cols-[repeat(auto-fit,minmax(min(215px,100%),1fr))]">
+            {(
+              [
+                { val: "yes", icon: "house-04", tone: "green", label: isFr ? "Oui, habitable" : "نعم، صالح للإقامة" },
+                { val: "unknown", icon: "house-01", tone: "danger", label: isFr ? "Partiellement" : "أضرار جزئية" },
+                { val: "no", icon: "house-01", tone: "danger", label: isFr ? "Non, sinistré / évacué" : "لا، متضرر أو تم إخلاؤه" },
+              ] as const
+            ).map((opt) => (
+              <ChoiceCard
+                key={opt.val}
+                name="is_housing_habitable"
+                value={opt.val}
+                tone={opt.tone}
+                icon={opt.icon}
+                title={opt.label}
+                checked={housingHabitable === opt.val}
+                onChange={() =>
+                  setValue("is_housing_habitable", opt.val, { shouldValidate: true })
+                }
+              />
+            ))}
+          </div>
+        </fieldset>
+      </FormStep>
+
+      <FormStep
+        step={3}
+        title={isFr ? "Besoins prioritaires demandés" : "نوع المساعدات المطلوبة بإلحاح"}
+        caption={
+          isFr
+            ? "Sélectionnez toutes les catégories nécessaires pour votre famille"
+            : "حدد المواد الأساسية التي تحتاجها أسرتكم في الوقت الراهن"
+        }
+      >
+        <fieldset>
+          <legend className="sr-only">
+            {isFr ? "Catégories de besoins" : "أنواع المساعدات المطلوبة"}
+          </legend>
+          <div className="grid gap-3 grid-cols-2 desktop:grid-cols-[repeat(auto-fit,minmax(min(215px,100%),1fr))]">
+            {needCategoryOptions.map((cat) => (
+              <ChoiceCard
+                key={cat.value}
+                type="checkbox"
+                compact
+                tone="danger"
+                name={`need-${cat.value}`}
+                icon={categoryIcons[cat.value] ?? "more-horizontal"}
+                title={cat.label}
+                checked={selectedCategories.includes(cat.value)}
+                onChange={() => toggleCategory(cat.value)}
+              />
+            ))}
+          </div>
+        </fieldset>
+        {errors.needed_categories && (
+          <p className="mt-2 text-xs font-semibold text-haba-red" role="alert">
+            {errors.needed_categories.message}
           </p>
+        )}
 
-          <div className="grid grid-cols-2 sm:grid-cols-3 gap-2.5 pt-1">
-            {needCategoryOptions.map((cat) => {
-              const selected = selectedCategories.includes(cat.value);
-              const Icon = categoryIcons[cat.value] || HeartHandshake;
-              return (
-                <button
-                  key={cat.value}
-                  type="button"
-                  onClick={() => toggleCategory(cat.value)}
-                  className={cn(
-                    "flex items-center gap-2 rounded-2xl border p-3 text-xs font-bold transition-all text-start cursor-pointer",
-                    selected
-                      ? "border-priority-critical bg-priority-critical/10 text-priority-critical ring-2 ring-priority-critical/25 shadow-xs"
-                      : "border-border bg-card/70 hover:bg-secondary/40 text-foreground"
-                  )}
-                >
-                  <Icon className="size-4 shrink-0" />
-                  <span className="truncate">{cat.label}</span>
-                </button>
-              );
-            })}
-          </div>
-          {errors.needed_categories && (
-            <p className="mt-1 text-xs text-destructive">{errors.needed_categories.message}</p>
-          )}
+        <div className="mt-4 grid gap-3 desktop:grid-cols-2">
+          <ChoiceCard
+            type="checkbox"
+            showControl
+            name="needs_medical"
+            title={
+              isFr
+                ? "Présence de malades chroniques ou besoin d'ordonnances"
+                : "يوجد أصحاب أمراض مزمنة أو حاجة لأدوية محددة"
+            }
+            checked={needsMedical}
+            onChange={(e) => setValue("needs_medical", e.target.checked)}
+          />
+          <ChoiceCard
+            type="checkbox"
+            showControl
+            name="has_injuries"
+            title={
+              isFr
+                ? "Présence de blessés ou de cas nécessitant des soins"
+                : "يوجد مصابون أو حالات تحتاج لعلاج ومتابعة طبية"
+            }
+            checked={hasInjuries}
+            onChange={(e) => setValue("has_injuries", e.target.checked)}
+          />
+        </div>
 
-          {/* Health & Special Conditions */}
-          <div className="pt-3 border-t border-border/60 space-y-2.5">
-            <label className="flex items-center gap-2.5 text-xs text-foreground font-semibold cursor-pointer">
-              <Checkbox
-                checked={needsMedical}
-                onCheckedChange={(v) => setValue("needs_medical", Boolean(v))}
-              />
-              <span>{isFr ? "Présence de malades chroniques ou besoin d'ordonnances" : "يوجد أصحاب أمراض مزمنة أو حاجة لأدوية محددة"}</span>
-            </label>
+        <div className="mt-4">
+          <FieldLabel htmlFor="help-notes">
+            {isFr ? "Détails ou besoins particuliers (facultatif)" : "ملاحظات وتفاصيل إضافية (اختياري)"}
+          </FieldLabel>
+          <textarea
+            id="help-notes"
+            rows={3}
+            placeholder={
+              isFr
+                ? "Précisez des besoins spécifiques (ex: lait pour bébé 1er âge, couches taille 4, insuline…)"
+                : "اكتب أي احتياجات خاصة (مثال: حليب أطفال نوع معين، حفاظات مقاس 4، أدوية سكري…)"
+            }
+            className="w-full border border-haba-border bg-haba-surface px-3.5 py-[11px] text-[14.5px] text-haba-ink outline-none placeholder:text-haba-muted focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-haba-green"
+            {...register("other_needs_note")}
+          />
+        </div>
+      </FormStep>
 
-            <label className="flex items-center gap-2.5 text-xs text-foreground font-semibold cursor-pointer">
-              <Checkbox
-                checked={hasInjuries}
-                onCheckedChange={(v) => setValue("has_injuries", Boolean(v))}
-              />
-              <span>{isFr ? "Présence de blessés ou de cas nécessitant des soins" : "يوجد مصابون أو حالات تحتاج لعلاج ومتابعة طبية"}</span>
-            </label>
-          </div>
-
-          <div>
-            <Label className="mb-1.5">{isFr ? "Détails ou besoins particuliers (facultatif)" : "ملاحظات وتفاصيل إضافية (اختياري)"}</Label>
-            <Textarea
-              placeholder={
-                isFr
-                  ? "Précisez des besoins spécifiques (ex: lait pour bébé 1er âge, couches taille 4, insuline...)"
-                  : "اكتب أي احتياجات خاصة (مثال: حليب أطفال نوع معين، حفاضات مقاس 4، أدوية سكري...)"
-              }
-              {...register("other_needs_note")}
-            />
-          </div>
-        </CardContent>
-      </Card>
-
-      {/* Dignity & Privacy Notice */}
-      <div className="flex items-start gap-2.5 p-3.5 rounded-2xl border border-border/80 bg-muted/40 text-xs text-muted-foreground leading-relaxed">
-        <ShieldCheck className="size-4 text-algeria-green shrink-0 mt-0.5" />
+      <div className="flex items-start gap-2.5 border border-haba-border bg-haba-surface p-4 text-[13.5px] leading-relaxed text-haba-ink-2 desktop:px-[18px]">
+        <Icon name="shield-01" size={18} className="mt-0.5 text-haba-green" />
         <p>
           {isFr
             ? "Vos informations personnelles sont strictement confidentielles. Elles ne sont utilisées que pour coordonner l'acheminement de l'aide par les équipes agréées."
-            : "بياناتكم تعامل بأقصى درجات السرية والاحترام، ولا تُستخدم إلا لتنسيق إيصال المساعدات مباشرة لعائلتكم عبر الجمعيات والفرق الميدانية المعتمدة."}
+            : "بياناتكم تُعامل بأقصى درجات السرية والاحترام، ولا تُستخدم إلا لتنسيق إيصال المساعدات مباشرة لعائلتكم عبر الجمعيات والفرق الميدانية المعتمدة."}
         </p>
       </div>
 
       {submitError && (
-        <Alert variant="destructive">
-          <AlertDescription>{submitError}</AlertDescription>
-        </Alert>
+        <p
+          role="alert"
+          className="border border-haba-red bg-haba-red-50 p-4 text-sm font-semibold text-haba-red"
+        >
+          {submitError}
+        </p>
       )}
 
-      <Button
+      <Action
         type="submit"
-        size="lg"
-        className="w-full bg-priority-critical hover:bg-priority-critical/90 text-white font-extrabold text-base shadow-md h-12 rounded-2xl"
+        variant="danger"
+        size="submit"
+        icon={submitting ? undefined : "sent"}
         disabled={submitting}
       >
-        {submitting ? (
-          <Loader2 className="size-5 animate-spin" />
-        ) : (
-          <Send className="size-5 ms-1" />
-        )}
-        <span>{isFr ? "Envoyer la demande d'aide d'urgence" : "إرسال طلب الإغاثة والمساعدة"}</span>
-      </Button>
+        {submitting
+          ? isFr
+            ? "Envoi en cours…"
+            : "جارٍ الإرسال…"
+          : isFr
+            ? "Envoyer la demande d'aide d'urgence"
+            : "إرسال طلب الإغاثة والمساعدة"}
+      </Action>
     </form>
   );
 }

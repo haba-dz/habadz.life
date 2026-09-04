@@ -5,24 +5,7 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import {
   Loader2,
-  Hammer,
-  Paintbrush,
-  Wrench,
-  Zap,
-  Home,
-  ShieldCheck,
-  CheckCircle2,
-  Package,
-} from "lucide-react";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Textarea } from "@/components/ui/textarea";
-import { Label } from "@/components/ui/label";
-import { Checkbox } from "@/components/ui/checkbox";
-import { Card, CardContent } from "@/components/ui/card";
-import { Alert, AlertDescription } from "@/components/ui/alert";
-import { WilayaSelect } from "@/components/ui/wilaya-select";
-import { CommuneSelect } from "@/components/ui/commune-select";
+  } from "lucide-react";
 import { priorityWilayas } from "@/lib/algeria-cities";
 import { cn } from "@/lib/utils";
 import {
@@ -30,16 +13,29 @@ import {
   type ArtisanVolunteerInput,
 } from "@/schemas/artisan-volunteer";
 import { SuccessPanel } from "@/components/shared/success-panel";
+import { Icon, type IconName } from "@/components/icons";
+import {
+  Action,
+  ChoiceCard,
+  CommuneSelect,
+  FieldInput,
+  FieldLabel,
+  FieldPhoneInput,
+  FieldTextarea,
+  FOCUS_RING,
+  FormStep,
+  WilayaSelect,
+} from "@/components/site";
 import { submitArtisanVolunteer } from "@/actions/artisans";
 import type { AvailableLocale } from "@/i18n/locales";
 
-const popularCrafts = [
-  { ar: "بناء وترميم جدران", fr: "Maçonnerie", icon: Hammer },
-  { ar: "دهان وطلاء", fr: "Peinture", icon: Paintbrush },
-  { ar: "سباكة وترصيص صحي", fr: "Plomberie", icon: Wrench },
-  { ar: "كهرباء معمارية", fr: "Électricité", icon: Zap },
-  { ar: "أسقف وقرميد وعزل", fr: "Toiture & Étanchéité", icon: Home },
-  { ar: "نجارة وأبواب ونوافذ", fr: "Menuiserie", icon: Package },
+const popularCrafts: { ar: string; fr: string; icon: IconName }[] = [
+  { ar: "بناء وترميم جدران", fr: "Maçonnerie", icon: "building-03" },
+  { ar: "دهان وطلاء", fr: "Peinture", icon: "cleaning-bucket" },
+  { ar: "سباكة وترصيص صحي", fr: "Plomberie", icon: "water-energy" },
+  { ar: "كهرباء معمارية", fr: "Électricité", icon: "flash" },
+  { ar: "أسقف وقرميد وعزل", fr: "Toiture & Étanchéité", icon: "house-04" },
+  { ar: "نجارة وأبواب ونوافذ", fr: "Menuiserie", icon: "layers-01" },
 ];
 
 export function ArtisanForm({ locale = "ar" }: { locale?: AvailableLocale }) {
@@ -121,64 +117,56 @@ export function ArtisanForm({ locale = "ar" }: { locale?: AvailableLocale }) {
   return (
     <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
       {/* 1. Identity & Specialty */}
-      <Card>
-        <CardContent className="space-y-4 px-5 pt-6">
-          <div className="flex items-center gap-2 text-foreground font-bold">
-            <span className="flex size-7 items-center justify-center rounded-lg bg-orange-500/10 text-orange-600 dark:text-orange-400 text-sm font-extrabold">
-              1
-            </span>
-            <h2>{isFr ? "Informations personnelles & Métier" : "البيانات المهنية والتخصص"}</h2>
-          </div>
+      <FormStep
+        step={1}
+        title={isFr ? "Informations personnelles & Métier" : "البيانات المهنية والتخصص"}
+      >
+        <div className="flex flex-col gap-4">
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
             <div>
-              <Label className="mb-1.5">{isFr ? "Nom et prénom *" : "الاسم واللقب *"}</Label>
-              <Input
+              <FieldLabel htmlFor="ar-name">{isFr ? "Nom et prénom *" : "الاسم واللقب *"}</FieldLabel>
+              <FieldInput
+                id="ar-name"
                 placeholder={isFr ? "Ex : Mohamed Belhadj" : "مثال: محمد بلحاج"}
                 {...register("full_name")}
               />
               {errors.full_name && (
-                <p className="mt-1 text-xs text-destructive">{errors.full_name.message}</p>
+                <p className="mt-1 text-xs text-haba-red">{errors.full_name.message}</p>
               )}
             </div>
 
             <div>
-              <Label className="mb-1.5">{isFr ? "Numéro de téléphone *" : "رقم الهاتف للتواصل *"}</Label>
-              <Input dir="ltr" placeholder="0555xxxxxx" {...register("phone")} />
+              <FieldLabel htmlFor="ar-phone">
+                {isFr ? "Numéro de téléphone *" : "رقم الهاتف للتواصل *"}
+              </FieldLabel>
+              <FieldPhoneInput id="ar-phone" placeholder="0555xxxxxx" {...register("phone")} />
               {errors.phone && (
-                <p className="mt-1 text-xs text-destructive">{errors.phone.message}</p>
+                <p className="mt-1 text-xs text-haba-red">{errors.phone.message}</p>
               )}
             </div>
           </div>
 
           {/* Craft / Trade Selection Cards */}
-          <div className="space-y-2">
-            <Label className="text-xs font-semibold text-muted-foreground">
+          <fieldset className="flex flex-col gap-2">
+            <legend className="mb-1.5 block text-[13px] font-semibold text-haba-ink-2">
               {isFr ? "Sélectionnez votre corps de métier :" : "اختر مهنتك أو تخصصك الحرفي :"}
-            </Label>
-            <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
-              {popularCrafts.map((c) => {
-                const isSelected = selectedSpecialty === (isFr ? c.fr : c.ar);
-                const Icon = c.icon;
-                return (
-                  <button
-                    key={c.ar}
-                    type="button"
-                    onClick={() => setValue("specialty", isFr ? c.fr : c.ar, { shouldValidate: true })}
-                    className={cn(
-                      "flex items-center gap-2 p-2.5 rounded-xl border text-start transition-all cursor-pointer",
-                      isSelected
-                        ? "border-orange-500 bg-orange-500/10 text-foreground font-bold shadow-xs"
-                        : "border-border bg-card/60 text-muted-foreground hover:bg-secondary/40"
-                    )}
-                  >
-                    <Icon className="size-4 text-orange-600 dark:text-orange-400 shrink-0" />
-                    <span className="text-xs leading-snug">{isFr ? c.fr : c.ar}</span>
-                  </button>
-                );
-              })}
+            </legend>
+            <div className="grid grid-cols-2 gap-2 desktop:grid-cols-3">
+              {popularCrafts.map((c) => (
+                <ChoiceCard
+                  key={c.ar}
+                  name="specialty-preset"
+                  compact
+                  icon={c.icon}
+                  title={isFr ? c.fr : c.ar}
+                  checked={selectedSpecialty === (isFr ? c.fr : c.ar)}
+                  onChange={() => setValue("specialty", isFr ? c.fr : c.ar, { shouldValidate: true })}
+                />
+              ))}
             </div>
-            <Input
+            <FieldInput
+              aria-label={isFr ? "Autre corps de métier" : "مهنة أخرى"}
               placeholder={
                 isFr
                   ? "Ou précisez un autre métier..."
@@ -187,13 +175,15 @@ export function ArtisanForm({ locale = "ar" }: { locale?: AvailableLocale }) {
               {...register("specialty")}
             />
             {errors.specialty && (
-              <p className="mt-1 text-xs text-destructive">{errors.specialty.message}</p>
+              <p className="mt-1 text-xs text-haba-red">{errors.specialty.message}</p>
             )}
-          </div>
+          </fieldset>
 
           {/* Wilaya selection */}
           <div>
-            <Label className="mb-1.5">{isFr ? "Wilaya de résidence ou d'intervention *" : "الولاية (مقر الإقامة أو الاستعداد للتدخل) *"}</Label>
+            <FieldLabel htmlFor="ar-wilaya">
+              {isFr ? "Wilaya de résidence ou d'intervention *" : "الولاية (مقر الإقامة أو الاستعداد للتدخل) *"}
+            </FieldLabel>
             {/* Quick Priority Wilaya Buttons */}
             <div className="flex flex-wrap gap-1.5 mb-2">
               {priorityWilayas.map((pw) => {
@@ -208,13 +198,14 @@ export function ArtisanForm({ locale = "ar" }: { locale?: AvailableLocale }) {
                       setValue("commune_id", "");
                     }}
                     className={cn(
-                      "rounded-lg px-2.5 py-1 text-xs font-bold transition-all cursor-pointer",
+                      "inline-flex items-center gap-1 border px-2.5 py-1 text-xs font-bold transition-colors",
                       active
-                        ? "bg-priority-critical text-white shadow-xs"
-                        : "bg-priority-critical/10 text-priority-critical hover:bg-priority-critical/20"
+                        ? "border-haba-red bg-haba-red text-white"
+                        : "border-haba-red-200 bg-haba-red-50 text-haba-red hover:border-haba-red",
+                      FOCUS_RING,
                     )}
                   >
-                    <Zap className="size-3 text-amber-500 shrink-0 fill-amber-500" />
+                    <Icon name="fire" size={12} className="shrink-0" />
                     <span>{isFr ? `${pw.codeStr} - ${pw.name_fr}` : `${pw.codeStr} - ${pw.name_ar}`}</span>
                   </button>
                 );
@@ -222,6 +213,7 @@ export function ArtisanForm({ locale = "ar" }: { locale?: AvailableLocale }) {
             </div>
 
             <WilayaSelect
+              id="ar-wilaya"
               locale={locale}
               value={selectedWilaya}
               onChange={(e) => {
@@ -230,77 +222,74 @@ export function ArtisanForm({ locale = "ar" }: { locale?: AvailableLocale }) {
               }}
             />
             {errors.wilaya_code && (
-              <p className="mt-1 text-xs text-destructive">{errors.wilaya_code.message}</p>
+              <p className="mt-1 text-xs text-haba-red">{errors.wilaya_code.message}</p>
             )}
           </div>
 
           {/* Commune selection */}
           <div>
-            <Label className="mb-1.5">{isFr ? "Commune de présence / intervention *" : "البلدية (مكان التواجد / التدخل) *"}</Label>
+            <FieldLabel htmlFor="ar-commune">
+              {isFr ? "Commune de présence / intervention *" : "البلدية (مكان التواجد / التدخل) *"}
+            </FieldLabel>
             <CommuneSelect
+              id="ar-commune"
               wilaya={selectedWilaya}
               locale={locale}
               value={watch("commune_id")}
               onChange={(e) => setValue("commune_id", e.target.value, { shouldValidate: true })}
             />
             {errors.commune_id && (
-              <p className="mt-1 text-xs text-destructive">{errors.commune_id.message}</p>
+              <p className="mt-1 text-xs text-haba-red">{errors.commune_id.message}</p>
             )}
           </div>
-        </CardContent>
-      </Card>
+        </div>
+      </FormStep>
 
       {/* 2. Tools & Availability */}
-      <Card>
-        <CardContent className="space-y-4 px-5 pt-6">
-          <div className="flex items-center gap-2 text-foreground font-bold">
-            <span className="flex size-7 items-center justify-center rounded-lg bg-orange-500/10 text-orange-600 dark:text-orange-400 text-sm font-extrabold">
-              2
-            </span>
-            <h2>{isFr ? "Outils & Déplacement" : "العتاد والأدوات وجاهزية التنقل"}</h2>
-          </div>
+      <FormStep step={2} title={isFr ? "Outils & Déplacement" : "العتاد والأدوات وجاهزية التنقل"}>
+        <div className="flex flex-col gap-4">
+          <div className="flex flex-col gap-2.5">
+            <ChoiceCard
+              type="checkbox"
+              showControl
+              title={
+                isFr
+                  ? "Prêt à se déplacer dans les communes sinistrées"
+                  : "الاستعداد للتنقل إلى القرى والبلديات المتضررة"
+              }
+              description={
+                isFr
+                  ? "Participer aux chantiers collectifs de réparation des toits et murs"
+                  : "المشاركة في ورشات ترميم المنازل وإصلاح شبكات المياه والكهرباء"
+              }
+              checked={canTravel}
+              onChange={(e) => setValue("can_travel", e.target.checked)}
+            />
 
-          <div className="space-y-2.5">
-            <label className="flex items-start gap-3 p-3 rounded-2xl border border-border bg-card/60 cursor-pointer hover:bg-secondary/40 transition-colors">
-              <Checkbox
-                checked={canTravel}
-                onCheckedChange={(v) => setValue("can_travel", Boolean(v))}
-                className="mt-0.5"
-              />
-              <div className="space-y-0.5 text-start">
-                <p className="text-xs sm:text-sm font-bold text-foreground">
-                  {isFr ? "Prêt à se déplacer dans les communes sinistrées" : "الاستعداد للتنقل إلى القرى والبلديات المتضررة"}
-                </p>
-                <p className="text-[11px] text-muted-foreground">
-                  {isFr
-                    ? "Participer aux chantiers collectifs de réparation des toits et murs"
-                    : "المشاركة في ورشات ترميم المنازل وإصلاح شبكات المياه والكهرباء"}
-                </p>
-              </div>
-            </label>
-
-            <label className="flex items-start gap-3 p-3 rounded-2xl border border-border bg-card/60 cursor-pointer hover:bg-secondary/40 transition-colors">
-              <Checkbox
-                checked={hasOwnTools}
-                onCheckedChange={(v) => setValue("has_own_tools", Boolean(v))}
-                className="mt-0.5"
-              />
-              <div className="space-y-0.5 text-start">
-                <p className="text-xs sm:text-sm font-bold text-foreground">
-                  {isFr ? "Dispose de son propre outillage de travail" : "أملك عتادي وأدوات عملي الخاصة"}
-                </p>
-                <p className="text-[11px] text-muted-foreground">
-                  {isFr
-                    ? "Échelles, perceuses, outils de plomberie/peinture prêts"
-                    : "سلالم، مثاقب، أدوات سباكة أو دهان جاهزة للاستخدام"}
-                </p>
-              </div>
-            </label>
+            <ChoiceCard
+              type="checkbox"
+              showControl
+              title={
+                isFr
+                  ? "Dispose de son propre outillage de travail"
+                  : "أملك عتادي وأدوات عملي الخاصة"
+              }
+              description={
+                isFr
+                  ? "Échelles, perceuses, outils de plomberie/peinture prêts"
+                  : "سلالم، مثاقب، أدوات سباكة أو دهان جاهزة للاستخدام"
+              }
+              checked={hasOwnTools}
+              onChange={(e) => setValue("has_own_tools", e.target.checked)}
+            />
           </div>
 
           <div>
-            <Label className="mb-1.5">{isFr ? "Remarques (facultatif)" : "ملاحظات إضافية (اختياري)"}</Label>
-            <Textarea
+            <FieldLabel htmlFor="ar-notes">
+              {isFr ? "Remarques (facultatif)" : "ملاحظات إضافية (اختياري)"}
+            </FieldLabel>
+            <FieldTextarea
+              id="ar-notes"
               placeholder={
                 isFr
                   ? "Créneaux de disponibilité, matériel spécifique disponible..."
@@ -309,28 +298,26 @@ export function ArtisanForm({ locale = "ar" }: { locale?: AvailableLocale }) {
               {...register("notes")}
             />
           </div>
-        </CardContent>
-      </Card>
+        </div>
+      </FormStep>
 
       {submitError && (
-        <Alert variant="destructive">
-          <AlertDescription>{submitError}</AlertDescription>
-        </Alert>
+        <p
+          role="alert"
+          className="border border-haba-red bg-haba-red-50 p-4 text-sm font-semibold text-haba-red"
+        >
+          {submitError}
+        </p>
       )}
 
-      <Button
-        type="submit"
-        size="lg"
-        className="w-full bg-orange-600 hover:bg-orange-700 text-white font-extrabold text-base shadow-md h-12 rounded-2xl"
-        disabled={submitting}
-      >
+      <Action type="submit" variant="primary" size="submit" disabled={submitting}>
         {submitting ? (
           <Loader2 className="size-5 animate-spin" />
         ) : (
-          <Hammer className="size-5 ms-1" />
+          <Icon name="house-04" size={20} />
         )}
         <span>{isFr ? "Confirmer mon inscription artisan" : "تأكيد تسجيل التطوع الحرفي"}</span>
-      </Button>
+      </Action>
     </form>
   );
 }

@@ -1,9 +1,12 @@
 import type { Metadata } from "next";
-import { createClient } from "@/lib/supabase/server";
-import { MedicalVolunteerForm } from "./medical-volunteer-form";
-import { MedicalVolunteersList } from "./medical-volunteers-list";
+
+import { EmergencySection } from "@/components/shared/emergency-section";
+import { PageHero, SECTION } from "@/components/site";
+import { createPublicClient } from "@/lib/supabase/server";
 import { getDictionary } from "@/i18n/dictionaries";
 import { getLocale } from "@/i18n/server";
+import { MedicalVolunteerForm } from "./medical-volunteer-form";
+import { MedicalVolunteersList } from "./medical-volunteers-list";
 
 export async function generateMetadata(): Promise<Metadata> {
   const locale = await getLocale();
@@ -14,22 +17,32 @@ export async function generateMetadata(): Promise<Metadata> {
   };
 }
 
+/** No artboard — design.md §7.3, restyle-and-keep. */
 export default async function MedicalPage() {
   const locale = await getLocale();
   const t = await getDictionary(locale);
-  const supabase = await createClient();
+  const isFr = locale === "fr";
+
+  // Public read: this list is shown to anonymous visitors, so it must not be
+  // scoped to the caller's cookies. design.md §8.1b
+  const supabase = createPublicClient();
   const { data: volunteers } = await supabase.rpc("get_public_medical_volunteers");
 
   return (
-    <div className="mx-auto max-w-2xl px-4 py-10">
-      <div className="mb-6 text-center">
-        <h1 className="text-3xl font-extrabold">{t.medical.pageTitle}</h1>
-        <p className="mt-2 text-muted-foreground">
-          {t.medical.pageSubtitle}
-        </p>
+    <>
+      <PageHero
+        eyebrow={isFr ? "Équipes de santé bénévoles" : "الأطقم الصحية المتطوعة"}
+        eyebrowIcon="stethoscope"
+        title={t.medical.pageTitle}
+        lede={t.medical.pageSubtitle}
+      />
+
+      <div className={`mx-auto w-full max-w-[1000px] px-4 desktop:px-6 ${SECTION}`}>
+        <MedicalVolunteerForm locale={locale} />
+        <MedicalVolunteersList volunteers={volunteers ?? []} locale={locale} />
       </div>
-      <MedicalVolunteerForm locale={locale} />
-      <MedicalVolunteersList volunteers={volunteers ?? []} locale={locale} />
-    </div>
+
+      <EmergencySection />
+    </>
   );
 }

@@ -1,12 +1,15 @@
 "use client";
 
 import { useState } from "react";
-import { MapPin, Clock, Phone, Navigation, Home, Package } from "lucide-react";
-import { cn } from "@/lib/utils";
-import { Card, CardContent } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { PointStatusBadge } from "@/components/shared/status-badge";
-import { VerificationBadge } from "@/components/shared/verification-badge";
+
+import { Icon } from "@/components/icons";
+import {
+  POINT_KINDS,
+  getKindLabel,
+  pointStatusTone,
+  verificationTone,
+} from "@/components/map/point-kind";
+import { actionVariants, Chip, FOCUS_RING, StatusDot } from "@/components/site";
 import {
   Dialog,
   DialogContent,
@@ -14,9 +17,16 @@ import {
   DialogTitle,
   DialogDescription,
 } from "@/components/ui/dialog";
-import { CategoryIcon } from "@/components/shared/category-icon";
+import { formatPlace } from "@/lib/algeria-cities";
 import { splitNeedNotes } from "@/lib/notes";
-import { getCategoryName, type PointStatus, type VerificationLevel } from "@/lib/constants";
+import {
+  getCategoryName,
+  getPointStatusLabel,
+  getVerificationLabel,
+  type PointStatus,
+  type VerificationLevel,
+} from "@/lib/constants";
+import { cn } from "@/lib/utils";
 import type { AvailableLocale } from "@/i18n/locales";
 
 export interface PointCardData {
@@ -37,25 +47,21 @@ export interface PointCardData {
   notes: string | null;
 }
 
-const kindLabelsByLocale: Record<AvailableLocale, Record<PointCardData["kind"], string>> = {
-  ar: {
-    collection_point: "نقطة تجميع",
-    relief_hub: "مركز استقبال",
-    shelter: "مركز إيواء",
-  },
-  fr: {
-    collection_point: "Point de collecte",
-    relief_hub: "Centre d'accueil",
-    shelter: "Centre d'hébergement",
-  },
-};
+function directionsUrl(point: PointCardData) {
+  return point.lat != null && point.lng != null
+    ? `https://www.google.com/maps/dir/?api=1&destination=${point.lat},${point.lng}`
+    : `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(
+        `${point.name} ${point.commune} ${point.wilaya}`,
+      )}`;
+}
 
-const kindDot: Record<PointCardData["kind"], string> = {
-  collection_point: "bg-[#00843D]",
-  relief_hub: "bg-[#1d4ed8]",
-  shelter: "bg-[#7c3aed]",
-};
-
+/**
+ * Centre card — the `البطاقات` view of /map. design.md §5.5
+ *
+ * Flat and hairline like the rest of the system: no Card, no shadow, no lift on
+ * hover. The whole card is not a button; the title is, so the phone and
+ * directions links inside it stay reachable and there is no nested control.
+ */
 export function PointCard({
   point,
   locale = "ar",
@@ -72,181 +78,187 @@ export function PointCard({
   const [open, setOpen] = useState(false);
   const { detail, source } = splitNeedNotes(point.notes);
   const isFr = locale === "fr";
-
-  const directionsUrl =
-    point.lat != null && point.lng != null
-      ? `https://www.google.com/maps/dir/?api=1&destination=${point.lat},${point.lng}`
-      : `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(
-          `${point.name} ${point.commune} ${point.wilaya}`,
-        )}`;
-
-  const kindLabel = kindLabelsByLocale[locale]?.[point.kind] ?? kindLabelsByLocale.ar[point.kind];
-  const wilayaText = isFr ? `Wilaya de ${point.wilaya}` : `ولاية ${point.wilaya}`;
+  const kind = POINT_KINDS[point.kind];
+  const placeText = formatPlace(point.commune, point.wilaya, locale);
 
   return (
     <>
-      <Card
-        onClick={() => setOpen(true)}
+      <div
         className={cn(
-          "group h-full cursor-pointer transition-all hover:-translate-y-0.5 hover:shadow-md",
+          "flex h-full flex-col justify-between gap-3 border p-4",
           isSelected
-            ? "border-2 border-algeria-green bg-algeria-green/5 shadow-md ring-2 ring-algeria-green/20"
-            : "hover:border-algeria-green/50",
+            ? "border-haba-green bg-haba-green-tint"
+            : "border-haba-border bg-haba-surface",
           className,
         )}
       >
-        <CardContent className="flex h-full flex-col justify-between space-y-2 px-5 py-4">
-          <div className="space-y-2">
-            <div className="flex items-start justify-between gap-2">
-              <div className="min-w-0">
-                <p className="flex items-center gap-1.5 text-xs font-semibold text-muted-foreground">
-                  <span className={`size-2.5 rounded-full ${kindDot[point.kind]}`} aria-hidden />
-                  {kindLabel}
-                </p>
-                <p className="mt-1 font-bold leading-tight text-foreground group-hover:text-algeria-green transition-colors">
-                  {point.name}
-                </p>
-              </div>
-              <PointStatusBadge status={point.status} locale={locale} />
-            </div>
+        <div>
+          <div className="flex items-start justify-between gap-2">
+            <Chip tone={kind.tone} fill="tint" size="xs">
+              <Icon name={kind.icon} size={12} />
+              {getKindLabel(point.kind, locale)}
+            </Chip>
+            <span className="flex items-center gap-1.5 text-[12px] text-haba-muted">
+              <StatusDot tone={pointStatusTone[point.status]} />
+              {getPointStatusLabel(point.status, locale)}
+            </span>
+          </div>
 
-            <p className="flex items-start gap-1.5 text-sm text-muted-foreground">
-              <MapPin className="mt-0.5 size-3.5 shrink-0 text-muted-foreground/80" />
-              {point.address ?? `${point.commune}، ${wilayaText}`}
+          <button
+            type="button"
+            aria-haspopup="dialog"
+            onClick={() => setOpen(true)}
+            className={cn(
+              "mt-2 block text-start text-[15px] font-bold leading-snug text-haba-ink hover:text-haba-green",
+              FOCUS_RING,
+            )}
+          >
+            {point.name}
+          </button>
+
+          <p className="mt-1.5 flex items-start gap-1.5 text-[13px] leading-relaxed text-haba-ink-2">
+            <Icon name="location-01" size={14} className="mt-0.5 text-haba-muted" />
+            {point.address ?? placeText}
+          </p>
+
+          {point.openingHours && (
+            <p className="mt-1 flex items-center gap-1.5 text-[12.5px] text-haba-muted">
+              <Icon name="clock-01" size={14} />
+              {point.openingHours}
             </p>
+          )}
 
-            {point.openingHours && (
-              <p className="flex items-center gap-1.5 text-xs text-muted-foreground">
-                <Clock className="size-3.5 shrink-0" /> {point.openingHours}
-              </p>
+          {point.acceptedCategories && point.acceptedCategories.length > 0 && (
+            <p className="mt-2 text-[12.5px] leading-relaxed text-haba-muted">
+              <span className="font-semibold text-haba-ink-2">
+                {isFr ? "Accepte : " : "يقبل: "}
+              </span>
+              {point.acceptedCategories
+                .map((slug) => getCategoryName(slug, slug, locale))
+                .join("، ")}
+            </p>
+          )}
+        </div>
+
+        <div className="flex items-center justify-between gap-2 border-t border-haba-border pt-3">
+          <Chip tone={verificationTone[point.verificationLevel]} fill="outline" size="xs">
+            {getVerificationLabel(point.verificationLevel, locale)}
+          </Chip>
+
+          <div className="flex items-center gap-3">
+            {onShowOnMap && point.lat !== null && point.lng !== null && (
+              <button
+                type="button"
+                onClick={() => onShowOnMap(point)}
+                className={cn(
+                  "inline-flex items-center gap-1.5 text-[12.5px] font-semibold text-haba-ink-2 hover:text-haba-green",
+                  FOCUS_RING,
+                )}
+              >
+                <Icon name="maps" size={14} />
+                {isFr ? "Carte" : "الخريطة"}
+              </button>
             )}
 
-            {point.acceptedCategories && point.acceptedCategories.length > 0 && (
-              <p className="flex flex-wrap gap-1 text-base" aria-label={isFr ? "Articles acceptés" : "المواد المقبولة"}>
-                {point.acceptedCategories.map((slug) => (
-                  <span key={slug} title={getCategoryName(slug, slug, locale)}>
-                    <CategoryIcon slug={slug} className="size-4" />
-                  </span>
-                ))}
-              </p>
+            {point.phone && (
+              <a
+                href={`tel:${point.phone.replace(/\s/g, "")}`}
+                dir="ltr"
+                className={cn(
+                  "inline-flex items-center gap-1.5 text-[13px] font-bold text-haba-green hover:underline",
+                  FOCUS_RING,
+                )}
+              >
+                <Icon name="call-02" size={14} />
+                {point.phone}
+              </a>
             )}
           </div>
-
-          <div className="flex items-center justify-between gap-2 pt-2 border-t border-border/50">
-            <VerificationBadge level={point.verificationLevel} locale={locale} />
-
-            <div className="flex items-center gap-2">
-              {onShowOnMap && point.lat !== null && point.lng !== null && (
-                <button
-                  type="button"
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    onShowOnMap(point);
-                  }}
-                  className="inline-flex items-center gap-1 rounded-md bg-muted/80 px-2.5 py-1 text-xs font-semibold text-foreground hover:bg-algeria-green hover:text-white transition-colors"
-                  title={isFr ? "Voir sur la carte" : "عرض على الخريطة"}
-                >
-                  <Navigation className="size-3" />
-                  <span>{isFr ? "Carte" : "الخريطة"}</span>
-                </button>
-              )}
-
-              {point.phone && (
-                <a
-                  href={`tel:${point.phone.replace(/\s/g, "")}`}
-                  onClick={(e) => e.stopPropagation()}
-                  className="flex items-center gap-1 text-sm font-semibold text-algeria-green hover:underline"
-                  dir="ltr"
-                >
-                  <Phone className="size-3.5" />
-                  {point.phone}
-                </a>
-              )}
-            </div>
-          </div>
-        </CardContent>
-      </Card>
+        </div>
+      </div>
 
       <Dialog open={open} onOpenChange={setOpen}>
-        <DialogContent className="max-h-[85vh] overflow-y-auto sm:max-w-md">
+        <DialogContent className="max-h-[85vh] overflow-y-auto rounded-none border-haba-border sm:max-w-md">
           <DialogHeader>
-            <p className="flex items-center gap-1.5 text-xs font-medium text-muted-foreground">
-              <span className={`size-2 rounded-full ${kindDot[point.kind]}`} aria-hidden />
-              {kindLabel}
-            </p>
-            <DialogTitle className="flex items-center gap-2">
-              {point.kind === "shelter" && <Home className="size-4 text-[#7c3aed]" />}
+            <Chip tone={kind.tone} fill="tint" size="xs">
+              <Icon name={kind.icon} size={12} />
+              {getKindLabel(point.kind, locale)}
+            </Chip>
+            <DialogTitle className="text-[19px] font-bold text-haba-forest">
               {point.name}
             </DialogTitle>
-            <DialogDescription className="flex items-start gap-1">
-              <MapPin className="mt-0.5 size-3.5 shrink-0" />
-              {point.address ?? `${point.commune}، ${wilayaText}`}
+            <DialogDescription className="flex items-start gap-1.5 text-[13.5px] text-haba-ink-2">
+              <Icon name="location-01" size={14} className="mt-0.5 shrink-0 text-haba-muted" />
+              {point.address ?? placeText}
             </DialogDescription>
           </DialogHeader>
 
           <div className="flex flex-wrap items-center gap-2">
-            <PointStatusBadge status={point.status} locale={locale} />
-            <VerificationBadge level={point.verificationLevel} locale={locale} />
+            <Chip tone={pointStatusTone[point.status]} fill="tint" size="xs">
+              {getPointStatusLabel(point.status, locale)}
+            </Chip>
+            <Chip tone={verificationTone[point.verificationLevel]} fill="outline" size="xs">
+              {getVerificationLabel(point.verificationLevel, locale)}
+            </Chip>
           </div>
 
           {point.openingHours && (
-            <p className="flex items-center gap-2 text-sm">
-              <Clock className="size-4 text-muted-foreground" /> {point.openingHours}
+            <p className="flex items-center gap-2 text-[13.5px] text-haba-ink-2">
+              <Icon name="clock-01" size={16} className="text-haba-muted" />
+              {point.openingHours}
             </p>
           )}
 
           {point.capacityNote && (
-            <div className="flex items-start gap-2 rounded-lg bg-muted/60 p-3">
-              <Package className="mt-0.5 size-4 shrink-0 text-muted-foreground" />
-              <p className="text-sm leading-relaxed">{point.capacityNote}</p>
-            </div>
+            <p className="flex items-start gap-2 border border-haba-border bg-haba-surface-2 p-3 text-[13.5px] leading-relaxed text-haba-ink-2">
+              <Icon name="package" size={16} className="mt-0.5 shrink-0 text-haba-muted" />
+              {point.capacityNote}
+            </p>
           )}
 
           {point.acceptedCategories && point.acceptedCategories.length > 0 && (
             <div>
-              <p className="mb-1.5 text-xs font-semibold text-muted-foreground">
+              <p className="mb-1.5 text-[12.5px] font-semibold text-haba-muted">
                 {isFr ? "Articles acceptés" : "المواد المقبولة"}
               </p>
               <div className="flex flex-wrap gap-1.5">
                 {point.acceptedCategories.map((slug) => (
-                  <span
-                    key={slug}
-                    className="inline-flex items-center gap-1 rounded-full bg-muted px-2.5 py-1 text-xs"
-                  >
-                    <CategoryIcon slug={slug} className="size-3.5" /> {getCategoryName(slug, slug, locale)}
-                  </span>
+                  <Chip key={slug} tone="neutral" fill="tint" size="xs">
+                    {getCategoryName(slug, slug, locale)}
+                  </Chip>
                 ))}
               </div>
             </div>
           )}
 
-          {detail && <p className="text-sm leading-relaxed text-muted-foreground">{detail}</p>}
+          {detail && (
+            <p className="text-[13.5px] leading-relaxed text-haba-ink-2">{detail}</p>
+          )}
           {source && (
-            <p className="text-xs text-muted-foreground">
+            <p className="text-[12.5px] text-haba-muted">
               {isFr ? `Source : ${source}` : `المصدر: ${source}`}
             </p>
           )}
 
-          <div className="flex gap-2">
-            {point.phone ? (
-              <Button
-                size="lg"
-                className="flex-1"
-                nativeButton={false}
-                render={<a href={`tel:${point.phone.replace(/\s/g, "")}`} />}
+          <div className="flex flex-wrap gap-2.5">
+            {point.phone && (
+              <a
+                href={`tel:${point.phone.replace(/\s/g, "")}`}
+                className={cn(actionVariants({ variant: "primary", size: "md" }), "flex-1")}
               >
-                <Phone className="size-4" /> {isFr ? "Appeler" : "اتصال"}
-              </Button>
-            ) : null}
-            <Button
-              variant="outline"
-              size="lg"
-              className="flex-1"
-              nativeButton={false}
-              render={<a href={directionsUrl} target="_blank" rel="noopener noreferrer" />}
+                <Icon name="call-02" size={18} />
+                {isFr ? "Appeler" : "اتصال"}
+              </a>
+            )}
+            <a
+              href={directionsUrl(point)}
+              target="_blank"
+              rel="noopener noreferrer"
+              className={cn(actionVariants({ variant: "outline", size: "md" }), "flex-1")}
             >
-              <Navigation className="size-4" /> {isFr ? "Itinéraire" : "الاتجاهات"}
-            </Button>
+              <Icon name="navigation-03" size={18} />
+              {isFr ? "Itinéraire" : "الاتجاهات"}
+            </a>
           </div>
         </DialogContent>
       </Dialog>
