@@ -40,3 +40,8 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+.gstack/
+
+# local tooling scratch — not part of the app
+codedb.snapshot
+supabase/.temp/
