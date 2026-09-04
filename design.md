@@ -589,6 +589,22 @@ under the ≤860px rules. Differences beyond the responsive rules:
   container with a ResizeObserver, so the same map instance resizes with no remount and no refetch.
 - **The advisory stays full-width below the split**, not inside the right column. It reads as a
   page-level instruction and it already lived in `page.tsx`.
+- **Marker DOM must not carry an inline `position`.** The pin is a square box plus an absolutely
+  positioned diamond tail, and the tail needs a containing block — but setting `position: relative`
+  on the marker root breaks maplibre. `.maplibregl-marker` is a *class* rule carrying
+  `position: absolute`, so an inline value wins: every marker lays out in normal flow at the
+  container's full width, and maplibre's own `translate(-50%, -100%)` then resolves `-50%` against
+  ~1000px instead of the 34px pin. Measured in a standalone repro against the real stylesheet: the
+  box landed at x=217 for a point at x=700, while the tail — `left: 50%` of that same full-width
+  element — landed back on x=700, so the tails looked correct and the boxes floated away.
+  `position: absolute` from the class is itself the containing block the tail needs, so the fix is
+  to set no `position` at all. maplibre owns `transform` and rewrites it every frame; do not set
+  that either. The tail sits at `bottom: 3px`, not a negative value: rotating a 14px square 45°
+  pushes its lowest corner ~9.9px past its own box, and `anchor: "bottom"` puts the element's
+  bottom edge on the coordinate.
+- **A centre with no `lat`/`lng` is dropped by the marker loop**, so the map can plot fewer centres
+  than the list holds — 7 of 12 in the seed — with nothing on screen to say why, which reads as
+  "there is nothing near me". The legend strip now names the gap and points at the list.
 - **The map degrades instead of taking the page down.** maplibre needs WebGL2; without it the
   constructor fires an error event, finishes with no painter, and the next `map.remove()` throws a
   TypeError that reached the route error boundary and blanked the entire page — list included,

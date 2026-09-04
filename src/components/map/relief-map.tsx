@@ -176,8 +176,18 @@ export function ReliefMap({
 
         // Square pin with a diamond tail — the system has no radius, so the
         // usual teardrop is drawn as a rotated square instead. design.md §3.1
+        //
+        // Set no `position` and no `transform` here. `.maplibregl-marker` is a
+        // class rule carrying `position: absolute`, and an inline value beats
+        // it: the marker then lays out in normal flow at the container's full
+        // width, so maplibre's own `translate(-50%, -100%)` resolves -50%
+        // against ~1000px instead of the 34px pin and throws every box half a
+        // map to the left. `position: absolute` is also what makes the element
+        // the containing block the tail is positioned against, so the tail
+        // needs nothing else. maplibre owns `transform` and overwrites it on
+        // every frame.
         const el = document.createElement("div");
-        el.style.cssText = "position:relative;cursor:pointer;transform:translate(-50%,-100%)";
+        el.style.cursor = "pointer";
 
         const box = document.createElement("div");
         box.style.cssText = `
@@ -188,9 +198,13 @@ export function ReliefMap({
         `;
         box.innerHTML = iconSvg(kind.icon, isSelected ? 18 : 16, "#ffffff");
 
+        // bottom:3px, not a negative value: rotating a 14px square (10px plus
+        // its border) 45deg pushes its lowest corner ~9.9px below the square's
+        // own box, and `anchor: "bottom"` puts the element's bottom edge on the
+        // coordinate. 3px lands that corner on the point rather than 8px under it.
         const tail = document.createElement("div");
         tail.style.cssText = `
-          position:absolute;left:50%;bottom:-5px;width:10px;height:10px;
+          position:absolute;left:50%;bottom:3px;width:10px;height:10px;
           background:${kind.hex};border:2px solid #ffffff;
           transform:translateX(-50%) rotate(45deg);z-index:-1;
         `;

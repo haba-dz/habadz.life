@@ -115,6 +115,12 @@ export function MapClient({
     };
   }, [points, matchesLocation]);
 
+  /** Centres the marker loop cannot place. */
+  const unplottable = useMemo(
+    () => filteredPoints.filter((p) => p.lat === null || p.lng === null).length,
+    [filteredPoints],
+  );
+
   const activeFilterCount =
     (selectedKind !== "all" ? 1 : 0) +
     (selectedWilaya !== "all" ? 1 : 0) +
@@ -210,6 +216,19 @@ export function MapClient({
 
       <div className="border-t border-haba-border px-4 py-3">
         <MapLegend locale={locale} />
+        {/*
+          A centre with no lat/lng is dropped by the marker loop, so the map can
+          plot fewer centres than the list holds with nothing to say why — which
+          reads as "there is nothing near me". Name the gap and point at the list.
+        */}
+        {unplottable > 0 && (
+          <p className="mt-2.5 flex items-start gap-1.5 text-[12px] leading-relaxed text-haba-muted">
+            <Icon name="alert-circle" size={13} className="mt-0.5" />
+            {isFr
+              ? `${unplottable} centre${unplottable > 1 ? "s" : ""} sans coordonnées ne ${unplottable > 1 ? "sont" : "est"} pas affiché${unplottable > 1 ? "s" : ""} sur la carte. ${unplottable > 1 ? "Ils figurent" : "Il figure"} dans la liste.`
+              : `${unplottable} من المراكز بدون إحداثيات ولا تظهر على الخريطة. تجدها في القائمة.`}
+          </p>
+        )}
       </div>
     </section>
   );
