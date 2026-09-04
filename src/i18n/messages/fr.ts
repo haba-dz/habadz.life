@@ -515,7 +515,9 @@ const fr: Dictionary = {
       tracking: "Suivi & données",
       platform: "La plateforme",
       sourceCode: "Code source sur GitHub",
-      pledges: "Aucune collecte d'argent · Aucune donnée sensible · Code ouvert",
+      // Voir le commentaire côté ar.ts : « Aucune donnée sensible » contredisait
+      // la page /privacy, qui liste blessures, notes médicales et photos.
+      pledges: "Aucune collecte d'argent · Aucune revente de données · Code ouvert",
       copyright: "Initiative solidaire indépendante et à but non lucratif",
       appsTitle: "Télécharger l'application",
       appStore: "App Store",
