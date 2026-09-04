@@ -68,7 +68,16 @@ export function UpdateCard({
   const name = meta ? meta[locale === "fr" ? "fr" : "ar"] : (item.authority ?? item.source);
 
   return (
-    <article className={cn("bg-haba-surface p-4 desktop:px-6 desktop:py-6", className)}>
+    /*
+      Flex column so the source row can be pushed to the bottom. The cards sit
+      in a stretch row, so without this the "original source" link lands at a
+      different height in every card, following whatever the body text does.
+      No h-full: an explicit height cancels the flex stretch that gives the card
+      the row's height in the first place.
+    */
+    <article
+      className={cn("flex flex-col bg-haba-surface p-4 desktop:px-6 desktop:py-6", className)}
+    >
       <div className="flex flex-wrap items-center gap-x-2.5 gap-y-1 text-[11.5px] text-haba-muted desktop:text-xs">
         <span className={cn("inline-flex items-center gap-1.5 font-bold", meta ? toneClass[meta.tone] : "text-haba-ink")}>
           {meta && <Icon name={meta.icon} size={16} />}
@@ -89,7 +98,7 @@ export function UpdateCard({
       )}
 
       {!compact && (
-        <div className="mt-3 flex flex-wrap items-center justify-between gap-2 text-[13px]">
+        <div className="mt-auto flex flex-wrap items-center justify-between gap-2 pt-3 text-[13px]">
           <span className="text-haba-muted">
             {sourcePrefix}
             {name}
