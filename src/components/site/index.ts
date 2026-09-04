@@ -5,6 +5,7 @@
  * which this redesign does not touch.
  */
 export { Action, actionVariants } from "./action";
+export { BrandMark } from "./brand-mark";
 export { Chip, chipVariants, StatusDot, type ChipProps } from "./chip";
 export { ChoiceCard } from "./choice-card";
 export { EmergencyNumbers, type EmergencyNumber } from "./emergency-numbers";

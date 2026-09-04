@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 
 import { Icon, type IconName } from "@/components/icons";
-import { actionVariants, FOCUS_RING } from "@/components/site";
+import { actionVariants, BrandMark, FOCUS_RING } from "@/components/site";
 import {
   Dialog,
   DialogContent,
@@ -137,7 +137,7 @@ export function WelcomeDialog({ locale = "ar" }: { locale?: AvailableLocale }) {
       <DialogContent className="max-h-[88vh] overflow-y-auto rounded-none border-haba-border sm:max-w-lg">
         <DialogHeader>
           <span className="flex size-11 items-center justify-center bg-haba-green text-white">
-            <Icon name="heart-check" size={24} />
+            <BrandMark size={24} />
           </span>
           <DialogTitle className="text-[21px] font-bold leading-tight text-haba-forest">
             {isFr ? `Bienvenue sur ${siteConfig.name}` : `مرحبًا بك في ${siteConfig.name}`}

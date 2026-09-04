@@ -5,7 +5,7 @@ import { usePathname } from "next/navigation";
 
 import { cn } from "@/lib/utils";
 import { Icon, type IconName } from "@/components/icons";
-import { Action, FlagStripe, FOCUS_RING } from "@/components/site";
+import { Action, BrandMark, FlagStripe, FOCUS_RING } from "@/components/site";
 import { useMobileMenu } from "./mobile-menu-context";
 
 export type NavItem = {
@@ -56,7 +56,7 @@ export function SiteHeaderBar({
           className={cn("flex min-w-0 items-center gap-2.5 desktop:gap-3.5", FOCUS_RING)}
         >
           <span className="flex size-9.5 items-center justify-center bg-haba-green text-white desktop:size-11.5">
-            <Icon name="heart-check" size={22} />
+            <BrandMark size={22} />
           </span>
           <span className="min-w-0">
             <span className="block font-haba-display text-[21px] font-bold leading-none text-haba-forest desktop:text-[clamp(20px,2.4vw,26px)]">

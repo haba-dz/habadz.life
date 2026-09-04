@@ -2,7 +2,7 @@ import Link from "next/link";
 
 import { siteConfig } from "@/config/site";
 import { Icon, type IconName } from "@/components/icons";
-import { FlagStripe, FOCUS_RING } from "@/components/site";
+import { BrandMark, FlagStripe, FOCUS_RING } from "@/components/site";
 import { getDictionary } from "@/i18n/dictionaries";
 import { getLocale } from "@/i18n/server";
 import { cn } from "@/lib/utils";
@@ -48,7 +48,7 @@ export async function SiteFooter() {
         <div>
           <Link href="/" className={cn("flex w-fit items-center gap-3", FOCUS_RING)}>
             <span className="flex size-10 items-center justify-center bg-white text-haba-forest">
-              <Icon name="heart-check" size={22} />
+              <BrandMark size={22} />
             </span>
             <span className="font-haba-display text-2xl font-bold text-white">
               {siteConfig.shortName}
